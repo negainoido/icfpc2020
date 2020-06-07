@@ -4,7 +4,13 @@ steps:
 - name: 'gcr.io/$PROJECT_ID/restore_cache'
   args:
   - '--bucket=gs://$_CACHE_BUCKET'
-  - '--key=cargo-lock-$( checksum Cargo.lock )'
+  - '--key=cargo-home-$( checksum Cargo.lock )'
+
+# https://github.com/GoogleCloudPlatform/cloud-builders-community/tree/master/cache
+- name: 'gcr.io/$PROJECT_ID/restore_cache'
+  args:
+  - '--bucket=gs://$_CACHE_BUCKET'
+  - '--key=cargo-target-$( checksum Cargo.lock )'
 
 # from https://hub.docker.com/_/rust
 - name: 'rust:slim-stretch'
@@ -14,13 +20,23 @@ steps:
 - name: 'gcr.io/$PROJECT_ID/save_cache'
   args:
   - '--bucket=gs://$_CACHE_BUCKET'
-  - '--key=cargo-lock-$( checksum Cargo.lock )'
+  - '--key=cargo-home-$( checksum Cargo.lock )'
   # https://doc.rust-lang.org/cargo/guide/cargo-home.html#caching-the-cargo-home-in-ci
   - '--path=cargo_home/bin'
   - '--path=cargo_home/registry/index'
   - '--path=cargo_home/registry/cache'
   - '--path=cargo_home/git/db'
   - '--no-clobber'
+
+# https://github.com/GoogleCloudPlatform/cloud-builders-community/tree/master/cache
+- name: 'gcr.io/$PROJECT_ID/save_cache'
+  args:
+  - '--bucket=gs://$_CACHE_BUCKET'
+  - '--key=cargo-target-$( checksum Cargo.lock )'
+  # https://doc.rust-lang.org/cargo/guide/build-cache.html
+  - '--path=target'
+
+
 options:
   env:
     - 'CARGO_HOME=/workspace/cargo_home'
