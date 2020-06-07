@@ -3,11 +3,14 @@ use structopt::StructOpt;
 
 extern crate icfpc2020;
 use icfpc2020::ai::AI;
+use icfpc2020::opt::CommonOpt;
 
 #[derive(Debug, StructOpt)]
 struct Opt {
-    #[structopt(short, long)]
-    verbose: bool,
+    #[structopt(flatten)]
+    common: CommonOpt,
+    #[structopt(short, long, default_value = "3")]
+    num: usize,
 }
 
 fn main() {
