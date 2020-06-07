@@ -1,7 +1,10 @@
 extern crate structopt;
 use structopt::StructOpt;
 
-#[derive(StructOpt)]
+extern crate icfpc2020;
+use icfpc2020::ai::AI;
+
+#[derive(Debug, StructOpt)]
 struct Opt {
     #[structopt(short, long)]
     verbose: bool,
@@ -9,6 +12,7 @@ struct Opt {
 
 fn main() {
     let opt = Opt::from_args();
-    println!("Hello, world! {}", rand::random::<u32>());
-    println!("verbose: {:?}", opt.verbose);
+    let ai = AI();
+    println!("{:?}", opt);
+    println!("{:?}", ai);
 }
