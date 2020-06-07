@@ -12,9 +12,7 @@ pub struct CommonOpt {
     verbose: bool,
 }
 
-pub fn common_init() {
-    let opt = CommonOpt::from_args();
-
+pub fn common_init(opt: &CommonOpt) {
     if opt.verbose {
         env_logger::builder().filter_level(LevelFilter::Info).init();
     } else {

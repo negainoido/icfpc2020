@@ -17,9 +17,9 @@ struct Opt {
 }
 
 fn main() {
-    common_init();
-
     let opt = Opt::from_args();
+    common_init(&opt.common);
+
     let ai = AI();
     println!("{:?}", opt);
     println!("{:?}", ai);

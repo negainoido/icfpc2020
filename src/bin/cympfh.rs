@@ -2,8 +2,8 @@ extern crate structopt;
 use structopt::StructOpt;
 
 extern crate icfpc2020;
-use icfpc2020::ai::AI;
-use icfpc2020::opt::CommonOpt;
+use icfpc2020::ai::*;
+use icfpc2020::opt::*;
 
 #[derive(Debug, StructOpt)]
 struct Opt {
@@ -15,6 +15,8 @@ struct Opt {
 
 fn main() {
     let opt = Opt::from_args();
+    common_init(&opt.common);
+
     let ai = AI();
     println!("{:?}", opt);
     println!("{:?}", ai);
