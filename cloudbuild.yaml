@@ -2,3 +2,5 @@ steps:
   # from https://hub.docker.com/_/rust
 - name: 'rust:slim-stretch'
   args: ['cargo', 'run']
+options:
+  env: ['CARGO_HOME=/workspace/cargo_home']
