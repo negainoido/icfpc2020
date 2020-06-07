@@ -12,3 +12,6 @@ rand = "0.7.3"
 
 [[bin]]
 name = "solver1"
+
+[[bin]]
+name = "cympfh"
