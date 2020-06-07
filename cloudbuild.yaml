@@ -2,19 +2,25 @@ steps:
 
 # https://github.com/GoogleCloudPlatform/cloud-builders-community/tree/master/cache
 - name: 'gcr.io/$PROJECT_ID/restore_cache'
+  waitFor: ['-']
   args:
   - '--bucket=gs://$_CACHE_BUCKET'
   - '--key=cargo-home-$( checksum Cargo.lock )'
+  id: 'cargo-home'
 
 # https://github.com/GoogleCloudPlatform/cloud-builders-community/tree/master/cache
 - name: 'gcr.io/$PROJECT_ID/restore_cache'
+  waitFor: ['-']
   args:
   - '--bucket=gs://$_CACHE_BUCKET'
   - '--key=cargo-target-$( checksum Cargo.lock )'
+  id: 'cargo-target'
 
 # from https://hub.docker.com/_/rust
 - name: 'rust:slim-stretch'
   args: ['cargo', 'run']
+  waitFor: ['cargo-home', 'cargo-target']
+  id: 'cargo-run'
 
 # https://github.com/GoogleCloudPlatform/cloud-builders-community/tree/master/cache
 - name: 'gcr.io/$PROJECT_ID/save_cache'
@@ -27,6 +33,7 @@ steps:
   - '--path=cargo_home/registry/cache'
   - '--path=cargo_home/git/db'
   - '--no-clobber'
+  waitFor: ['cargo-run']
 
 # https://github.com/GoogleCloudPlatform/cloud-builders-community/tree/master/cache
 - name: 'gcr.io/$PROJECT_ID/save_cache'
@@ -35,10 +42,13 @@ steps:
   - '--key=cargo-target-$( checksum Cargo.lock )'
   # https://doc.rust-lang.org/cargo/guide/build-cache.html
   - '--path=target'
+  waitFor: ['cargo-run']
 
 
 options:
   env:
     - 'CARGO_HOME=/workspace/cargo_home'
+
+
 substitutions:
   _CACHE_BUCKET: negainoido-icfpc-2020_cloudbuild
