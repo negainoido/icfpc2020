@@ -1,0 +1,3 @@
+steps:
+- name: 'rust'
+  args: ['cargo', 'run']
