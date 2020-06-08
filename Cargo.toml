@@ -11,6 +11,7 @@ structopt = "0.3.14"
 rand = "0.7.3"
 env_logger = "0.7.1"
 log = "0.4.8"
+assert_cmd = "1.0.1"
 
 [[bin]]
 name = "solver1"
