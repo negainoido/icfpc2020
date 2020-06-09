@@ -14,6 +14,12 @@ struct Opt {
     common: CommonOpt,
     #[structopt(short, long, default_value = "3")]
     num: usize,
+
+    #[structopt(short, long, default_value = "")]
+    input: String,
+
+    #[structopt(short, long, default_value = "")]
+    output: String,
 }
 
 fn main() {
