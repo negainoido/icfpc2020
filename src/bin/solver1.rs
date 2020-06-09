@@ -5,6 +5,9 @@ extern crate icfpc2020;
 use icfpc2020::ai::AI;
 use icfpc2020::opt::{common_init, CommonOpt};
 
+use std::fs::File;
+use std::io::prelude::*;
+
 #[macro_use]
 extern crate log;
 
@@ -22,7 +25,7 @@ struct Opt {
     output: String,
 }
 
-fn main() {
+fn main() -> std::io::Result<()> {
     let opt = Opt::from_args();
     common_init(&opt.common);
 
@@ -35,4 +38,11 @@ fn main() {
     info!("This is info log");
     warn!("This is warning log");
     error!("This is error log");
+
+    let mut contents = String::new();
+    File::open(&opt.input)?.read_to_string(&mut contents)?;
+
+    File::create(&opt.output)?.write_all(&contents.as_bytes())?;
+
+    Ok(())
 }
