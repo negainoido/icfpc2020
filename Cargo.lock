@@ -139,6 +139,7 @@ dependencies = [
  "assert_cmd",
  "env_logger",
  "log",
+ "proconio",
  "rand",
  "structopt",
  "tempfile",
@@ -236,6 +237,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "beae6331a816b1f65d04c45b078fd8e6c93e8071771f41b8163255bbd8d7c8fa"
 dependencies = [
  "unicode-xid",
+]
+
+[[package]]
+name = "proconio"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa877a7e416946a5d375574b7f15e42fc0442d76cabe66541646c8ee5a62516f"
+dependencies = [
+ "lazy_static",
 ]
 
 [[package]]
