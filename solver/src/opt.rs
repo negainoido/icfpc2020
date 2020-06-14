@@ -18,4 +18,9 @@ pub fn common_init(opt: &CommonOpt) {
     } else {
         env_logger::init();
     }
+
+    match std::env::var("SOLVER_REVISION") {
+        Ok(val) => eprintln!("solver revison is {}", val),
+        Err(e) => eprintln!("solver revision is unknown: {}", e),
+    }
 }
