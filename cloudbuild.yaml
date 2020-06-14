@@ -26,6 +26,7 @@ steps:
   args: ['build',
          '-t', 'gcr.io/$PROJECT_ID/solver',
          '-t', 'gcr.io/$PROJECT_ID/solver:$COMMIT_SHA',
+         '--build-arg', 'SOLVER_REVISION=$COMMIT_SHA',
          '.' ]
   waitFor: ['cargo-build']
 
