@@ -1,1 +1,3 @@
 /target/
+
+# each target binary will be excluded in cloudbuild.yaml.
