@@ -1,10 +1,5 @@
-extern crate env_logger;
-
-extern crate structopt;
-use structopt::StructOpt;
-
-extern crate log;
 use log::LevelFilter;
+use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 pub struct CommonOpt {
