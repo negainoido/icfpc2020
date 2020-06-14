@@ -22,6 +22,13 @@ steps:
   waitFor: ['cargo-home', 'cargo-target']
   id: 'cargo-build'
 
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build',
+         '-t', 'gcr.io/$PROJECT_ID/solver',
+         '-t', 'gcr.io/$PROJECT_ID/solver:$COMMIT_SHA',
+         '.' ]
+  waitFor: ['cargo-build']
+
 # from https://hub.docker.com/_/rust
 - name: 'rust:slim-stretch'
   args: ['cargo', 'test']
@@ -50,6 +57,9 @@ steps:
   - '--path=target'
   waitFor: ['cargo-test']
 
+images:
+- 'gcr.io/$PROJECT_ID/solver'
+- 'gcr.io/$PROJECT_ID/solver:$COMMIT_SHA'
 
 options:
   env:
