@@ -1,12 +1,9 @@
-extern crate structopt;
-use structopt::StructOpt;
-
-extern crate icfpc2020;
-use icfpc2020::ai::AI;
-use icfpc2020::opt::{common_init, CommonOpt};
-
 use std::fs::File;
 use std::io::prelude::*;
+
+use icfpc2020::ai::AI;
+use icfpc2020::opt::{common_init, CommonOpt};
+use structopt::StructOpt;
 
 #[macro_use]
 extern crate log;
