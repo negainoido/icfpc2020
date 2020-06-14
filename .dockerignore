@@ -1,4 +1,3 @@
 /target/
 
-!/target/debug/solver1
-!/target/debug/cympfh
+# each target binary will be excluded in cloudbuild.yaml.
