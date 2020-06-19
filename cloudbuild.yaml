@@ -16,10 +16,20 @@ steps:
   - '--key=cargo-target-$( checksum Cargo.lock )'
   id: 'cargo-target'
 
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    docker pull gcr.io/$PROJECT_ID/rust_base || true
+    docker build -f Dockerfile.base -t gcr.io/$PROJECT_ID/rust_base .
+  waitFor: ['-']
+  id: 'build_rust_base'
+
 # from https://hub.docker.com/_/rust
-- name: 'rust:slim-stretch'
+- name: 'gcr.io/$PROJECT_ID/rust_base'
   args: ['cargo', 'build']
-  waitFor: ['cargo-home', 'cargo-target']
+  waitFor: ['cargo-home', 'cargo-target', 'build_rust_base']
   id: 'cargo-build'
 
 - name: 'gcr.io/cloud-builders/docker'
@@ -36,7 +46,7 @@ steps:
   waitFor: ['cargo-build']
 
 # from https://hub.docker.com/_/rust
-- name: 'rust:slim-stretch'
+- name: 'gcr.io/$PROJECT_ID/rust_base'
   args: ['cargo', 'test']
   waitFor: ['cargo-build']
   id: 'cargo-test'
@@ -66,6 +76,7 @@ steps:
 images:
 - 'gcr.io/$PROJECT_ID/solver'
 - 'gcr.io/$PROJECT_ID/solver:$COMMIT_SHA'
+- 'gcr.io/$PROJECT_ID/rust_base'
 
 options:
   env:
