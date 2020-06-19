@@ -1,5 +1,7 @@
 FROM rust:slim-stretch
 
 RUN apt-get update && apt-get install -y \
+  --no-install-recommends \
   libssl-dev \
-  pkg-config
+  pkg-config \
+  && :
