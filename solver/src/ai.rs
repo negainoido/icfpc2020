@@ -4,7 +4,7 @@ impl AI {
     pub fn new() -> Self {
         AI()
     }
-    pub fn square(self, n: u128) -> u128 {
+    pub fn square(&self, n: u128) -> u128 {
         n * n
     }
 }
@@ -17,5 +17,6 @@ mod tests {
     fn it_works() {
         let ai = AI::new();
         assert_eq!(ai.square(2), 4);
+        assert!(ai.square(2) >= 4);
     }
 }
