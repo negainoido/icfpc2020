@@ -22,7 +22,8 @@ steps:
   - '-c'
   - |
     docker pull gcr.io/$PROJECT_ID/rust_base || true
-    docker build -f Dockerfile.base -t gcr.io/$PROJECT_ID/rust_base .
+    docker build -f Dockerfile.base --cache-from gcr.io/$PROJECT_ID/rust_base \
+      -t gcr.io/$PROJECT_ID/rust_base .
   waitFor: ['-']
   id: 'build_rust_base'
 
