@@ -2,7 +2,6 @@ FROM rust:slim-stretch
 
 RUN apt-get update && apt-get install -y \
   --no-install-recommends \
-  libdbus-1-dev \
   libssl-dev \
   pkg-config \
   && :
