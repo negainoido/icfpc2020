@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: install necessary libs
+      run: sudo apt update && sudo apt install -y --no-install-recommends libdbus-1-dev libssl-dev pkg-config
     - name: Build
       run: cargo build --verbose
     - name: Run tests
