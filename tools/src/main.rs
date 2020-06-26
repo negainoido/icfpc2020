@@ -24,8 +24,8 @@ struct Config {
 impl Config {
     pub fn assign(&self, new_config: &Self) -> Self {
         Config {
-            editor: new_config.editor.clone().or(self.editor.clone()),
-            hook_url: new_config.hook_url.clone().or(self.hook_url.clone()),
+            editor: new_config.editor.clone().or_else(|| self.editor.clone()),
+            hook_url: new_config.hook_url.clone().or_else(|| self.hook_url.clone()),
         }
     }
 }
@@ -41,7 +41,7 @@ fn main() {
         Action::Edit => {
             let editor = config
                 .editor
-                .or(env::var("EDITOR").ok())
+                .or_else(|| env::var("EDITOR").ok())
                 .expect("Please set $EDITOR");
             let status = Command::new(editor).status().expect("Something wrong");
             if status.success() {
@@ -51,9 +51,9 @@ fn main() {
             }
         }
         Action::Config(new_config) => {
-            let mut new_config = config.assign(&new_config);
+            let new_config = config.assign(&new_config);
             println!("Config: {}", serde_json::to_string(&new_config).unwrap());
-            confy::store(APP_NAME, new_config);
+            confy::store(APP_NAME, new_config).expect("Failed to store the config");
         }
         Action::Password => {
             let pass = rpassword::read_password_from_tty(Some("Password: "))
@@ -77,7 +77,7 @@ fn main() {
                         hook_url: Some(hook_url.clone()),
                         ..config
                     },
-                );
+                ).expect("Failed to store the cofig");
                 hook_url
             } else {
                 config.hook_url.unwrap()
