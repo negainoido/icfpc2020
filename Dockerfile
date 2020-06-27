@@ -2,4 +2,5 @@ FROM gcr.io/distroless/cc
 
 COPY target/* /
 
+ARG SOLVER_REVISION
 ENV SOLVER_REVISION $SOLVER_REVISION
