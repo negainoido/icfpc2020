@@ -72,7 +72,7 @@ steps:
   - '--bucket=gs://$_CACHE_BUCKET'
   - '--key=cargo-target-release-$( checksum Cargo.lock )'
   # https://doc.rust-lang.org/cargo/guide/build-cache.html
-  - '--path=target'
+  - '--path=target/release'
   waitFor: ['cargo-test']
 
 images:
