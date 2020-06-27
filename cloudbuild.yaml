@@ -5,7 +5,7 @@ steps:
   waitFor: ['-']
   args:
   - '--bucket=gs://$_CACHE_BUCKET'
-  - '--key=cargo-home-$( checksum Cargo.lock )'
+  - '--key=cargo-home-release-$( checksum Cargo.lock )'
   id: 'cargo-home'
 
 # https://github.com/GoogleCloudPlatform/cloud-builders-community/tree/master/cache
@@ -13,7 +13,7 @@ steps:
   waitFor: ['-']
   args:
   - '--bucket=gs://$_CACHE_BUCKET'
-  - '--key=cargo-target-$( checksum Cargo.lock )'
+  - '--key=cargo-target-release-$( checksum Cargo.lock )'
   id: 'cargo-target'
 
 - name: 'gcr.io/cloud-builders/docker'
@@ -30,7 +30,7 @@ steps:
 
 # from https://hub.docker.com/_/rust
 - name: 'gcr.io/$PROJECT_ID/rust_base'
-  args: ['cargo', 'build']
+  args: ['cargo', 'build', '--release']
   waitFor: ['cargo-home', 'cargo-target', 'build_rust_base']
   id: 'cargo-build'
 
@@ -49,7 +49,7 @@ steps:
 
 # from https://hub.docker.com/_/rust
 - name: 'gcr.io/$PROJECT_ID/rust_base'
-  args: ['cargo', 'test']
+  args: ['cargo', 'test', '--release']
   waitFor: ['cargo-build']
   id: 'cargo-test'
 
@@ -57,7 +57,7 @@ steps:
 - name: 'gcr.io/$PROJECT_ID/save_cache'
   args:
   - '--bucket=gs://$_CACHE_BUCKET'
-  - '--key=cargo-home-$( checksum Cargo.lock )'
+  - '--key=cargo-home-release-$( checksum Cargo.lock )'
   # https://doc.rust-lang.org/cargo/guide/cargo-home.html#caching-the-cargo-home-in-ci
   - '--path=cargo_home/bin'
   - '--path=cargo_home/registry/index'
@@ -70,7 +70,7 @@ steps:
 - name: 'gcr.io/$PROJECT_ID/save_cache'
   args:
   - '--bucket=gs://$_CACHE_BUCKET'
-  - '--key=cargo-target-$( checksum Cargo.lock )'
+  - '--key=cargo-target-release-$( checksum Cargo.lock )'
   # https://doc.rust-lang.org/cargo/guide/build-cache.html
   - '--path=target'
   waitFor: ['cargo-test']
