@@ -75,6 +75,8 @@ steps:
   - '--path=target/release'
   waitFor: ['cargo-test']
 
+timeout: 1200s
+
 images:
 - 'gcr.io/$PROJECT_ID/solver'
 - 'gcr.io/$PROJECT_ID/solver:$COMMIT_SHA'
