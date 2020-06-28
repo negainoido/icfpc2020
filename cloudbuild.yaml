@@ -37,6 +37,7 @@ steps:
 
 - name: 'gcr.io/$PROJECT_ID/rust_base'
   args: ['cargo', 'fmt', '--', '--check']
+  waitFor: ['build_rust_base']
 
 # from https://hub.docker.com/_/rust
 - name: 'gcr.io/$PROJECT_ID/rust_base'
