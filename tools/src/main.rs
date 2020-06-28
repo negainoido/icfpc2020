@@ -87,17 +87,12 @@ fn main() {
                 config.hook_url.unwrap()
             };
 
-            let client = reqwest::blocking::Client::new();
             let json = SlackHookRequest {
                 text: "hello".to_owned(),
                 ..SlackHookRequest::default()
             };
             println!("{:?}", json);
-            let result = client
-                .post(&hook_url)
-                .json(&json)
-                .send()
-                .expect("request failed");
+            let result = ureq::post(&hook_url).send_json(serde_json::to_value(json).unwrap());
 
             println!("{:?}", result);
         }
