@@ -25,7 +25,10 @@ impl Config {
     pub fn assign(&self, new_config: &Self) -> Self {
         Config {
             editor: new_config.editor.clone().or_else(|| self.editor.clone()),
-            hook_url: new_config.hook_url.clone().or_else(|| self.hook_url.clone()),
+            hook_url: new_config
+                .hook_url
+                .clone()
+                .or_else(|| self.hook_url.clone()),
         }
     }
 }
@@ -77,7 +80,8 @@ fn main() {
                         hook_url: Some(hook_url.clone()),
                         ..config
                     },
-                ).expect("Failed to store the cofig");
+                )
+                .expect("Failed to store the cofig");
                 hook_url
             } else {
                 config.hook_url.unwrap()
