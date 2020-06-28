@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
   pkg-config \
   && :
 
+RUN rustup component add rustfmt
+
 COPY --from=sccache /sccache /
 ENV RUSTC_WRAPPER /sccache
 ENV SCCACHE_CACHE_SIZE 1G
