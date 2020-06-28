@@ -16,6 +16,13 @@ steps:
   - '--key=cargo-target-release-$( checksum Cargo.lock )'
   id: 'cargo-target'
 
+- name: 'gcr.io/$PROJECT_ID/restore_cache'
+  waitFor: ['-']
+  args:
+  - '--bucket=gs://$_CACHE_BUCKET'
+  - '--key=sccache'
+  id: 'sccache'
+
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
   args:
@@ -31,7 +38,7 @@ steps:
 # from https://hub.docker.com/_/rust
 - name: 'gcr.io/$PROJECT_ID/rust_base'
   args: ['cargo', 'build', '--release']
-  waitFor: ['cargo-home', 'cargo-target', 'build_rust_base']
+  waitFor: ['cargo-home', 'cargo-target', 'build_rust_base', 'sccache']
   id: 'cargo-build'
 
 - name: 'gcr.io/cloud-builders/docker'
@@ -75,6 +82,14 @@ steps:
   - '--path=target/release'
   waitFor: ['cargo-test']
 
+# https://github.com/GoogleCloudPlatform/cloud-builders-community/tree/master/cache
+- name: 'gcr.io/$PROJECT_ID/save_cache'
+  args:
+  - '--bucket=gs://$_CACHE_BUCKET'
+  - '--key=sccache'
+  - '--path=sccache'
+  waitFor: ['cargo-test']
+
 timeout: 1200s
 
 images:
@@ -86,6 +101,8 @@ images:
 options:
   env:
     - 'CARGO_HOME=/workspace/cargo_home'
+    # https://github.com/mozilla/sccache#local
+    - 'SCCACHE_DIR=/workspace/sccache'
 
 
 substitutions:
