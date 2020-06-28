@@ -1,8 +1,5 @@
 steps:
 
-- name: 'rust:alpine'
-  args: ['cargo', 'fmt', '--', '--check']
-
 # https://github.com/GoogleCloudPlatform/cloud-builders-community/tree/master/cache
 - name: 'gcr.io/$PROJECT_ID/restore_cache'
   waitFor: ['-']
@@ -37,6 +34,9 @@ steps:
       -t gcr.io/$PROJECT_ID/rust_base .
   waitFor: ['-']
   id: 'build_rust_base'
+
+- name: 'gcr.io/$PROJECT_ID/rust_base'
+  args: ['cargo', 'fmt', '--', '--check']
 
 # from https://hub.docker.com/_/rust
 - name: 'gcr.io/$PROJECT_ID/rust_base'
