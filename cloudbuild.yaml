@@ -1,5 +1,8 @@
 steps:
 
+- name: 'rust:alpine'
+  args: ['cargo', 'fmt', '--', '--check']
+
 # https://github.com/GoogleCloudPlatform/cloud-builders-community/tree/master/cache
 - name: 'gcr.io/$PROJECT_ID/restore_cache'
   waitFor: ['-']
