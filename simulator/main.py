@@ -9,8 +9,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 # to resolve chromedriver binary path
 import chromedriver_binary
 
-# example: `python main.py <description_file> <solution_file>`
-
 parser = argparse.ArgumentParser('run official simulator in selenium')
 parser.add_argument('input_file')
 parser.add_argument('solution_file')
@@ -24,11 +22,6 @@ script_path = os.path.dirname(os.path.abspath(__file__))
 url = 'file://' + script_path + '/contents/index.html'
 
 base_path = os.getcwd()
-
-if not os.path.isabs(sol):
-    sol = os.path.normpath(os.path.join(base_path, sol))
-else:
-    sol = os.path.normpath(sol)
 
 options = ChromeOptions()
 # ヘッドレスモードを有効にする（次の行をコメントアウトすると画面が表示される）。
