@@ -2,5 +2,5 @@
 
 members = [
     "solver",
-    "tools",
+    "slack_tool",
 ]
