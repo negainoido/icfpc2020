@@ -1,13 +1,13 @@
-import os
-import sys
-# to resolve chromedriver binary path
-import chromedriver_binary
 import argparse
+import os
 
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
+
+# to resolve chromedriver binary path
+import chromedriver_binary
 
 # example: `python main.py <description_file> <solution_file>`
 
@@ -16,19 +16,14 @@ parser.add_argument('input_file')
 parser.add_argument('solution_file')
 args = parser.parse_args()
 
-desc = args.input_file
-sol = args.solution_file
+desc = os.path.abspath(args.input_file)
+sol = os.path.abspath(args.solution_file)
 
 script_path = os.path.dirname(os.path.abspath(__file__))
 
 url = 'file://' + script_path + '/contents/index.html'
 
 base_path = os.getcwd()
-
-if not os.path.isabs(desc):
-    desc = os.path.normpath(os.path.join(base_path, desc))
-else:
-    desc = os.path.normpath(desc)
 
 if not os.path.isabs(sol):
     sol = os.path.normpath(os.path.join(base_path, sol))
