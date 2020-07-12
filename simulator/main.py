@@ -2,6 +2,7 @@ import os
 import sys
 # to resolve chromedriver binary path
 import chromedriver_binary
+import argparse
 
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
@@ -10,10 +11,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 # example: `python main.py <description_file> <solution_file>`
 
-script_path = os.path.dirname(os.path.abspath(__file__))
+parser = argparse.ArgumentParser('run official simulator in selenium')
+parser.add_argument('input_file')
+parser.add_argument('solution_file')
+args = parser.parse_args()
 
-desc = sys.argv[1]
-sol = sys.argv[2]
+desc = args.input_file
+sol = args.solution_file
+
+script_path = os.path.dirname(os.path.abspath(__file__))
 
 url = 'file://' + script_path + '/contents/index.html'
 
