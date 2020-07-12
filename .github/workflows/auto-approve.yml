@@ -1,0 +1,11 @@
+# https://github.com/marketplace/actions/auto-approve
+name: Auto approve
+on: pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: hmarr/auto-approve-action@v2.0.0
+      with:
+        github-token: "${{ secrets.GITHUB_TOKEN }}"
