@@ -1110,6 +1110,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "slack"
+version = "0.1.0"
+dependencies = [
+ "confy",
+ "keyring",
+ "rpassword",
+ "serde",
+ "serde_json",
+ "structopt",
+ "ureq",
+]
+
+[[package]]
 name = "spin"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1323,19 +1336,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ffc92d160b1eef40665be3a05630d003936a3bc7da7421277846c2613e92c71a"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "tools"
-version = "0.1.0"
-dependencies = [
- "confy",
- "keyring",
- "rpassword",
- "serde",
- "serde_json",
- "structopt",
- "ureq",
 ]
 
 [[package]]

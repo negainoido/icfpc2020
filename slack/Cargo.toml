@@ -1,5 +1,5 @@
 [package]
-name = "tools"
+name = "slack"
 version = "0.1.0"
 authors = ["garasubo <garasubo@gmail.com>"]
 edition = "2018"
