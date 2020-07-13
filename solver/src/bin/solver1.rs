@@ -1,8 +1,11 @@
 use std::fs::File;
 use std::io::prelude::*;
+use std::io::BufReader;
 
 use icfpc2020::ai::AI;
 use icfpc2020::opt::{common_init, CommonOpt};
+use proconio::input;
+use proconio::source::auto::AutoSource;
 use structopt::StructOpt;
 
 #[macro_use]
@@ -36,8 +39,12 @@ fn main() -> std::io::Result<()> {
     warn!("This is warning log");
     error!("This is error log");
 
-    let mut contents = String::new();
-    File::open(&opt.input)?.read_to_string(&mut contents)?;
+    let source = AutoSource::new(BufReader::new(File::open(&opt.input)?));
+
+    input! {
+        from source,
+        contents: String,
+    }
 
     File::create(&opt.output)?.write_all(&contents.as_bytes())?;
 
