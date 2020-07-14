@@ -5,18 +5,21 @@
 // $ cargo run --bin wav2png -- --input input.wav --output output.png
 //
 
+use std::fs;
+use std::io;
+
 use hound::WavReader;
 use structopt::StructOpt;
 
 use icfpc2020::opt::{common_init, CommonOpt};
 
-#[derive(Debug, StructOpt)]
+#[derive(StructOpt)]
 struct Opt {
     #[structopt(flatten)]
     common: CommonOpt,
 
-    #[structopt(short, long)]
-    input: String,
+    #[structopt(short, long, parse(try_from_str=WavReader::open))]
+    input: WavReader<io::BufReader<fs::File>>,
 
     #[structopt(short, long)]
     output: String,
@@ -26,9 +29,8 @@ fn main() {
     let opt = Opt::from_args();
     common_init(&opt.common);
 
-    let r = WavReader::open(opt.input).unwrap();
-    let spec = r.spec();
-    let samples: Vec<i16> = r.into_samples().map(Result::unwrap).collect();
+    let spec = opt.input.spec();
+    let samples: Vec<i16> = opt.input.into_samples().map(Result::unwrap).collect();
 
     let freq = 600;
     let step = 2.0 * std::f32::consts::PI * freq as f32 / spec.sample_rate as f32;
