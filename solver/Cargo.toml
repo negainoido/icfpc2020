@@ -14,9 +14,14 @@ log = "0.4.8"
 assert_cmd = "1.0.1"
 tempfile = "3.1.0"
 proconio = "0.4.1"
+hound = "3.4.0"
+png = "0.16.6"
 
 [[bin]]
 name = "solver1"
 
 [[bin]]
 name = "cympfh"
+
+[[bin]]
+name = "wav2png"
