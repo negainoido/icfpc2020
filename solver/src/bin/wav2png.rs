@@ -34,9 +34,8 @@ fn main() {
     let step = 2.0 * std::f32::consts::PI * freq as f32 / spec.sample_rate as f32;
     let xys: Vec<(f32, f32)> = samples
         .iter()
-        .copied()
         .enumerate()
-        .map(|(i, s)| {
+        .map(|(i, &s)| {
             let s = s as f32;
             let a = i as f32 * step;
             (a.cos() * s, a.sin() * s)
