@@ -1,3 +1,4 @@
 # see https://docs.github.com/ja/github/creating-cloning-and-archiving-repositories/about-code-owners
 
 /tools/src/slack.rs @garasubo
+/simulator @garasubo
