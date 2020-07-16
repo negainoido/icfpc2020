@@ -16,6 +16,7 @@ tempfile = "3.1.0"
 proconio = "0.4.1"
 hound = "3.4.0"
 png = "0.16.6"
+image = "0.23.7"
 
 [[bin]]
 name = "solver1"
@@ -25,3 +26,6 @@ name = "cympfh"
 
 [[bin]]
 name = "wav2png"
+
+[[bin]]
+name = "png2txt"
