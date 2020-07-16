@@ -14,8 +14,6 @@ RUN pipenv install --dev --system && \
 COPY main.py .
 COPY contents contents
 
-VOLUME /app/inputs /app/solutions
-ARG input=input.txt
-ARG solution=solution.txt
+VOLUME /app/files
 
-CMD ["python", "./main.py", "./inputs/$input", "./solutions/$solution"]
+CMD ["python", "./main.py", "./files/input.txt", "./files/solution.txt"]

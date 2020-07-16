@@ -20,6 +20,9 @@ inputs_dir=$(dirname "$input_file")
 solutions_dir=$(dirname "$solution_file")
 
 cd $(dirname "$script_path")
+cp "$input_file" ./tmp/input.txt
+cp "$solution_file" ./tmp/solution.txt
 
-IMAGE_ID=$(docker build -q . --build-arg input="$(basename \"$input_file\")" --build-arg solution="$(basename \"$solution_file\")")
-docker run -v /dev/shm:/dev/shm -v "$inputs_dir":/app/inputs -v "$solutions_dir":/app/solutions $IMAGE_ID
+echo "Start building container"
+IMAGE_ID=$(docker build -q .)
+docker run -v /dev/shm:/dev/shm -v "$(pwd)/tmp":/app/files $IMAGE_ID
