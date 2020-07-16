@@ -59,22 +59,14 @@ fn get(arr: &Vec<Vec<bool>>, x: usize, y: usize) -> Option<(usize, usize, usize,
     // https://message-from-space.readthedocs.io/en/latest/message13.html
     //
     let mut cx = x + 1;
-    while cx < arr.len() {
-        if arr[cx][y] || arr[cx][y + 1] {
-            cx += 1;
-            continue;
-        }
-        break;
+    while cx < arr.len() && (arr[cx][y] || arr[cx][y + 1]) {
+        cx += 1;
     }
     let cx = cx;
 
     let mut cy = y + 1;
-    while cy < arr[0].len() {
-        if arr[x][cy] || arr[x + 1][cy] {
-            cy += 1;
-            continue;
-        }
-        break;
+    while cy < arr[0].len() && (arr[x][cy] || arr[x + 1][cy]) {
+        cy += 1;
     }
     Some((x, y, cx - x, cy - y))
 }
