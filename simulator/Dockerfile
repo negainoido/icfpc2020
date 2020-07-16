@@ -14,6 +14,4 @@ RUN pipenv install --dev --system && \
 COPY main.py .
 COPY contents contents
 
-VOLUME /app/files
-
 CMD ["python", "./main.py", "./files/input.txt", "./files/solution.txt"]
