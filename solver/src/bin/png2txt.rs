@@ -33,9 +33,11 @@ fn get(arr: &Vec<Vec<bool>>, x: usize, y: usize) -> Option<(usize, usize, usize,
         // check
         // .........
         // .#.#.#.#.
-        if !&arr[x][y..y + 9].iter().any(|&x| x)
-            && !&arr[x + 1][y..y + 9].iter().step_by(2).any(|&x| x)
-            && *&arr[x + 1][y + 1..y + 9].iter().step_by(2).all(|&x| x)
+        let first = &arr[x][y..y + 9];
+        let second = &arr[x + 1][y..y + 9];
+        if first.iter().all(|&f| !f)
+            && second.iter().step_by(2).all(|&f| !f)
+            && second.iter().skip(1).step_by(2).all(|&t| t)
         {
             return Some((x + 1, y + 1, 1, 7));
         }
