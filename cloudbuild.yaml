@@ -46,7 +46,6 @@ steps:
       -t gcr.io/$PROJECT_ID/simulator:$COMMIT_SHA \
       -t gcr.io/$PROJECT_ID/simulator .
   waitFor: ['-']
-  id: 'build_simulator'
 
 - name: 'gcr.io/$PROJECT_ID/rust_base'
   args: ['cargo', 'fmt', '--', '--check']
