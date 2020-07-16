@@ -33,7 +33,6 @@ fn get(arr: &Vec<Vec<bool>>, x: usize, y: usize) -> Option<(usize, usize, usize,
         // check
         // .........
         // .#.#.#.#.
-        // .........
         if !&arr[x][y..y + 9].iter().any(|&x| x)
             && !&arr[x + 1][y..y + 9].iter().step_by(2).any(|&x| x)
             && *&arr[x + 1][y + 1..y + 9].iter().step_by(2).all(|&x| x)
@@ -43,11 +42,11 @@ fn get(arr: &Vec<Vec<bool>>, x: usize, y: usize) -> Option<(usize, usize, usize,
     }
 
     // detect following case
-    //  .#
-    //  #.
+    //  ?#
+    //  #?
     // or
-    //  #.
-    //  .?
+    //  #?
+    //  ??
     //
     if !(arr[x][y] || (arr[x + 1][y] && arr[x][y + 1])) {
         return None;
