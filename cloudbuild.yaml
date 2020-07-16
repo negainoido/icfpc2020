@@ -35,6 +35,18 @@ steps:
   waitFor: ['-']
   id: 'build_rust_base'
 
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    docker pull gcr.io/$PROJECT_ID/simulator || true
+    cd ./simulator
+    docker build --cache-from gcr.io/$PROJECT_ID/simulator \
+      -t gcr.io/$PROJECT_ID/simulator:$COMMIT_SHA \
+      -t gcr.io/$PROJECT_ID/simulator .
+  waitFor: ['-']
+
 - name: 'gcr.io/$PROJECT_ID/rust_base'
   args: ['cargo', 'fmt', '--', '--check']
   waitFor: ['build_rust_base']
@@ -101,6 +113,8 @@ images:
 - 'gcr.io/$PROJECT_ID/solver:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/rust_base'
 - 'gcr.io/$PROJECT_ID/rust_base:$COMMIT_SHA'
+- 'gcr.io/$PROJECT_ID/simulator'
+- 'gcr.io/$PROJECT_ID/simulator:$COMMIT_SHA'
 
 options:
   env:
