@@ -119,7 +119,4 @@ fn main() {
             }
         }
     }
-
-    println!("{:?}", img.dimensions());
-    println!("{}", opt.output);
 }
