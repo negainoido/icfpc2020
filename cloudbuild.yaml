@@ -41,7 +41,8 @@ steps:
   - '-c'
   - |
     docker pull gcr.io/$PROJECT_ID/simulator || true
-    docker build -f simulator/Dockerfile --cache-from gcr.io/$PROJECT_ID/simulator \
+    cd ./simulator
+    docker build --cache-from gcr.io/$PROJECT_ID/simulator \
       -t gcr.io/$PROJECT_ID/simulator:$COMMIT_SHA \
       -t gcr.io/$PROJECT_ID/simulator .
   waitFor: ['-']
