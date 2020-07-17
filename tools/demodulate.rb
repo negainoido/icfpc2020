@@ -1,3 +1,4 @@
+# example: ruby demodulate.rb 110110000111011111100001001111110101000000
 def demodulate(s)
 	prefix = s.shift + s.shift
 
@@ -27,6 +28,8 @@ def demodulate(s)
 	end
 	res
 end
+p demodulate(ARGV[0].split(""))
+=begin
 a = "110110000111011111100001001111110101000000".split("")
 #a = "1101000".split("")
 p demodulate(a)
@@ -44,5 +47,5 @@ p demodulate("110110000111011111100001001101010110011100".split(""))
 p demodulate("110110000111011111100001001101010110011100".split(""))
 
 p demodulate("110110000111011111100001001101001001111000".split(""))
-
+=end
 
