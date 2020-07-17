@@ -556,6 +556,7 @@ dependencies = [
  "rand 0.7.3",
  "structopt",
  "tempfile",
+ "ureq",
 ]
 
 [[package]]
