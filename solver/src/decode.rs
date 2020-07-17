@@ -1,4 +1,22 @@
 use crate::symbol::Symbol;
+use image::{DynamicImage, GrayImage};
+
+pub fn png2expr(dimg: DynamicImage) -> Vec<Vec<Symbol>> {
+    let img: GrayImage = dimg.to_luma();
+    let width = img.dimensions().0 as usize / 4 - 2;
+    let height = img.dimensions().1 as usize / 4 - 2;
+
+    let mut arr = vec![vec![false; width]; height];
+
+    // println!("{:?}", img.dimensions());
+    for x in 0..height {
+        for y in 0..width {
+            arr[x][y] = img.get_pixel((y as u32 + 1) * 4, (x as u32 + 1) * 4).0[0] > 0;
+        }
+    }
+
+    table2exprs(&arr)
+}
 
 fn is_zero_column(arr: &Vec<Vec<bool>>, x: usize, h: usize, y: usize) -> bool {
     for i in x..x + h {
@@ -64,7 +82,7 @@ fn is_zeroline(line: &Vec<bool>) -> bool {
     line.iter().all(|x| !x)
 }
 
-pub fn table2exprs(arr: &Vec<Vec<bool>>) -> Vec<Vec<Symbol>> {
+fn table2exprs(arr: &Vec<Vec<bool>>) -> Vec<Vec<Symbol>> {
     let h = arr.len();
     let mut l = 0;
     let mut exprs = Vec::<Vec<Symbol>>::new();
