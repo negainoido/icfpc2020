@@ -107,6 +107,29 @@ impl Symbol {
         if height != width {
             return None;
         }
+        if height < 4 || width < 4 {
+            return None;
+        }
+        if !image[x + 1][y + 1] {
+            return None;
+        }
+        // edge check
+        for i in 0..height {
+            if !image[x + i][y] {
+                return None;
+            }
+            if !image[x + i][y + width - 1] {
+                return None;
+            }
+        }
+        for j in 0..width {
+            if !image[x][y + j] {
+                return None;
+            }
+            if !image[x + height - 1][y + j] {
+                return None;
+            }
+        }
         if let Some((num, _)) = Symbol::as_number((x + 1, y + 1, height - 2, width - 2), &image) {
             let full = (1 << (width - 3).pow(2)) - 1;
             Some(full ^ num)
@@ -164,22 +187,50 @@ mod tests {
     #[test]
     fn test_variable() {
         {
-            let image = vec![
-                vec![true, true, true, true],
-                vec![true, true, false, true],
-                vec![true, false, true, true],
-                vec![true, true, true, true],
-            ];
+            let image = Symbol::str2vec(
+                "
+                ####
+                ##.#
+                #.##
+                ####
+            ",
+            );
             assert_eq!(Symbol::as_variable((0, 0, 4, 4), &image), Some(0));
         }
         {
-            let image = vec![
-                vec![true, true, true, true],
-                vec![true, true, false, true],
-                vec![true, false, false, true],
-                vec![true, true, true, true],
-            ];
-            assert_eq!(Symbol::as_variable((0, 0, 4, 4), &image), Some(0));
+            let image = Symbol::str2vec(
+                "
+                ####
+                ##.#
+                #..#
+                ####
+            ",
+            );
+            assert_eq!(Symbol::as_variable((0, 0, 4, 4), &image), Some(1));
+        }
+        {
+            let image = Symbol::str2vec(
+                "
+                #####
+                ##..#
+                #.#.#
+                #.###
+                #####
+            ",
+            );
+            assert_eq!(Symbol::as_variable((0, 0, 5, 5), &image), Some(2));
+        }
+        {
+            let image = Symbol::str2vec(
+                "
+                #####
+                ##..#
+                #.#.#
+                #.###
+                ####.
+            ",
+            );
+            assert_eq!(Symbol::as_variable((0, 0, 5, 5), &image), None);
         }
     }
 
