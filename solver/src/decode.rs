@@ -1,8 +1,64 @@
 #![allow(unused)]
 use crate::symbol::Symbol;
 
-fn lines2expr(arr: &Vec<Vec<bool>>, x: usize, y: usize) -> Option<(Vec<Symbol>, usize)> {
-    unimplemented!("lines2vec");
+fn is_zero_column(arr: &Vec<Vec<bool>>, x: usize, h: usize, y: usize) -> bool {
+    for i in x..x + h {
+        if (arr[i][y]) {
+            return false;
+        }
+    }
+    true
+}
+
+fn lines2expr(arr: &Vec<Vec<bool>>, x: usize, h: usize) -> Option<Vec<Symbol>> {
+    let w = arr[x].len();
+    let mut squares = Vec::<(usize, usize, usize, usize)>::new();
+
+    let mut j = 0;
+    while j < w {
+        if (is_zero_column(&arr, x, h, j)) {
+            j += 1;
+            continue;
+        }
+        // The origin of the current square is (x, j);
+        let mut next_j = j + 1;
+        while next_j < w {
+            if (is_zero_column(&arr, x, h, next_j)) {
+                break;
+            }
+            next_j += 1;
+        }
+        let square_w = next_j - j;
+        let mut square_h = h;
+        for i in (x + h - 1..=x).rev() {
+            let mut last_square_line = false;
+            for j2 in j..j + square_w {
+                if (arr[i][j2]) {
+                    last_square_line = true;
+                    break;
+                }
+            }
+            if (last_square_line) {
+                square_h = i - x + 1;
+            }
+        }
+        squares.push((x, j, square_h, square_w));
+        j = next_j + 1;
+    }
+
+    let mut expr = Vec::<Symbol>::new();
+    for (x, y, h, w) in squares {
+        match Symbol::from(x, y, h, w, &arr) {
+            None => {
+                panic!("Failed parsing symbol");
+            }
+            Some(symbol) => {
+                expr.push(symbol);
+            }
+        }
+    }
+
+    Some(expr)
 }
 
 fn is_zeroline(line: &Vec<bool>) -> bool {
@@ -29,11 +85,10 @@ pub fn table2exprs(arr: &Vec<Vec<bool>>) -> Vec<Vec<Symbol>> {
             next_zl += 1;
         }
 
-        match lines2expr(&arr, l, h) {
-            None => panic!("Failed parsing"),
-            Some((expr, l_inc)) => {
+        match lines2expr(&arr, l, next_zl - l) {
+            None => panic!("Failed parsing expression"),
+            Some(expr) => {
                 exprs.push(expr);
-                l += l_inc
             }
         }
         // The next start is the next line of next zero line.
