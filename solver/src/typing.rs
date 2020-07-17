@@ -3,11 +3,15 @@ use crate::symbol::Symbol;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TypedSymbol {
-    Cons(Vec<TypedExpr>),
+    Number(i128),
     Nil,
+    Cons(Vec<TypedExpr>),
     Car(Vec<TypedExpr>),
     Cdr(Vec<TypedExpr>),
-    Number(i128),
+    BComb(Vec<TypedExpr>),
+    CComb(Vec<TypedExpr>),
+    SComb(Vec<TypedExpr>),
+    IComb,
 }
 
 impl TypedSymbol {
@@ -15,11 +19,15 @@ impl TypedSymbol {
         use TypedSymbol::*;
 
         match sym {
-            Symbol::Cons => Some(Cons(vec![])),
+            Symbol::Number(i) => Some(Number(*i)),
             Symbol::Nil => Some(Nil),
+            Symbol::Cons => Some(Cons(vec![])),
             Symbol::Car => Some(Car(vec![])),
             Symbol::Cdr => Some(Cdr(vec![])),
-            Symbol::Number(i) => Some(Number(*i)),
+            Symbol::BComb => Some(BComb(vec![])),
+            Symbol::CComb => Some(CComb(vec![])),
+            Symbol::SComb => Some(SComb(vec![])),
+            Symbol::IComb => Some(IComb),
             _ => todo!("todo"),
         }
     }

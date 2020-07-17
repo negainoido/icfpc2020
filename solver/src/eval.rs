@@ -7,12 +7,14 @@ pub enum EvalError {
     Todo,
 }
 
-pub(crate) fn eval(expr: &TypedExpr) -> Result<TypedExpr, EvalError> {
+fn app(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
+    TypedExpr::Apply(Box::new(e1), Box::new(e2))
+}
+
+pub fn eval(expr: &TypedExpr) -> Result<TypedExpr, EvalError> {
     use EvalError::*;
     use TypedExpr::*;
     use TypedSymbol::*;
-
-    dbg!(&expr);
 
     match expr {
         Val(_) => Ok(expr.clone()),
@@ -20,19 +22,6 @@ pub(crate) fn eval(expr: &TypedExpr) -> Result<TypedExpr, EvalError> {
             let f = eval(&f)?;
             let x = eval(&x)?;
             match f {
-                // Cons
-                Val(Cons(xs)) if xs.len() == 2 => {
-                    let e = eval(&x)?;
-                    let f0 = Apply(Box::new(e), Box::new(xs[0].clone()));
-                    let f1 = Apply(Box::new(f0), Box::new(xs[1].clone()));
-                    eval(&f1)
-                }
-                Val(Cons(xs)) => {
-                    let mut args = xs.clone();
-                    let e = eval(&x)?;
-                    args.push(e);
-                    Ok(Val(Cons(args)))
-                }
                 // Car
                 Val(Car(xs)) if xs.len() == 1 => Ok(xs[0].clone()),
                 Val(Car(xs)) => {
@@ -47,6 +36,78 @@ pub(crate) fn eval(expr: &TypedExpr) -> Result<TypedExpr, EvalError> {
                     let e = eval(&x)?;
                     Ok(Val(Cdr(vec![e])))
                 }
+                // Cons
+                Val(Cons(xs)) if xs.len() == 2 => {
+                    // ap ap ap cons x0 x1 x2   =   ap ap x2 x0 x1
+                    let x0 = xs[0].clone();
+                    let x1 = xs[1].clone();
+                    let x2 = eval(&x)?;
+
+                    let v = app(app(x2, x0), x1);
+                    eval(&v)
+                }
+                Val(Cons(xs)) => {
+                    let mut args = xs.clone();
+                    let e = eval(&x)?;
+                    args.push(e);
+                    Ok(Val(Cons(args)))
+                }
+                // B-Combinator
+                Val(BComb(xs)) if xs.len() == 2 => {
+                    // ap ap ap b x0 x1 x2   =   ap x0 ap x1 x2
+                    let x0 = xs[0].clone();
+                    let x1 = xs[1].clone();
+                    let x2 = eval(&x)?;
+
+                    let v = app(x0, app(x1, x2));
+                    eval(&v)
+                }
+                Val(BComb(xs)) => {
+                    assert!(xs.len() < 2);
+                    let mut args = xs.clone();
+                    let e = eval(&x)?;
+                    args.push(e);
+                    Ok(Val(BComb(args)))
+                }
+                // C-Combinator
+                Val(CComb(xs)) if xs.len() == 2 => {
+                    // ap ap ap c x0 x1 x2   =   ap ap x0 x2 x1
+                    let x0 = xs[0].clone();
+                    let x1 = xs[1].clone();
+                    let x2 = eval(&x)?;
+
+                    let v = app(app(x0, x2), x1);
+                    eval(&v)
+                }
+                Val(CComb(xs)) => {
+                    assert!(xs.len() < 2);
+                    let mut args = xs.clone();
+                    let e = eval(&x)?;
+                    args.push(e);
+                    Ok(Val(CComb(args)))
+                }
+                // S-Combinator
+                Val(SComb(xs)) if xs.len() == 2 => {
+                    // ap ap ap s x0 x1 x2   =   ap ap x0 x2 ap x1 x2
+                    let x0 = xs[0].clone();
+                    let x1 = xs[1].clone();
+                    let x2 = eval(&x)?;
+
+                    let v = app(app(x0, x2.clone()), app(x1, x2));
+                    eval(&v)
+                }
+                Val(SComb(xs)) => {
+                    assert!(xs.len() < 2);
+                    let mut args = xs.clone();
+                    let e = eval(&x)?;
+                    args.push(e);
+                    Ok(Val(SComb(args)))
+                }
+                // I-Combinator
+                Val(IComb) => {
+                    // ap i x0   =   x0
+                    eval(&x)
+                }
                 t => {
                     dbg!(t);
                     Err(Todo)
@@ -59,10 +120,6 @@ pub(crate) fn eval(expr: &TypedExpr) -> Result<TypedExpr, EvalError> {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    fn app(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
-        TypedExpr::Apply(Box::new(e1), Box::new(e2))
-    }
 
     fn number(x: i128) -> TypedExpr {
         TypedExpr::Val(TypedSymbol::Number(x))
