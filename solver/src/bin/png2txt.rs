@@ -51,7 +51,7 @@ fn main() {
             if vis[x][y] {
                 continue;
             }
-            match decode::get(&arr, x, y) {
+            match decode::get_rectangle(&arr, x, y) {
                 None => continue,
                 Some((x, y, h, w)) => {
                     for cx in x..x + h {

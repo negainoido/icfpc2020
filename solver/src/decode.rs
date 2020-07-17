@@ -8,7 +8,11 @@
 /// v
 /// x
 ///
-pub fn get(arr: &Vec<Vec<bool>>, x: usize, y: usize) -> Option<(usize, usize, usize, usize)> {
+pub fn get_rectangle(
+    arr: &Vec<Vec<bool>>,
+    x: usize,
+    y: usize,
+) -> Option<(usize, usize, usize, usize)> {
     if x + 1 >= arr.len() || y + 1 >= arr[0].len() {
         return None;
     }
