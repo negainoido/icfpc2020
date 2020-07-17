@@ -53,7 +53,7 @@ fn test() {
 
     let task = Task::new(&input);
     let mut expected_expr_map = HashMap::new();
-    &mut expected_expr_map.insert(
+    expected_expr_map.insert(
         1029,
         expr::parse(&vec![
             Symbol::App,
@@ -67,7 +67,7 @@ fn test() {
             Symbol::Nil,
         ]),
     );
-    &mut expected_expr_map.insert(
+    expected_expr_map.insert(
         1032,
         expr::parse(&vec![
             Symbol::App,
