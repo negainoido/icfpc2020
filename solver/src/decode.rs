@@ -1,8 +1,12 @@
 #![allow(unused)]
 use crate::symbol::Symbol;
 
-fn lines2expr(arr: &Vec<Vec<bool>>, l: usize) -> Option<(Vec<Symbol>, usize)> {
+fn lines2expr(arr: &Vec<Vec<bool>>, x: usize, y: usize) -> Option<(Vec<Symbol>, usize)> {
     unimplemented!("lines2vec");
+}
+
+fn is_zeroline(line: &Vec<bool>) -> bool {
+    line.iter().all(|x| !x)
 }
 
 pub fn table2exprs(arr: &Vec<Vec<bool>>) -> Vec<Vec<Symbol>> {
@@ -10,13 +14,30 @@ pub fn table2exprs(arr: &Vec<Vec<bool>>) -> Vec<Vec<Symbol>> {
     let mut l = 0;
     let mut exprs = Vec::<Vec<Symbol>>::new();
     while l < h {
-        match lines2expr(&arr, l) {
+        // Skip the zero line.
+        if (is_zeroline(&arr[l])) {
+            l += 1;
+            continue;
+        }
+        // l is not zero line now.
+        // find next zero line.
+        let mut next_zl = l + 1;
+        while next_zl < h {
+            if (is_zeroline(&arr[next_zl])) {
+                break;
+            }
+            next_zl += 1;
+        }
+
+        match lines2expr(&arr, l, h) {
             None => panic!("Failed parsing"),
             Some((expr, l_inc)) => {
                 exprs.push(expr);
                 l += l_inc
             }
         }
+        // The next start is the next line of next zero line.
+        l = next_zl + 1;
     }
 
     exprs
