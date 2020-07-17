@@ -1,3 +1,5 @@
+use crate::encode;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Symbol {
     Number(i128),
@@ -24,8 +26,20 @@ pub enum Symbol {
 
 use Symbol::*;
 impl Symbol {
-    const OPS: [Symbol; 16] = [
-        App, Eq, Succ, Pred, Sum, Prod, Div, True, False, BigEq, Less, Mod, DeMod, Lpar, Rpar, Sep,
+    const SHAPE_OPS: [Symbol; 5] = [App, Eq, Lpar, Rpar, Sep];
+
+    const NUM_OPS: [(Symbol, u32); 11] = [
+        (Succ, 417),
+        (Pred, 401),
+        (Sum, 365),
+        (Prod, 146),
+        (Div, 40),
+        (True, 2),
+        (False, 8),
+        (BigEq, 448),
+        (Less, 416),
+        (Mod, 170),
+        (DeMod, 341),
     ];
 
     fn str2vec(s: &str) -> Vec<Vec<bool>> {
@@ -168,10 +182,13 @@ impl Symbol {
         }
     }
 
-    fn shape_eq(square: (usize, usize, usize, usize), image: &Vec<Vec<bool>>, op: Symbol) -> bool {
+    fn shape_eq(
+        square: (usize, usize, usize, usize),
+        image: &Vec<Vec<bool>>,
+        shape: &Vec<Vec<bool>>,
+    ) -> bool {
         let (x, y, height, width) = square;
-        let shape = op.shape();
-        if x != shape.len() || y != shape[0].len() {
+        if height != shape.len() || width != shape[0].len() {
             false
         } else {
             for i in 0..height {
@@ -183,6 +200,24 @@ impl Symbol {
             }
             true
         }
+    }
+
+    /// Decodes a shape whose shape is based on a number.
+    fn from_num_shape(
+        x: usize,
+        y: usize,
+        height: usize,
+        width: usize,
+        image: &Vec<Vec<bool>>,
+    ) -> Option<Self> {
+        for &(sym, num) in Self::NUM_OPS.iter() {
+            let mut shape = encode::encode_num(num as i32);
+            shape[0][0] = true;
+            if Symbol::shape_eq((x, y, height, width), &image, &shape) {
+                return Some(sym);
+            }
+        }
+        None
     }
 
     pub fn from(
@@ -200,8 +235,16 @@ impl Symbol {
                 return Some(Number(num));
             }
         }
-        for &op in Self::OPS.iter() {
-            if Symbol::shape_eq((x, y, height, width), &image, op) {
+
+        // For number-based symbols
+        if let Some(sym) = Symbol::from_num_shape(x, y, height, width, &image) {
+            return Some(sym);
+        }
+
+        // For special shape symbols
+        for &op in Self::SHAPE_OPS.iter() {
+            let shape = op.shape();
+            if Symbol::shape_eq((x, y, height, width), &image, &shape) {
                 return Some(op);
             }
         }
@@ -322,6 +365,20 @@ mod tests {
             );
             assert_eq!(Symbol::as_number((0, 0, 4, 3), &image), Some((-13, false)))
         }
+    }
+
+    #[test]
+    fn test_from_num_symbol() {
+        let image = vec![
+            vec![true, true, true, true],
+            vec![true, true, false, false],
+            vec![true, false, false, true],
+            vec![true, false, true, true],
+        ];
+        assert_eq!(
+            Symbol::from_num_shape(0, 0, 4, 4, &image),
+            Some(Symbol::Succ)
+        );
     }
 
     #[test]
