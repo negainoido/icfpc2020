@@ -153,21 +153,21 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 Val(Div(xs)) if xs.len() == 1 => {
                     let x_num = xs[0];
                     let x = eval(&x, env)?;
-                    let x_den = x.get_number().unwrap();
+                    let x_den = x.get_number().ok_or_else(|| NumberIsExpected(x))?;
                     Ok(Val(Number(x_num / x_den)))
                 }
                 Val(Div(xs)) => {
                     assert_eq!(xs.len(), 0);
                     let mut args = vec![];
                     let x_num = eval(&x, env)?;
-                    args.push(x_num.get_number().unwrap());
+                    args.push(x_num.get_number().ok_or_else(|| NumberIsExpected(x))?);
                     Ok(Val(Div(args)))
                 }
                 // Less
                 Val(Less(xs)) if xs.len() == 1 => {
                     let x = eval(&x, env)?;
                     let x0 = xs[0];
-                    let x1 = x.get_number().unwrap();
+                    let x1 = x.get_number().ok_or_else(|| NumberIsExpected(x))?;
                     if x0 < x1 {
                         Ok(Val(True(vec![])))
                     } else {
@@ -178,7 +178,7 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                     assert_eq!(xs.len(), 0);
                     let mut args = vec![];
                     let x0 = eval(&x, env)?;
-                    args.push(x0.get_number().unwrap());
+                    args.push(x0.get_number().ok_or_else(|| NumberIsExpected(x))?);
                     Ok(Val(Less(args)))
                 }
                 t => {
