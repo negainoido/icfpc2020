@@ -11,6 +11,11 @@ fn main() {
     let response: ureq::Response =
         ureq::get(&format!("{}?player_key={}", server_url, player_key)).call();
 
+    if let Some(error) = response.synthetic_error() {
+        eprintln!("{}", error);
+        return;
+    }
+
     let text = response.into_string().unwrap();
     println!("text {}", text)
 }
