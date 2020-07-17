@@ -139,18 +139,40 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                     Ok(Val(False(args)))
                 }
                 // Sum (Add)
-                Val(Sum { arity, args }) => {
-                    let x = eval(&x, env)?;
-                    let n: i128 = x.get_number().ok_or_else(|| NumberIsExpected(x))?;
-
-                    if args.len() + 1 == (arity as usize) {
-                        let v = n + args.iter().sum::<i128>();
-                        Ok(Val(Number(v)))
-                    } else {
-                        let mut args = args.clone();
-                        args.push(n);
-                        Ok(Val(Sum { arity, args }))
+                Val(Sum { arity, args }) if args.len() + 1 == (arity as usize) => {
+                    let mut ret: i128 = eval(&x, env)?
+                        .get_number()
+                        .ok_or_else(|| NumberIsExpected(x))?;
+                    for arg in args {
+                        let n = eval(&arg, env)?
+                            .get_number()
+                            .ok_or_else(|| NumberIsExpected(arg))?;
+                        ret = ret + n;
                     }
+                    Ok(Val(Number(ret)))
+                }
+                Val(Sum { arity, args }) => {
+                    let mut args = args.clone();
+                    args.push(x);
+                    Ok(Val(Sum { arity, args }))
+                }
+                // Product
+                Val(Prod { arity, args }) if args.len() + 1 == (arity as usize) => {
+                    let mut ret: i128 = eval(&x, env)?
+                        .get_number()
+                        .ok_or_else(|| NumberIsExpected(x))?;
+                    for arg in args {
+                        let n = eval(&arg, env)?
+                            .get_number()
+                            .ok_or_else(|| NumberIsExpected(arg))?;
+                        ret = ret * n;
+                    }
+                    Ok(Val(Number(ret)))
+                }
+                Val(Prod { arity, args }) => {
+                    let mut args = args.clone();
+                    args.push(x);
+                    Ok(Val(Prod { arity, args }))
                 }
                 Val(Neg) => {
                     let x = eval(&x, env)?;
