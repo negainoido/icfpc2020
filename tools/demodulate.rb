@@ -21,7 +21,7 @@ def demodulate(s)
 		end
 		s.shift
 		len *= 4
-		num =  s[0..len-1].reverse.join("").to_i(2)
+		num =  s[0..len-1].join("").to_i(2)
 		res << sign * num
 		len.times { s.shift }
 	end
@@ -42,4 +42,7 @@ p demodulate("110110000111011111100001001101010110011100".split(""))
 
 
 p demodulate("110110000111011111100001001101010110011100".split(""))
+
+p demodulate("110110000111011111100001001101001001111000".split(""))
+
 
