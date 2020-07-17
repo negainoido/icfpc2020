@@ -1,0 +1,13 @@
+steps:
+
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    docker pull gcr.io/$PROJECT_ID/simulator || true
+    cd ./simulator
+    docker build --cache-from gcr.io/$PROJECT_ID/simulator \
+      -t gcr.io/$PROJECT_ID/simulator:$COMMIT_SHA \
+      -t gcr.io/$PROJECT_ID/simulator .
+  waitFor: ['-']
