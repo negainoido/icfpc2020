@@ -37,6 +37,9 @@ impl Symbol {
 
     fn is_number(square: (usize, usize, usize, usize), image: &Vec<Vec<bool>>) -> bool {
         let (x, y, height, width) = square;
+        if width <= 1 || height <= 1 {
+            return false;
+        }
         if image[x][y] {
             return false;
         }
@@ -65,9 +68,6 @@ impl Symbol {
         image: &Vec<Vec<bool>>,
     ) -> Option<(i128, bool)> {
         let (x, y, height, width) = square;
-        if width <= 1 || height <= 1 {
-            return None;
-        }
         if height == width || height == width + 1 {
             let sign = if height == width { 1 } else { -1 };
             let is_num = Symbol::is_number(square, &image);
