@@ -25,14 +25,29 @@ impl Symbol {
         App, Eq, Succ, Pred, Sum, Prod, Div, True, False, BigEq, Less, Mod, DeMod,
     ];
 
+    fn str2vec(s: &str) -> Vec<Vec<bool>> {
+        let mut v = vec![];
+
+        for i in s.trim().split("\n") {
+            let i = i.trim();
+            if i.is_empty() {
+                continue;
+            }
+            v.push(i.trim().chars().map(|x| x == '#').collect());
+        }
+        v
+    }
+
     pub fn shape(&self) -> Vec<Vec<bool>> {
-        let ss = match self {
-            App => vec!["##", "#."],
+        match self {
+            App => Symbol::str2vec(
+                r#"
+##
+#.
+"#,
+            ),
             _ => unimplemented!(),
-        };
-        ss.iter()
-            .map(|&line| line.chars().map(|c| c == '#').collect())
-            .collect()
+        }
     }
 
     fn is_number(square: (usize, usize, usize, usize), image: &Vec<Vec<bool>>) -> bool {
@@ -176,5 +191,29 @@ mod tests {
         ];
         assert_eq!(Symbol::from(1, 1, 2, 2, &image), Some(Symbol::App));
         assert_eq!(Symbol::from(0, 0, 1, 2, &image), None);
+    }
+
+    #[test]
+    fn test_str2vec() {
+        assert_eq!(
+            Symbol::str2vec(
+                r#"
+#.
+##
+"#
+            ),
+            vec![vec![true, false], vec![true, true]]
+        );
+
+        assert_eq!(
+            Symbol::str2vec(
+                r#"
+#.
+
+##
+"#
+            ),
+            vec![vec![true, false], vec![true, true]]
+        );
     }
 }
