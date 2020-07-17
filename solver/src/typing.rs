@@ -19,6 +19,8 @@ pub enum TypedSymbol {
     Neg,
     Div(Vec<i128>),
     Less(Vec<i128>),
+    IsNil,
+    BigEq(Vec<i128>),
 }
 
 impl TypedSymbol {
@@ -45,6 +47,8 @@ impl TypedSymbol {
             Symbol::Neg => Some(Neg),
             Symbol::Div => Some(Div(vec![])),
             Symbol::Less => Some(Less(vec![])),
+            Symbol::IsNil => Some(IsNil),
+            Symbol::BigEq => Some(BigEq(vec![])),
             _ => todo!("todo"),
         }
     }

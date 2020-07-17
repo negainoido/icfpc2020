@@ -7,6 +7,7 @@ use crate::typing::*;
 #[derive(Debug)]
 pub enum EvalError {
     NumberIsExpected(TypedExpr),
+    ListIsExpected(TypedExpr),
     Todo,
 }
 
@@ -187,6 +188,31 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                     args.push(x0.get_number().ok_or_else(|| NumberIsExpected(x))?);
                     Ok(Val(Less(args)))
                 }
+                Val(IsNil) => {
+                    let e = eval(&x, env)?;
+                    match e {
+                        Val(Nil) => Ok(Val(True(vec![]))),
+                        Val(Cons(_)) => Ok(Val(False(vec![]))),
+                        _ => Err(ListIsExpected(e)),
+                    }
+                }
+                Val(BigEq(xs)) if xs.len() == 1 => {
+                    let x_num = xs[0];
+                    let y = eval(&x, env)?;
+                    let y_num = y.get_number().ok_or_else(|| NumberIsExpected(y))?;
+                    if x_num == y_num {
+                        Ok(Val(True(vec![])))
+                    } else {
+                        Ok(Val(False(vec![])))
+                    }
+                }
+                Val(BigEq(xs)) => {
+                    assert_eq!(xs.len(), 0);
+                    let mut args = vec![];
+                    let x_num = eval(&x, env)?;
+                    args.push(x_num.get_number().ok_or_else(|| NumberIsExpected(x))?);
+                    Ok(Val(BigEq(args)))
+                }
                 t => {
                     dbg!(t);
                     Err(Todo)
@@ -245,6 +271,19 @@ mod test {
             arity,
             args: vec![],
         })
+    }
+
+    fn big_eq(x1: TypedExpr, x2: TypedExpr) -> TypedExpr {
+        let eq = TypedExpr::Val(TypedSymbol::BigEq(vec![]));
+        app(app(eq, x1), x2)
+    }
+
+    fn t() -> TypedExpr {
+        TypedExpr::Val(TypedSymbol::True(vec![]))
+    }
+
+    fn f() -> TypedExpr {
+        TypedExpr::Val(TypedSymbol::False(vec![]))
     }
 
     #[test]
@@ -388,5 +427,26 @@ mod test {
 
         let expr = app(app(sum_n(2), number(-100)), number(101));
         assert_eq!(number(1), eval(&expr, &env).unwrap());
+    }
+
+    #[test]
+    fn test_is_nil() {
+        use TypedExpr::*;
+        use TypedSymbol::*;
+
+        let env = HashMap::new();
+        let expr = app(Val(IsNil), nil());
+        assert_eq!(t(), eval(&expr, &env).unwrap());
+        let expr = app(Val(IsNil), cons(number(1), nil()));
+        assert_eq!(f(), eval(&expr, &env).unwrap());
+    }
+
+    #[test]
+    fn test_big_eq() {
+        let env = HashMap::new();
+        let expr = big_eq(number(1), number(1));
+        assert_eq!(t(), eval(&expr, &env).unwrap());
+        let expr = big_eq(number(1), number(0));
+        assert_eq!(f(), eval(&expr, &env).unwrap());
     }
 }
