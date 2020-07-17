@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use crate::expr;
 use crate::expr::Expr;
 use crate::symbol::Symbol;
-use crate::symbol::Symbol::Variable;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Task {
