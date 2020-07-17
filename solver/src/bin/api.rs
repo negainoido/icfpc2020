@@ -1,8 +1,10 @@
 fn main() -> std::io::Result<()> {
     let request = "1101000";
 
-    let resp = ureq::post("https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c")
-        .send_bytes(&request.as_bytes());
+    let resp = ureq::post(
+        "https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c",
+    )
+    .send_bytes(&request.as_bytes());
 
     // .ok() tells if response is 200-299.
     if resp.ok() {
