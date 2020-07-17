@@ -23,18 +23,16 @@ pub fn eval(expr: &TypedExpr) -> Result<TypedExpr, EvalError> {
             let x = eval(&x)?;
             match f {
                 // Car
-                Val(Car(xs)) if xs.len() == 1 => Ok(xs[0].clone()),
-                Val(Car(xs)) => {
-                    assert!(xs.len() == 0);
-                    let e = eval(&x)?;
-                    Ok(Val(Car(vec![e])))
+                Val(Car) => {
+                    // ap car x   =   ap x t
+                    let v = app(x, Val(True(vec![])));
+                    eval(&v)
                 }
                 // Cdr
-                Val(Cdr(xs)) if xs.len() == 1 => Ok(xs[1].clone()),
-                Val(Cdr(xs)) => {
-                    assert!(xs.len() == 0);
-                    let e = eval(&x)?;
-                    Ok(Val(Cdr(vec![e])))
+                Val(Cdr) => {
+                    // ap cdr x2   =   ap x2 f
+                    let v = app(x, Val(False(vec![])));
+                    eval(&v)
                 }
                 // Cons
                 Val(Cons(xs)) if xs.len() == 2 => {
@@ -108,6 +106,32 @@ pub fn eval(expr: &TypedExpr) -> Result<TypedExpr, EvalError> {
                     // ap i x0   =   x0
                     eval(&x)
                 }
+                // True
+                Val(True(xs)) if xs.len() == 1 => {
+                    // ap ap t x0 x1   =   x0
+                    let x0 = xs[0].clone();
+                    Ok(x0)
+                }
+                Val(True(xs)) => {
+                    assert_eq!(xs.len(), 0);
+                    let mut args = xs.clone();
+                    let e = eval(&x)?;
+                    args.push(e);
+                    Ok(Val(True(args)))
+                }
+                // False
+                Val(False(xs)) if xs.len() == 1 => {
+                    // ap ap f x0 x1   =   x1
+                    let x1 = xs[1].clone();
+                    Ok(x1)
+                }
+                Val(False(xs)) => {
+                    assert_eq!(xs.len(), 0);
+                    let mut args = xs.clone();
+                    let e = eval(&x)?;
+                    args.push(e);
+                    Ok(Val(False(args)))
+                }
                 t => {
                     dbg!(t);
                     Err(Todo)
@@ -130,7 +154,7 @@ mod test {
     }
 
     fn car() -> TypedExpr {
-        TypedExpr::Val(TypedSymbol::Car(vec![]))
+        TypedExpr::Val(TypedSymbol::Car)
     }
 
     fn cons(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
@@ -141,7 +165,7 @@ mod test {
     #[test]
     fn test_cons() {
         let pair = cons(number(1), nil());
-        let x = app(pair, car());
+        let x = app(car(), pair);
 
         let e = eval(&x).unwrap();
         assert_eq!(e, number(1));

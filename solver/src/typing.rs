@@ -6,12 +6,14 @@ pub enum TypedSymbol {
     Number(i128),
     Nil,
     Cons(Vec<TypedExpr>),
-    Car(Vec<TypedExpr>),
-    Cdr(Vec<TypedExpr>),
+    Car,
+    Cdr,
     BComb(Vec<TypedExpr>),
     CComb(Vec<TypedExpr>),
     SComb(Vec<TypedExpr>),
     IComb,
+    True(Vec<TypedExpr>),
+    False(Vec<TypedExpr>),
 }
 
 impl TypedSymbol {
@@ -22,12 +24,14 @@ impl TypedSymbol {
             Symbol::Number(i) => Some(Number(*i)),
             Symbol::Nil => Some(Nil),
             Symbol::Cons => Some(Cons(vec![])),
-            Symbol::Car => Some(Car(vec![])),
-            Symbol::Cdr => Some(Cdr(vec![])),
+            Symbol::Car => Some(Car),
+            Symbol::Cdr => Some(Cdr),
             Symbol::BComb => Some(BComb(vec![])),
             Symbol::CComb => Some(CComb(vec![])),
             Symbol::SComb => Some(SComb(vec![])),
             Symbol::IComb => Some(IComb),
+            Symbol::True => Some(True(vec![])),
+            Symbol::False => Some(False(vec![])),
             _ => todo!("todo"),
         }
     }
