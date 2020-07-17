@@ -58,8 +58,13 @@ impl Task {
 
     // Currently, it works only when target statement doesn't contain any variable
     pub fn solve(&self) -> TypedExpr {
+        let env = self
+            .variable_to_expr_map
+            .iter()
+            .map(|(k, v)| (*k, TypedExpr::typing(&v).unwrap()))
+            .collect();
         let target_expr = TypedExpr::typing(&self.target).unwrap();
-        eval::eval(&target_expr).unwrap()
+        eval::eval(&target_expr, &env).unwrap()
     }
 
     fn execution_order(variable_ids: &Vec<i128>, depend: &HashMap<i128, Vec<i128>>) -> Vec<i128> {

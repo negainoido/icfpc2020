@@ -14,6 +14,7 @@ pub enum TypedSymbol {
     IComb,
     True(Vec<TypedExpr>),
     False(Vec<TypedExpr>),
+    Variable(i128),
 }
 
 impl TypedSymbol {
@@ -32,6 +33,7 @@ impl TypedSymbol {
             Symbol::IComb => Some(IComb),
             Symbol::True => Some(True(vec![])),
             Symbol::False => Some(False(vec![])),
+            Symbol::Variable(i) => Some(Variable(*i)),
             _ => todo!("todo"),
         }
     }
