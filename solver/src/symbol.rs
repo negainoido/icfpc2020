@@ -100,7 +100,7 @@ impl Symbol {
         }
         if height == width + 1 {
             for j in 1..width {
-                if image[height - 1][j] {
+                if image[x + height - 1][y + j] {
                     return false;
                 }
             }
@@ -266,12 +266,14 @@ mod tests {
 
     #[test]
     fn test_number() {
-        let image = vec![
-            vec![false, false, true, false],
-            vec![false, true, false, true],
-            vec![false, false, true, true],
-            vec![false, true, true, false],
-        ];
+        let image = Symbol::str2vec(
+            "
+            ..#.
+            .#.#
+            ..##
+            .##.
+            ",
+        );
         assert_eq!(Symbol::as_number((0, 0, 2, 2), &image), Some((1, false)));
         assert_eq!(Symbol::as_number((0, 1, 2, 2), &image), Some((0, true)));
         assert_eq!(Symbol::as_number((2, 1, 2, 2), &image), Some((1, true)));
@@ -280,21 +282,44 @@ mod tests {
         assert_eq!(Symbol::as_number((1, 2, 3, 2), &image), Some((-1, true)));
 
         {
-            let image = vec![
-                vec![false, true, true],
-                vec![true, true, false],
-                vec![true, true, true],
-                vec![true, false, false],
-            ];
+            let image = Symbol::str2vec(
+                "
+                .#
+                #.
+                ",
+            );
+            assert_eq!(Symbol::as_number((0, 0, 2, 2), &image), Some((0, true)))
+        }
+        {
+            let image = Symbol::str2vec(
+                "
+                .#
+                ##
+                #.
+                ",
+            );
+            assert_eq!(Symbol::as_number((0, 0, 3, 2), &image), Some((-1, true)))
+        }
+        {
+            let image = Symbol::str2vec(
+                "
+                .##
+                ##.
+                ###
+                #..
+            ",
+            );
             assert_eq!(Symbol::as_number((0, 0, 4, 3), &image), Some((-13, true)))
         }
         {
-            let image = vec![
-                vec![false, true, true],
-                vec![true, true, false],
-                vec![true, true, true],
-                vec![true, true, false],
-            ];
+            let image = Symbol::str2vec(
+                "
+                .##
+                ##.
+                ###
+                ##.
+                ",
+            );
             assert_eq!(Symbol::as_number((0, 0, 4, 3), &image), Some((-13, false)))
         }
     }
