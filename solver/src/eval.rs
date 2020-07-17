@@ -1,7 +1,8 @@
 #![allow(dead_code)]
 
-use crate::typing::*;
 use std::collections::HashMap;
+
+use crate::typing::*;
 
 #[derive(Debug)]
 pub enum EvalError {
@@ -13,10 +14,7 @@ fn app(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
     TypedExpr::Apply(Box::new(e1), Box::new(e2))
 }
 
-pub(crate) fn eval(
-    expr: &TypedExpr,
-    env: &HashMap<i128, TypedExpr>,
-) -> Result<TypedExpr, EvalError> {
+pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExpr, EvalError> {
     use EvalError::*;
     use TypedExpr::*;
     use TypedSymbol::*;
@@ -151,6 +149,37 @@ pub(crate) fn eval(
                         args.push(n);
                         Ok(Val(Sum { arity, args }))
                     }
+                } // Div
+                Val(Div(xs)) if xs.len() == 1 => {
+                    let x_num = xs[0];
+                    let x = eval(&x, env)?;
+                    let x_den = x.get_number().unwrap();
+                    Ok(Val(Number(x_num / x_den)))
+                }
+                Val(Div(xs)) => {
+                    assert_eq!(xs.len(), 0);
+                    let mut args = vec![];
+                    let x_num = eval(&x, env)?;
+                    args.push(x_num.get_number().unwrap());
+                    Ok(Val(Div(args)))
+                }
+                // Less
+                Val(Less(xs)) if xs.len() == 1 => {
+                    let x = eval(&x, env)?;
+                    let x0 = xs[0];
+                    let x1 = x.get_number().unwrap();
+                    if x0 < x1 {
+                        Ok(Val(True(vec![])))
+                    } else {
+                        Ok(Val(False(vec![])))
+                    }
+                }
+                Val(Less(xs)) => {
+                    assert_eq!(xs.len(), 0);
+                    let mut args = vec![];
+                    let x0 = eval(&x, env)?;
+                    args.push(x0.get_number().unwrap());
+                    Ok(Val(Less(args)))
                 }
                 t => {
                     dbg!(t);
@@ -165,8 +194,22 @@ pub(crate) fn eval(
 mod test {
     use super::*;
 
+    fn empty_env() -> HashMap<i128, TypedExpr> {
+        HashMap::new()
+    }
+
     fn number(x: i128) -> TypedExpr {
         TypedExpr::Val(TypedSymbol::Number(x))
+    }
+
+    fn div(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
+        let d = TypedExpr::Val(TypedSymbol::Div(vec![]));
+        app(app(d, e1), e2)
+    }
+
+    fn less(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
+        let l = TypedExpr::Val(TypedSymbol::Less(vec![]));
+        app(app(l, e1), e2)
     }
 
     fn nil() -> TypedExpr {
@@ -194,11 +237,62 @@ mod test {
     }
 
     #[test]
+    fn test_div() {
+        let exp = div(number(5), number(2));
+        let e = eval(&exp, &empty_env()).unwrap();
+        assert_eq!(e, number(2))
+    }
+
+    #[test]
+    fn test_div_numerator_minus() {
+        // ap ap div -5 3   =   -1
+        let exp = div(number(-5), number(3));
+        let e = eval(&exp, &empty_env()).unwrap();
+        assert_eq!(e, number(-1))
+    }
+
+    #[test]
+    fn test_div_denominator_minus() {
+        // ap ap div 5 -3   =   -1
+        let exp = div(number(5), number(-3));
+        let e = eval(&exp, &empty_env()).unwrap();
+        assert_eq!(e, number(-1))
+    }
+
+    #[test]
+    fn test_div_num_den_minus() {
+        // ap ap div -5 -3   =   1
+        let exp = div(number(-5), number(-3));
+        let e = eval(&exp, &empty_env()).unwrap();
+        assert_eq!(e, number(1))
+    }
+
+    #[test]
+    fn test_less() {
+        use TypedExpr::Val;
+
+        // ap ap lt 0 -1   =   f
+        let exp0 = less(number(0), number(-1));
+        let e0 = eval(&exp0, &empty_env()).unwrap();
+        assert_eq!(e0, Val(TypedSymbol::False(vec![])));
+
+        // ap ap lt 0 0   =   f
+        let exp1 = less(number(0), number(0));
+        let e1 = eval(&exp1, &empty_env()).unwrap();
+        assert_eq!(e1, Val(TypedSymbol::False(vec![])));
+
+        // ap ap lt 0 1   =   t
+        let exp2 = less(number(0), number(1));
+        let e2 = eval(&exp2, &empty_env()).unwrap();
+        assert_eq!(e2, Val(TypedSymbol::True(vec![])));
+    }
+
+    #[test]
     fn test_cons() {
         let pair = cons(number(1), nil());
         let x = app(car(), pair);
 
-        let e = eval(&x, &HashMap::new()).unwrap();
+        let e = eval(&x, &empty_env()).unwrap();
         assert_eq!(e, number(1));
     }
 
@@ -214,7 +308,7 @@ mod test {
             Val(Number(7)),
             Val(Cons(vec![Val(Number(123)), Val(Nil)])),
         ]));
-        assert_eq!(expected, eval(&x, &HashMap::new()).unwrap());
+        assert_eq!(expected, eval(&x, &empty_env()).unwrap());
     }
 
     #[test]
