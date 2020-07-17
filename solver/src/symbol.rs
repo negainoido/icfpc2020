@@ -50,6 +50,13 @@ impl Symbol {
                 return false;
             }
         }
+        if height == width + 1 {
+            for j in 1..width {
+                if image[height - 1][j] {
+                    return false;
+                }
+            }
+        }
         true
     }
 
@@ -134,6 +141,25 @@ mod tests {
         assert_eq!(Symbol::as_number((0, 0, 3, 3), &image), Some((9, false)));
         assert_eq!(Symbol::as_number((2, 2, 2, 2), &image), Some((0, false)));
         assert_eq!(Symbol::as_number((1, 2, 3, 2), &image), Some((-1, true)));
+
+        {
+            let image = vec![
+                vec![false, true, true],
+                vec![true, true, false],
+                vec![true, true, true],
+                vec![true, false, false],
+            ];
+            assert_eq!(Symbol::as_number((0, 0, 4, 3), &image), Some((-13, true)))
+        }
+        {
+            let image = vec![
+                vec![false, true, true],
+                vec![true, true, false],
+                vec![true, true, true],
+                vec![true, true, false],
+            ];
+            assert_eq!(Symbol::as_number((0, 0, 4, 3), &image), Some((-13, false)))
+        }
     }
 
     #[test]
