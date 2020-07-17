@@ -34,7 +34,7 @@ pub enum Symbol {
     Lpar,
     Rpar,
     Sep,
-    Target
+    Target,
 }
 
 impl Symbol {
@@ -243,7 +243,7 @@ impl Symbol {
             "nil" => Some(Symbol::Nil),
             "s" => Some(Symbol::SComb),
             "t" => Some(Symbol::TComb),
-            _ => None
+            _ => None,
         };
 
         if let Some(symbol) = option_symbol {
