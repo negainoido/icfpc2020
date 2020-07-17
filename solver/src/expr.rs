@@ -3,7 +3,7 @@ use crate::symbol::Symbol;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expr {
     Apply(Box<Expr>, Box<Expr>),
-    Sym(Symbol),
+    Val(Symbol),
 }
 
 pub fn parse(symbols: &Vec<Symbol>) -> Expr {
@@ -15,7 +15,7 @@ pub fn parse(symbols: &Vec<Symbol>) -> Expr {
                 new_symbols.push(e.clone());
                 app_count += 1;
             }
-            Symbol::Pred => {
+            Symbol::Prod => {
                 new_symbols.push(Symbol::PredN(app_count));
                 app_count = 0;
             }
@@ -44,7 +44,7 @@ fn parse_internal(symbols: &[Symbol], cur: &mut usize) -> Expr {
         }
         _ => {
             *cur += 1;
-            return Expr::Sym(symbols[*cur - 1].clone());
+            return Expr::Val(symbols[*cur - 1].clone());
         }
     }
 }
@@ -54,13 +54,25 @@ mod tests {
     use super::Expr::*;
     use super::*;
     use crate::symbol::Symbol::*;
+
+    #[test]
+    fn parse_simple_cons() {
+        let symbols = vec![App, App, Cons, Number(1), Number(2)];
+        let expr = parse(&symbols);
+        let expected_expr = Apply(
+            Box::new(Apply(Box::new(Val(Cons)), Box::new(Val(Number(1))))),
+            Box::new(Val(Number(2))),
+        );
+        assert_eq!(expr, expected_expr);
+    }
+
     #[test]
     fn parse_simple_sum() {
         let symbols = vec![App, App, Sum, Number(1), Number(2)];
         let expr = parse(&symbols);
         let expected_expr = Apply(
-            Box::new(Apply(Box::new(Sym(SumN(2))), Box::new(Sym(Number(1))))),
-            Box::new(Sym(Number(2))),
+            Box::new(Apply(Box::new(Val(SumN(2))), Box::new(Val(Number(1))))),
+            Box::new(Val(Number(2))),
         );
         assert_eq!(expr, expected_expr);
     }
@@ -80,10 +92,10 @@ mod tests {
         ];
         let expr = parse(&symbols);
         let expected_expr = Apply(
-            Box::new(Apply(Box::new(Sym(SumN(2))), Box::new(Sym(Number(1))))),
+            Box::new(Apply(Box::new(Val(SumN(2))), Box::new(Val(Number(1))))),
             Box::new(Apply(
-                Box::new(Apply(Box::new(Sym(SumN(2))), Box::new(Sym(Number(2))))),
-                Box::new(Sym(Number(3))),
+                Box::new(Apply(Box::new(Val(SumN(2))), Box::new(Val(Number(2))))),
+                Box::new(Val(Number(3))),
             )),
         );
         assert_eq!(expr, expected_expr);
@@ -95,10 +107,10 @@ mod tests {
         let expr = parse(&symbols);
         let expected_expr = Apply(
             Box::new(Apply(
-                Box::new(Apply(Box::new(Sym(SumN(3))), Box::new(Sym(Number(1))))),
-                Box::new(Sym(Number(2))),
+                Box::new(Apply(Box::new(Val(SumN(3))), Box::new(Val(Number(1))))),
+                Box::new(Val(Number(2))),
             )),
-            Box::new(Sym(Number(3))),
+            Box::new(Val(Number(3))),
         );
         assert_eq!(expr, expected_expr);
     }
