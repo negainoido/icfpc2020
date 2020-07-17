@@ -17,14 +17,6 @@ struct Opt {
     // output: String,
 }
 
-// enum Symbol {
-//     SymNumber(i64),
-//     SymOperator(i32),
-//     SymVariable(i32),
-//     SymEllipsis,
-//     SymUnknown,
-// }
-
 fn main() {
     let opt: Opt = Opt::from_args();
     common_init(&opt.common);
