@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
-use crate::expr;
 use crate::expr::Expr;
 use crate::symbol::Symbol;
+use crate::typing::TypedExpr;
+use crate::{eval, expr};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Task {
@@ -33,6 +34,12 @@ impl Task {
             variable_to_expr_map,
             target: expr::parse(&target_symbols[2..].to_vec()),
         }
+    }
+
+    // Currently, it works only when target statement doesn't contain any variable
+    pub fn solve(&self) -> TypedExpr {
+        let target_expr = TypedExpr::typing(&self.target).unwrap();
+        eval::eval(&target_expr).unwrap()
     }
 
     fn string_to_symbols(s: &String, target: &str) -> Vec<Symbol> {

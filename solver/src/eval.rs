@@ -1,12 +1,13 @@
 #![allow(dead_code)]
+
 use crate::typing::*;
 
 #[derive(Debug)]
-enum EvalError {
+pub enum EvalError {
     Todo,
 }
 
-fn eval(expr: &TypedExpr) -> Result<TypedExpr, EvalError> {
+pub(crate) fn eval(expr: &TypedExpr) -> Result<TypedExpr, EvalError> {
     use EvalError::*;
     use TypedExpr::*;
     use TypedSymbol::*;

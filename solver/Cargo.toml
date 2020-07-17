@@ -30,3 +30,7 @@ name = "cympfh"
 
 [[bin]]
 name = "submission"
+
+
+[[bin]]
+name = "solver"
