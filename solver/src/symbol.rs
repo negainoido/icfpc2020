@@ -74,6 +74,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore]
     fn it_works() {
         let image = vec![
             vec![false, false, false],
@@ -82,6 +83,6 @@ mod tests {
             vec![false, false, false],
         ];
         assert_eq!(Symbol::from(1, 1, 2, 2, &image), Some(Symbol::App));
-        // assert_eq!(Symbol::from(0, 0, 1, 2, &image), None);
+        assert_eq!(Symbol::from(0, 0, 1, 2, &image), None);
     }
 }
