@@ -1,3 +1,27 @@
+#![allow(unused)]
+use crate::symbol::Symbol;
+
+fn lines2expr(arr: &Vec<Vec<bool>>, l: usize) -> Option<(Vec<Symbol>, usize)> {
+    unimplemented!("lines2vec");
+}
+
+pub fn table2exprs(arr: &Vec<Vec<bool>>) -> Vec<Vec<Symbol>> {
+    let h = arr.len();
+    let mut l = 0;
+    let mut exprs = Vec::<Vec<Symbol>>::new();
+    while l < h {
+        match lines2expr(&arr, l) {
+            None => panic!("Failed parsing"),
+            Some((expr, l_inc)) => {
+                exprs.push(expr);
+                l += l_inc
+            }
+        }
+    }
+
+    exprs
+}
+
 /// get returns rectangle of detected symbol having (x, y) as top left corner
 /// assuming following coordinate system.
 /// +----> y
