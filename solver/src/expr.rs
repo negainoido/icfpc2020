@@ -16,7 +16,7 @@ pub fn parse(symbols: &Vec<Symbol>) -> Expr {
                 app_count += 1;
             }
             Symbol::Prod => {
-                new_symbols.push(Symbol::PredN(app_count));
+                new_symbols.push(Symbol::ProdN(app_count));
                 app_count = 0;
             }
             Symbol::Sum => {

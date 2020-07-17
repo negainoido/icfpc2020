@@ -181,6 +181,21 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                     args.push(x0.get_number().ok_or_else(|| NumberIsExpected(x))?);
                     Ok(Val(Less(args)))
                 }
+                // Product
+                Val(Prod { arity, args }) => {
+                    let x = eval(&x, env)?;
+                    let n: i128 = x.get_number().ok_or_else(|| NumberIsExpected(x))?;
+
+                    if args.len() + 1 == (arity as usize) {
+                        dbg!(&args);
+                        let v = n * args.iter().product::<i128>();
+                        Ok(Val(Number(v)))
+                    } else {
+                        let mut args = args.clone();
+                        args.push(n);
+                        Ok(Val(Prod { arity, args }))
+                    }
+                }
                 t => {
                     dbg!(t);
                     Err(Todo)
@@ -231,6 +246,13 @@ mod test {
 
     fn sum_n(arity: u32) -> TypedExpr {
         TypedExpr::Val(TypedSymbol::Sum {
+            arity,
+            args: vec![],
+        })
+    }
+
+    fn prod_n(arity: u32) -> TypedExpr {
+        TypedExpr::Val(TypedSymbol::Prod {
             arity,
             args: vec![],
         })
@@ -370,5 +392,15 @@ mod test {
 
         let expr = app(app(sum_n(2), number(-100)), number(101));
         assert_eq!(number(1), eval(&expr, &env).unwrap());
+    }
+
+    #[test]
+    fn test_prod() {
+        let env = HashMap::new();
+        let expr = app(app(app(prod_n(3), number(2)), number(4)), number(8));
+        assert_eq!(number(64), eval(&expr, &env).unwrap());
+
+        let expr = app(app(prod_n(2), number(-100)), number(100));
+        assert_eq!(number(-10000), eval(&expr, &env).unwrap());
     }
 }
