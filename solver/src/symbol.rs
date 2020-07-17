@@ -17,12 +17,15 @@ pub enum Symbol {
     DeMod,
     // Neg,
     Ellipsis,
+    Lpar,
+    Rpar,
+    Sep,
 }
 
 use Symbol::*;
 impl Symbol {
-    const OPS: [Symbol; 13] = [
-        App, Eq, Succ, Pred, Sum, Prod, Div, True, False, BigEq, Less, Mod, DeMod,
+    const OPS: [Symbol; 16] = [
+        App, Eq, Succ, Pred, Sum, Prod, Div, True, False, BigEq, Less, Mod, DeMod, Lpar, Rpar, Sep,
     ];
 
     fn str2vec(s: &str) -> Vec<Vec<bool>> {
@@ -44,6 +47,33 @@ impl Symbol {
                 r#"
 ##
 #.
+"#,
+            ),
+            Lpar => Symbol::str2vec(
+                r#"
+..#
+.##
+###
+.##
+..#
+"#,
+            ),
+            Rpar => Symbol::str2vec(
+                r#"
+#..
+##.
+###
+##.
+#..
+"#,
+            ),
+            Sep => Symbol::str2vec(
+                r#"
+##
+##
+##
+##
+##
 "#,
             ),
             _ => unimplemented!(),
