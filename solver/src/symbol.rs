@@ -102,6 +102,19 @@ impl Symbol {
         }
     }
 
+    fn as_variable(square: (usize, usize, usize, usize), image: &Vec<Vec<bool>>) -> Option<i128> {
+        let (x, y, height, width) = square;
+        if height != width {
+            return None;
+        }
+        if let Some((num, _)) = Symbol::as_number((x + 1, y + 1, height - 2, width - 2), &image) {
+            let full = (1 << (width - 3).pow(2)) - 1;
+            Some(full ^ num)
+        } else {
+            None
+        }
+    }
+
     fn shape_eq(square: (usize, usize, usize, usize), image: &Vec<Vec<bool>>, op: Symbol) -> bool {
         let (x, y, height, width) = square;
         let shape = op.shape();
@@ -126,6 +139,9 @@ impl Symbol {
         width: usize,
         image: &Vec<Vec<bool>>,
     ) -> Option<Self> {
+        if let Some(id) = Symbol::as_variable((x, y, height, width), &image) {
+            return Some(Variable(id));
+        }
         if let Some((num, is_number)) = Symbol::as_number((x, y, height, width), &image) {
             if is_number {
                 return Some(Number(num));
@@ -144,6 +160,28 @@ impl Symbol {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_variable() {
+        {
+            let image = vec![
+                vec![true, true, true, true],
+                vec![true, true, false, true],
+                vec![true, false, true, true],
+                vec![true, true, true, true],
+            ];
+            assert_eq!(Symbol::as_variable((0, 0, 4, 4), &image), Some(0));
+        }
+        {
+            let image = vec![
+                vec![true, true, true, true],
+                vec![true, true, false, true],
+                vec![true, false, false, true],
+                vec![true, true, true, true],
+            ];
+            assert_eq!(Symbol::as_variable((0, 0, 4, 4), &image), Some(0));
+        }
+    }
 
     #[test]
     fn test_number() {
