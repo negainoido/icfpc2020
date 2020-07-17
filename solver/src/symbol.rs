@@ -44,37 +44,37 @@ impl Symbol {
     pub fn shape(&self) -> Vec<Vec<bool>> {
         match self {
             App => Symbol::str2vec(
-                r#"
+                "
 ##
 #.
-"#,
+",
             ),
             Lpar => Symbol::str2vec(
-                r#"
+                "
 ..#
 .##
 ###
 .##
 ..#
-"#,
+",
             ),
             Rpar => Symbol::str2vec(
-                r#"
+                "
 #..
 ##.
 ###
 ##.
 #..
-"#,
+",
             ),
             Sep => Symbol::str2vec(
-                r#"
+                "
 ##
 ##
 ##
 ##
 ##
-"#,
+",
             ),
             _ => unimplemented!(),
         }
@@ -227,21 +227,21 @@ mod tests {
     fn test_str2vec() {
         assert_eq!(
             Symbol::str2vec(
-                r#"
+                "
 #.
 ##
-"#
+"
             ),
             vec![vec![true, false], vec![true, true]]
         );
 
         assert_eq!(
             Symbol::str2vec(
-                r#"
+                "
 #.
 
 ##
-"#
+"
             ),
             vec![vec![true, false], vec![true, true]]
         );
