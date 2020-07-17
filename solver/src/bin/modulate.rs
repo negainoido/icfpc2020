@@ -1,21 +1,19 @@
-/*
+#[derive(Debug, Clone, PartialEq, Eq)]
 enum List {
     Cons(Box<List>, Box<List>),
     Integer(i128),
     Nil,
 }
-*/
 
-fn demodulate(a: &str) -> &str {
+fn do_demodulate(a: &str) -> (&str, List) {
     let prefix = &a[..2];
     if prefix == "11" {
         println!("cons");
-        let a = demodulate(&a[2..]);
-        let a = demodulate(a);
-        a
+        let (a, car) = do_demodulate(&a[2..]);
+        let (a, cdr) = do_demodulate(a);
+        return (a, List::Cons(Box::new(car), Box::new(cdr)));
     } else if prefix == "00" {
-        println!("nil");
-        &a[2..]
+        return (&a[2..], List::Nil);
     } else {
         let sign;
         if prefix == "01" {
@@ -40,11 +38,17 @@ fn demodulate(a: &str) -> &str {
                 res += 1;
             }
         }
-        println!("len {}, int {}", len, sign * res);
-        a
+        let a = &a[len..];
+        return (a, List::Integer(sign * res));
     }
 }
+fn demodulate(a: &str) -> List {
+    let (_, l) = do_demodulate(a);
+    return l;
+}
 fn main() {
-    let request = "1101000";
-    demodulate(request);
+    //    let request = "1101000";
+    let request = "110110000111011111100001001010100000110000";
+    let res = demodulate(request);
+    println!("result: {:?}", res);
 }
