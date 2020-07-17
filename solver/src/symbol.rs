@@ -7,9 +7,9 @@ pub enum Symbol {
     Eq,
     Succ,
     Pred,
-    PredN(i128), // Used only in the eval step.
+    PredN(u32), // Used only in the eval step.
     Sum,
-    SumN(i128), // Used only in the eval step.
+    SumN(u32), // Used only in the eval step.
     Variable(i128),
     Prod,
     Div,

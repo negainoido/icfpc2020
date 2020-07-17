@@ -8,7 +8,7 @@ pub enum Expr {
 
 pub fn parse(symbols: &Vec<Symbol>) -> Expr {
     let mut new_symbols = Vec::<Symbol>::new();
-    let mut app_count: i128 = 0;
+    let mut app_count: u32 = 0;
     for e in symbols {
         match e {
             Symbol::App => {

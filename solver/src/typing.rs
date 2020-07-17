@@ -15,6 +15,7 @@ pub enum TypedSymbol {
     True(Vec<TypedExpr>),
     False(Vec<TypedExpr>),
     Variable(i128),
+    Sum { arity: u32, args: Vec<i128> },
 }
 
 impl TypedSymbol {
@@ -34,6 +35,10 @@ impl TypedSymbol {
             Symbol::True => Some(True(vec![])),
             Symbol::False => Some(False(vec![])),
             Symbol::Variable(i) => Some(Variable(*i)),
+            Symbol::SumN(arity) => Some(Sum {
+                arity: *arity,
+                args: vec![],
+            }),
             _ => todo!("todo"),
         }
     }
@@ -55,6 +60,13 @@ impl TypedExpr {
                 (Some(t1), Some(t2)) => Some(Apply(Box::new(t1), Box::new(t2))),
                 _ => None,
             },
+        }
+    }
+
+    pub fn get_number(&self) -> Option<i128> {
+        match self {
+            TypedExpr::Val(TypedSymbol::Number(x)) => Some(*x),
+            _ => None,
         }
     }
 }

@@ -5,6 +5,7 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub enum EvalError {
+    NumberIsExpected(TypedExpr),
     Todo,
 }
 
@@ -137,6 +138,20 @@ pub(crate) fn eval(
                     args.push(e);
                     Ok(Val(False(args)))
                 }
+                // Sum (Add)
+                Val(Sum { arity, args }) => {
+                    let x = eval(&x, env)?;
+                    let n: i128 = x.get_number().ok_or_else(|| NumberIsExpected(x))?;
+
+                    if args.len() + 1 == (arity as usize) {
+                        let v = n + args.iter().sum::<i128>();
+                        Ok(Val(Number(v)))
+                    } else {
+                        let mut args = args.clone();
+                        args.push(n);
+                        Ok(Val(Sum { arity, args }))
+                    }
+                }
                 t => {
                     dbg!(t);
                     Err(Todo)
@@ -169,6 +184,13 @@ mod test {
 
     fn variable(x: i128) -> TypedExpr {
         TypedExpr::Val(TypedSymbol::Variable(x))
+    }
+
+    fn sum_n(arity: u32) -> TypedExpr {
+        TypedExpr::Val(TypedSymbol::Sum {
+            arity,
+            args: vec![],
+        })
     }
 
     #[test]
@@ -244,5 +266,15 @@ mod test {
         ]));
 
         assert_eq!(expected, eval(&e, &env).unwrap());
+    }
+
+    #[test]
+    fn test_sum() {
+        let env = HashMap::new();
+        let expr = app(app(app(sum_n(3), number(1)), number(2)), number(3));
+        assert_eq!(number(6), eval(&expr, &env).unwrap());
+
+        let expr = app(app(sum_n(2), number(-100)), number(101));
+        assert_eq!(number(1), eval(&expr, &env).unwrap());
     }
 }
