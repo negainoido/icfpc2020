@@ -16,6 +16,7 @@ pub enum TypedSymbol {
     False(Vec<TypedExpr>),
     Variable(i128),
     Sum { arity: u32, args: Vec<i128> },
+    Neg,
     Div(Vec<i128>),
     Less(Vec<i128>),
 }
@@ -41,6 +42,7 @@ impl TypedSymbol {
                 arity: *arity,
                 args: vec![],
             }),
+            Symbol::Neg => Some(Neg),
             Symbol::Div => Some(Div(vec![])),
             Symbol::Less => Some(Less(vec![])),
             _ => todo!("todo"),

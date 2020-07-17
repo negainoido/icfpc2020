@@ -149,7 +149,13 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                         args.push(n);
                         Ok(Val(Sum { arity, args }))
                     }
-                } // Div
+                }
+                Val(Neg) => {
+                    let x = eval(&x, env)?;
+                    let x = x.get_number().ok_or_else(|| NumberIsExpected(x))?;
+                    Ok(Val(Number(-x)))
+                }
+                // Div
                 Val(Div(xs)) if xs.len() == 1 => {
                     let x_num = xs[0];
                     let x = eval(&x, env)?;
@@ -202,6 +208,11 @@ mod test {
         TypedExpr::Val(TypedSymbol::Number(x))
     }
 
+    fn neg(e: TypedExpr) -> TypedExpr {
+        let n = TypedExpr::Val(TypedSymbol::Neg);
+        app(n, e)
+    }
+
     fn div(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
         let d = TypedExpr::Val(TypedSymbol::Div(vec![]));
         app(app(d, e1), e2)
@@ -234,6 +245,13 @@ mod test {
             arity,
             args: vec![],
         })
+    }
+
+    #[test]
+    fn test_neg() {
+        let exp = neg(number(5));
+        let e = eval(&exp, &empty_env()).unwrap();
+        assert_eq!(e, number(-5))
     }
 
     #[test]
