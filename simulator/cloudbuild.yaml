@@ -11,3 +11,7 @@ steps:
       -t gcr.io/$PROJECT_ID/simulator:$COMMIT_SHA \
       -t gcr.io/$PROJECT_ID/simulator .
   waitFor: ['-']
+
+images:
+- 'gcr.io/$PROJECT_ID/simulator'
+- 'gcr.io/$PROJECT_ID/simulator:$COMMIT_SHA'

@@ -101,8 +101,6 @@ images:
 - 'gcr.io/$PROJECT_ID/solver:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/rust_base'
 - 'gcr.io/$PROJECT_ID/rust_base:$COMMIT_SHA'
-- 'gcr.io/$PROJECT_ID/simulator'
-- 'gcr.io/$PROJECT_ID/simulator:$COMMIT_SHA'
 
 options:
   env:
