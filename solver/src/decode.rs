@@ -1,9 +1,8 @@
-#![allow(unused)]
 use crate::symbol::Symbol;
 
 fn is_zero_column(arr: &Vec<Vec<bool>>, x: usize, h: usize, y: usize) -> bool {
     for i in x..x + h {
-        if (arr[i][y]) {
+        if arr[i][y] {
             return false;
         }
     }
@@ -16,14 +15,14 @@ fn lines2expr(arr: &Vec<Vec<bool>>, x: usize, h: usize) -> Option<Vec<Symbol>> {
 
     let mut j = 0;
     while j < w {
-        if (is_zero_column(&arr, x, h, j)) {
+        if is_zero_column(&arr, x, h, j) {
             j += 1;
             continue;
         }
         // The origin of the current square is (x, j);
         let mut next_j = j + 1;
         while next_j < w {
-            if (is_zero_column(&arr, x, h, next_j)) {
+            if is_zero_column(&arr, x, h, next_j) {
                 break;
             }
             next_j += 1;
@@ -33,12 +32,12 @@ fn lines2expr(arr: &Vec<Vec<bool>>, x: usize, h: usize) -> Option<Vec<Symbol>> {
         for i in (x + h - 1..=x).rev() {
             let mut last_square_line = false;
             for j2 in j..j + square_w {
-                if (arr[i][j2]) {
+                if arr[i][j2] {
                     last_square_line = true;
                     break;
                 }
             }
-            if (last_square_line) {
+            if last_square_line {
                 square_h = i - x + 1;
             }
         }
@@ -71,7 +70,7 @@ pub fn table2exprs(arr: &Vec<Vec<bool>>) -> Vec<Vec<Symbol>> {
     let mut exprs = Vec::<Vec<Symbol>>::new();
     while l < h {
         // Skip the zero line.
-        if (is_zeroline(&arr[l])) {
+        if is_zeroline(&arr[l]) {
             l += 1;
             continue;
         }
@@ -79,7 +78,7 @@ pub fn table2exprs(arr: &Vec<Vec<bool>>) -> Vec<Vec<Symbol>> {
         // find next zero line.
         let mut next_zl = l + 1;
         while next_zl < h {
-            if (is_zeroline(&arr[next_zl])) {
+            if is_zeroline(&arr[next_zl]) {
                 break;
             }
             next_zl += 1;
