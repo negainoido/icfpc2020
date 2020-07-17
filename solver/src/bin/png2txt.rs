@@ -2,6 +2,7 @@ use image::{DynamicImage, GrayImage};
 
 use structopt::StructOpt;
 
+use icfpc2020::decode;
 use icfpc2020::opt::{common_init, CommonOpt};
 
 #[derive(StructOpt)]
@@ -23,53 +24,6 @@ struct Opt {
 //     SymEllipsis,
 //     SymUnknown,
 // }
-
-fn get(arr: &Vec<Vec<bool>>, x: usize, y: usize) -> Option<(usize, usize, usize, usize)> {
-    if x + 1 >= arr.len() || y + 1 >= arr[0].len() {
-        return None;
-    }
-
-    if x + 1 < arr.len() && y + 8 < arr[0].len() {
-        // check
-        // .........
-        // .#.#.#.#.
-        let first = &arr[x][y..y + 9];
-        let second = &arr[x + 1][y..y + 9];
-        if first.iter().all(|&f| !f)
-            && second.iter().step_by(2).all(|&f| !f)
-            && second.iter().skip(1).step_by(2).all(|&t| t)
-        {
-            return Some((x + 1, y + 1, 1, 7));
-        }
-    }
-
-    // detect following case
-    //  ?#
-    //  #?
-    // or
-    //  #?
-    //  ??
-    //
-    if !(arr[x][y] || (arr[x + 1][y] && arr[x][y + 1])) {
-        return None;
-    }
-
-    // calc rectangle from top and left edge.
-    // take care linear binary representation in
-    // https://message-from-space.readthedocs.io/en/latest/message13.html
-    //
-    let mut cx = x + 1;
-    while cx < arr.len() && (arr[cx][y] || arr[cx][y + 1]) {
-        cx += 1;
-    }
-    let cx = cx;
-
-    let mut cy = y + 1;
-    while cy < arr[0].len() && (arr[x][cy] || arr[x + 1][cy]) {
-        cy += 1;
-    }
-    Some((x, y, cx - x, cy - y))
-}
 
 fn main() {
     let opt: Opt = Opt::from_args();
@@ -97,7 +51,7 @@ fn main() {
             if vis[x][y] {
                 continue;
             }
-            match get(&arr, x, y) {
+            match decode::get(&arr, x, y) {
                 None => continue,
                 Some((x, y, h, w)) => {
                     for cx in x..x + h {
