@@ -1,0 +1,12 @@
+(C,[
+    App C [
+        App Nil [],
+        App B [
+            App C [
+                App Nil [],
+                App Cons []
+            ],
+            App Cons []
+        ]
+    ],
+    App B [App B [App C [App C [App Nil [],App Cons []],App B [App Cons [],App B []]],App B [App Cons [App (Num 0) []]]],App B []]])
