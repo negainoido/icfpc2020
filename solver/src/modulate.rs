@@ -1,5 +1,6 @@
 use crate::typing::raku::cons;
-use crate::typing::{TypedExpr, TypedSymbol};
+use crate::typing::{ExprNode, TypedExpr, TypedSymbol};
+use std::cell::RefCell;
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum List {
@@ -69,7 +70,7 @@ fn modulate_number(value: i128) -> String {
     res
 }
 
-fn do_modulate(expr: &TypedExpr, str: &mut String) {
+fn do_modulate<'a>(expr: ExprNode<'a>, str: &mut String) {
     match expr {
         TypedExpr::Apply(l, r) => {
             do_modulate(l, str);
@@ -79,7 +80,7 @@ fn do_modulate(expr: &TypedExpr, str: &mut String) {
             TypedSymbol::Cons(exprs) => {
                 str.push_str("11");
                 for e in exprs {
-                    do_modulate(e, str);
+                    do_modulate(e.clone(), str);
                 }
             }
             TypedSymbol::Number(v) => {
@@ -95,26 +96,26 @@ fn do_modulate(expr: &TypedExpr, str: &mut String) {
     }
 }
 
-pub fn modulate(expr: &TypedExpr) -> String {
+pub fn modulate<'a>(expr: ExprNode<'a>) -> String {
     let mut result = String::new();
 
     do_modulate(expr, &mut result);
     result
 }
 
-fn convert_to_expr(list: &List) -> TypedExpr {
+fn convert_to_expr<'a>(list: &List) -> TypedExpr<'a> {
     match list {
         List::Nil => TypedExpr::Val(TypedSymbol::Nil),
         List::Integer(i) => TypedExpr::Val(TypedSymbol::Number(*i)),
         List::Cons(l, r) => {
             let l = convert_to_expr(&l);
             let r = convert_to_expr(&r);
-            cons(l, r)
+            cons(&l, &r)
         }
     }
 }
 
-pub fn demodulate(a: &str) -> TypedExpr {
+pub fn demodulate<'a>(a: &str) -> TypedExpr<'a> {
     if a == "11" {
         return TypedExpr::Val(TypedSymbol::Nil);
     }
@@ -125,7 +126,7 @@ pub fn demodulate(a: &str) -> TypedExpr {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::eval::{eval, EvalError};
+    use crate::eval::{eval, EvalError, Evaluator};
     use crate::typing::raku::{number, NIL};
     use std::collections::HashMap;
 
@@ -133,22 +134,21 @@ mod tests {
     fn demodulate_simple() {
         let request = "1101000";
         let expr = demodulate(request);
-        let expected_expr = cons(number(0), NIL);
+        let expected_expr = cons(&number(0), &NIL);
         assert_eq!(expr, expected_expr);
     }
 
     #[test]
-    fn modulate_simple() -> std::result::Result<(), EvalError> {
-        let expr = cons(number(0), NIL);
+    fn modulate_simple()  {
+        let expr = cons(&number(0), &NIL);
         let result = modulate(&expr);
         let expected = "1101000";
         assert_eq!(result, expected);
 
         let env = HashMap::new();
-        let expr = eval(&expr, &env)?;
-        let result = modulate(&expr);
+        let expr = Evaluator::new().eval(&expr, &env).unwrap();
+        let result = modulate(expr);
         assert_eq!(result, expected);
-        Ok(())
     }
 
     #[test]
@@ -169,14 +169,14 @@ mod tests {
         assert_eq!(demodulate(request), expected_expr);
 
         let request = "110000";
-        let expected_expr = cons(NIL, NIL);
+        let expected_expr = cons(&NIL, &NIL);
         assert_eq!(modulate(&expected_expr), request);
         assert_eq!(demodulate(request), expected_expr);
 
         let request = "1101100001111101100010110110001100110110010000";
         let expected_expr = cons(
-            number(1),
-            cons(cons(number(2), cons(number(3), NIL)), cons(number(4), NIL)),
+            &number(1),
+            &cons(&cons(&number(2), &cons(&number(3), &NIL)), &cons(&number(4), &NIL)),
         );
         assert_eq!(modulate(&expected_expr), request);
         assert_eq!(demodulate(request), expected_expr);
@@ -186,7 +186,7 @@ mod tests {
     fn demodulate_complex() {
         let request = "110110000111011111100001001010100000110000";
         let expr = demodulate(request);
-        let expected = cons(number(1), cons(number(76300), NIL));
+        let expected = cons(&number(1), &cons(&number(76300), &NIL));
 
         assert_eq!(expr, expected);
     }
