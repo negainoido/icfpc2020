@@ -12,7 +12,7 @@ pub struct Task {
 }
 
 impl Task {
-    pub fn new(input: &Vec<String>) -> Task {
+    pub fn new(input: &[String]) -> Task {
         let input_body = &input[..input.len() - 1];
         let input_target = input.last().unwrap();
 
@@ -48,7 +48,7 @@ impl Task {
         eval::eval(&target_expr, &mut env).unwrap()
     }
 
-    fn string_to_symbols(s: &String, target: &str) -> Vec<Symbol> {
+    fn string_to_symbols(s: &str, target: &str) -> Vec<Symbol> {
         return s
             .split_whitespace()
             .map(|s| Symbol::from_text(s, target))
@@ -59,12 +59,12 @@ impl Task {
 #[test]
 fn test() {
     let input = vec![
-        &":1029 = ap ap cons 7 ap ap cons 123229502148636 nil",
-        &":1032 = ap ap cons 7 ap ap cons 560803991675135 nil",
-        &"galaxy = :1032",
+        ":1029 = ap ap cons 7 ap ap cons 123229502148636 nil".to_string(),
+        ":1032 = ap ap cons 7 ap ap cons 560803991675135 nil".to_string(),
+        "galaxy = :1032".to_string(),
     ];
 
-    let task = Task::new(&input);
+    let task = Task::new(&input[..]);
     let mut expected_expr_map = HashMap::new();
     expected_expr_map.insert(
         1029,
