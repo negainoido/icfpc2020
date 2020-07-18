@@ -1,7 +1,9 @@
 pub mod ai;
+pub mod api_client;
 pub mod decode;
 pub mod eval;
 pub mod expr;
+pub mod modulate;
 pub mod opt;
 pub mod symbol;
 pub mod task;

@@ -12,8 +12,8 @@ pub struct Task {
 }
 
 impl Task {
-    pub fn new(input: &Vec<String>) -> Task {
-        let input_body = &input[0..input.len() - 1];
+    pub fn new(input: &[String]) -> Task {
+        let input_body = &input[..input.len() - 1];
         let input_target = input.last().unwrap();
 
         let mut variable_to_expr_map = HashMap::new();
@@ -39,67 +39,71 @@ impl Task {
 
     // Currently, it works only when target statement doesn't contain any variable
     pub fn solve(&self) -> TypedExpr {
-        let env = self
+        let mut env = self
             .variable_to_expr_map
             .iter()
             .map(|(k, v)| (*k, TypedExpr::typing(&v).unwrap()))
             .collect();
         let target_expr = TypedExpr::typing(&self.target).unwrap();
-        eval::eval(&target_expr, &env).unwrap()
+        eval::eval(&target_expr, &mut env).unwrap()
     }
 
-    fn string_to_symbols(s: &String, target: &str) -> Vec<Symbol> {
+    fn string_to_symbols(s: &str, target: &str) -> Vec<Symbol> {
         return s
             .split_whitespace()
-            .map(|s| Symbol::from_text(s.to_string(), &target.to_string()))
+            .map(|s| Symbol::from_text(s, target))
             .collect();
     }
 }
 
-#[test]
-fn test() {
-    let input = vec![
-        ":1029 = ap ap cons 7 ap ap cons 123229502148636 nil".to_string(),
-        ":1032 = ap ap cons 7 ap ap cons 560803991675135 nil".to_string(),
-        "galaxy = :1032".to_string(),
-    ];
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test() {
+        let input = vec![
+            ":1029 = ap ap cons 7 ap ap cons 123229502148636 nil".to_string(),
+            ":1032 = ap ap cons 7 ap ap cons 560803991675135 nil".to_string(),
+            "galaxy = :1032".to_string(),
+        ];
 
-    let task = Task::new(&input);
-    let mut expected_expr_map = HashMap::new();
-    expected_expr_map.insert(
-        1029,
-        expr::parse(&vec![
-            Symbol::App,
-            Symbol::App,
-            Symbol::Cons,
-            Symbol::Number(7),
-            Symbol::App,
-            Symbol::App,
-            Symbol::Cons,
-            Symbol::Number(123229502148636),
-            Symbol::Nil,
-        ]),
-    );
-    expected_expr_map.insert(
-        1032,
-        expr::parse(&vec![
-            Symbol::App,
-            Symbol::App,
-            Symbol::Cons,
-            Symbol::Number(7),
-            Symbol::App,
-            Symbol::App,
-            Symbol::Cons,
-            Symbol::Number(560803991675135),
-            Symbol::Nil,
-        ]),
-    );
+        let task = Task::new(&input[..]);
+        let mut expected_expr_map = HashMap::new();
+        expected_expr_map.insert(
+            1029,
+            expr::parse(&vec![
+                Symbol::App,
+                Symbol::App,
+                Symbol::Cons,
+                Symbol::Number(7),
+                Symbol::App,
+                Symbol::App,
+                Symbol::Cons,
+                Symbol::Number(123229502148636),
+                Symbol::Nil,
+            ]),
+        );
+        expected_expr_map.insert(
+            1032,
+            expr::parse(&vec![
+                Symbol::App,
+                Symbol::App,
+                Symbol::Cons,
+                Symbol::Number(7),
+                Symbol::App,
+                Symbol::App,
+                Symbol::Cons,
+                Symbol::Number(560803991675135),
+                Symbol::Nil,
+            ]),
+        );
 
-    assert_eq!(
-        task,
-        Task {
-            variable_to_expr_map: expected_expr_map,
-            target: expr::parse(&vec![Symbol::Variable(1032)]),
-        }
-    );
+        assert_eq!(
+            task,
+            Task {
+                variable_to_expr_map: expected_expr_map,
+                target: expr::parse(&vec![Symbol::Variable(1032)]),
+            }
+        );
+    }
 }

@@ -6,11 +6,13 @@ use serde::{Deserialize, Serialize};
 use structopt::StructOpt;
 
 use crate::slack::SlackHookRequest;
+use icfpc2020::api_client::ApiClient;
 
 #[derive(Serialize, Deserialize, StructOpt)]
 enum Action {
     Edit,
     Config(Config),
+    Send(SendOpt),
     Password,
     Slack,
 }
@@ -19,6 +21,13 @@ enum Action {
 struct Config {
     editor: Option<String>,
     hook_url: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone, StructOpt)]
+struct SendOpt {
+    body: String,
+    #[structopt(long)]
+    api_key: Option<String>,
 }
 
 impl Config {
@@ -36,8 +45,11 @@ impl Config {
 mod slack;
 
 const APP_NAME: &str = "wish";
+const ICFPC_KEY: &str = "ICFPC2020";
 
-fn main() {
+type Error = Box<dyn std::error::Error>;
+
+fn main() -> Result<(), Error> {
     let args = Action::from_args();
     let config: Config = confy::load(APP_NAME).expect("failed to load");
     match args {
@@ -96,5 +108,20 @@ fn main() {
 
             println!("{:?}", result);
         }
+        Action::Send(opt) => {
+            let user = env::var("USER")?;
+            let keyring = keyring::Keyring::new(ICFPC_KEY, &user);
+            let api_key = opt
+                .api_key
+                .clone()
+                .or_else(|| env::var("API_KEY").ok())
+                .or_else(|| keyring.get_password().ok())
+                .ok_or(failure::err_msg("NO API_KEY provided"))?;
+            keyring.set_password(&api_key)?;
+
+            let client = ApiClient::new(&api_key);
+            println!("{}", client.send_aliens(&opt.body)?);
+        }
     }
+    Ok(())
 }
