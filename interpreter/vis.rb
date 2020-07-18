@@ -1,3 +1,75 @@
+require 'json'
+require 'pp'
+
+# modulate("nil") == "00"
+# modulate("ap ap cons nil nil") == "110000"
+# modulate("ap ap cons 0 nil") == "1101000"
+# modulate("ap ap cons 1 2") == "110110000101100010"
+# modulate("-1") == "10100001"
+def modulate(s)
+	def f(s)
+		a = s.shift
+		case a
+		when "cons"
+			left = f(s)
+			right = f(s)
+			return "11" + left + right
+		when "nil"
+			return "00"
+		when "0"
+			return "010"
+		when /-?\d+/
+			a = a.to_i
+			sign = a >= 0 ? "01" : "10"
+			a = a.abs
+			bin = a.to_s(2)
+			bin = bin.rjust((bin.length + 3) / 4 * 4, '0')
+			return sign + "1" * (bin.length / 4) + "0" + bin
+		else
+			raise "Modulate match failed! #{s}"
+		end
+	end
+	s = s.split(" ").select {|x| x != "ap"}
+	f(s)
+end
+
+def demodulate(s)
+	def f(s)
+		prefix = s.shift + s.shift
+
+		res = []
+		case prefix
+		when "00"
+			res << "nil"
+		when "11"
+			res << "ap ap cons "
+			res += f(s)
+			res << " "
+			res += f(s)
+		else
+			if prefix == "01"
+				sign = 1
+			else
+				sign = -1
+			end
+			len = 0
+			while s[0] != "0"
+				len += 1
+				s.shift
+			end
+			s.shift
+			len *= 4
+			num =  s[0..len-1].join("").to_i(2)
+			res << sign * num
+			len.times { s.shift }
+		end
+		res
+	end
+	s = s.split("")
+	f(s).join().chomp(" ").chomp(" ")
+end
+
+=begin
 def pt(x, y)
 	[x, y]
 end
@@ -9,18 +81,13 @@ def read_image_from_string(lines)
 		end
 	end
 end
-
-def write_out(image, rgb, opaq)
-	image.each do |x, y|
-		@pixels[ [x, y] ] = rgb.map {|c| (c * opaq).to_i}
-	end
-end
+=end
 
 def exec_autotaker(point, data = "nil")
 	galaxy = File.open("galaxy.txt").read()
-	galaxy.gsub!(/^(:2000 = ap ap cons) (.*)$/, "\\1 #{point[0]} #{point[1]}")
+	galaxy.gsub!(/^(:2000 = ap ap cons) (.*)$/, "\\1 #{point}")
 	galaxy.gsub!(/^(:2001 = )(.*)$/, "\\1#{data}")
-	puts "point: #{point[0]} #{point[1]}"
+	puts "point: #{point}"
 	puts "data: #{data}"
 
 	lines = IO.popen(["cabal", "new-exec", "interpreter"], "r+") do |autotaker|
@@ -31,9 +98,7 @@ def exec_autotaker(point, data = "nil")
 	end
 end
 
-def plot_and_interact(lines)
-	images = read_image_from_string(lines)
-
+def plot_and_interact(images)
 	images.length.times do |i|
 		@plot.puts "$image#{i} << EOD"
 		images[i].each do |x, y|
@@ -59,30 +124,58 @@ def plot_and_interact(lines)
 	end
 end
 
-next_point = [0, 0]
+next_point = "0 0"
 data = "nil"
 
-#next_point = [1, 4]
-#data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+next_point = "1 4"
+data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+
+
+next_point = "-3 1"
+data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 
 @plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
 
 while true
 	lines = exec_autotaker(next_point, data)
-	puts "### autotaker"
-	puts lines
+	$stderr.puts "### autotaker ###"
+	$stderr.puts lines
+	$stderr.puts "#################"
 
-	data = lines =~ /DataAsCode: (.*)/ ? $1 : nil
-	if !data
-		$stderr.puts "!!!Warning!!!:  We could not find the next data"
-		data = "nil"
+	res = JSON.parse(File.open("result.json").read())
+	result = res["returnValue"]
+	data = res["stateData"]
+
+	if result == 0
+		# show images
+		next_point = plot_and_interact(res["imageList"])
+		next_point = "#{next_point[0]} #{next_point[1]}"
+	else
+		# interact with galaxy
+		puts "Interacting with Galaxy..."
+		send_data = res["imageListAsData"] # "ap ap cons 0 nil"
+		$stderr.puts "send_data: #{send_data}"
+		send_data = modulate(send_data)
+		$stderr.puts "modulated: #{send_data}"
+		res = `curl -X POST "https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c" -H "accept: */*" -H "Content-Type: text/plain" -d "#{send_data}"`
+		$stderr.puts "Response From Galaxy: #{res}"
+		res = demodulate(res)
+		res = res.split(" ").select{|x| x =~ /\d/}.map {|x| x.to_i}
+		$stderr.puts "Next Point: #{res}"
+		next_point = "#{res[0]} ap ap cons #{res[1]} nil"
 	end
-
-	next_point = plot_and_interact(lines)
 end
 
 
 exit
+
+
+=begin
+def write_out(image, rgb, opaq)
+	image.each do |x, y|
+		@pixels[ [x, y] ] = rgb.map {|c| (c * opaq).to_i}
+	end
+end
 
 
 xmin = images.flatten(1).map {|x, y| x}.min
@@ -107,4 +200,5 @@ for y in ymin..ymax
 		puts c.join(" ")
 	end
 end
+=end
 
