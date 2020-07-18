@@ -6,7 +6,7 @@ pub enum Expr {
     Val(Symbol),
 }
 
-pub fn parse(symbols: &Vec<Symbol>) -> Expr {
+pub fn parse(symbols: &[Symbol]) -> Expr {
     let mut new_symbols = Vec::<Symbol>::new();
     //let mut app_count: u32 = 0;
     for e in symbols {
