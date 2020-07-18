@@ -5,13 +5,11 @@ use crate::expr;
 use crate::expr::Expr;
 use crate::symbol::Symbol;
 use crate::typing::{ExprNode, TypedExpr};
-use typed_arena::Arena;
 
 pub struct Task<'a> {
     pub variable_to_expr_map: HashMap<i128, Expr>,
     pub target: Expr,
     evaluator: Evaluator<'a>,
-    pool: Arena<TypedExpr<'a>>,
 }
 
 impl<'a> Task<'a> {
@@ -34,12 +32,10 @@ impl<'a> Task<'a> {
         let target_symbols = Task::string_to_symbols(input_target, "galaxy");
         assert_eq!(target_symbols[0], Symbol::Target);
         assert_eq!(target_symbols[1], Symbol::Eq);
-        let pool = Arena::new();
         let evaluator = Evaluator::new();
         Task {
             variable_to_expr_map,
             target: expr::parse(&target_symbols[2..].to_vec()),
-            pool,
             evaluator,
         }
     }
@@ -50,11 +46,11 @@ impl<'a> Task<'a> {
             .variable_to_expr_map
             .iter()
             .map(|(k, v)| {
-                let v: &TypedExpr = self.pool.alloc(TypedExpr::typing(&v).unwrap());
+                let v: &TypedExpr = self.evaluator.typing(&v).unwrap();
                 (*k, v)
             })
             .collect();
-        let target_expr = self.pool.alloc(TypedExpr::typing(&self.target).unwrap());
+        let target_expr = self.evaluator.typing(&self.target).unwrap();
         self.evaluator.eval(target_expr, &mut env).unwrap()
     }
 

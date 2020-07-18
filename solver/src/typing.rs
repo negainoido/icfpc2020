@@ -1,4 +1,3 @@
-use crate::expr::Expr;
 use crate::symbol::Symbol;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -63,10 +62,6 @@ pub enum TypedExpr<'a> {
 }
 
 impl<'a> TypedExpr<'a> {
-    pub fn typing(_expr: &Expr) -> Option<Self> {
-        unimplemented!();
-    }
-
     pub fn get_number(&self) -> Option<i128> {
         match self {
             TypedExpr::Val(TypedSymbol::Number(x)) => Some(*x),
