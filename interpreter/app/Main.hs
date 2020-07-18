@@ -1,6 +1,6 @@
 module Main where
 
-import qualified MyLib (main)
+import qualified Negainoido (main)
 
 main :: IO ()
-main = MyLib.main
+main = Negainoido.main

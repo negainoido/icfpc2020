@@ -1,13 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-} 
 {-# LANGUAGE DeriveGeneric #-} 
 {-# LANGUAGE RecordWildCards #-} 
-module MyLib  where
+module Negainoido(main) where
 
 import qualified Data.Text as T
-import qualified Data.Map as M
-import Control.Monad.Fix
 import Control.Monad.Identity
-import Data.IORef
 import GHC.Generics
 import Control.Monad.Except
 --import Debug.Trace
@@ -16,6 +13,7 @@ import Data.Aeson(ToJSON(..), encodeFile)
 import Negainoido.Syntax
 import Negainoido.Eval
 import Negainoido.Parser
+
 
 
 main :: IO ()
@@ -37,9 +35,9 @@ main = do
             Just imageList' -> 
                 forM_ (zip [(1 :: Int)..] imageList')  $ \(i, image) -> do
                 let filename = "image_" ++ show i ++ ".txt"
-                    content = unlines [ show x ++ " "  ++ show y | (x,y) <- image]
+                    plot = unlines [ show x ++ " "  ++ show y | (x,y) <- image]
                 liftIO $ putStrLn $ "image is written at " ++ filename
-                liftIO $ writeFile filename $ content
+                liftIO $ writeFile filename plot
             Nothing -> pure ()
         when (returnValue /= 0) $ liftIO $ T.putStrLn $ "ImageListAsCode: " <> toCode imageListAsData
     case r of

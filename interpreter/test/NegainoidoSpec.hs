@@ -1,13 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-module MyLibSpec where
+module NegainoidoSpec where
 
 import Test.Hspec
 import Test.HUnit
 
-import MyLib
-import Negainoido.Syntax
-import Negainoido.Parser
-import Control.Monad.Except
+import Negainoido
 
 spec :: Spec
 spec = do
