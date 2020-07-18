@@ -26,6 +26,10 @@ pub fn car() -> TypedExpr {
     TypedExpr::Val(TypedSymbol::Car)
 }
 
+pub fn cdr() -> TypedExpr {
+    TypedExpr::Val(TypedSymbol::Cdr)
+}
+
 pub fn cons(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
     let c = TypedExpr::Val(TypedSymbol::Cons(vec![]));
     app(app(c, e1), e2)
@@ -336,6 +340,11 @@ mod test {
 
         let e = eval(&x, &empty_env()).unwrap();
         assert_eq!(e, number(1));
+
+        let list = cons(number(1), cons(number(2), nil()));
+        let x = app(cdr(), list);
+        let e = eval(&x, &empty_env()).unwrap();
+        assert_eq!(e, TypedExpr::Val(TypedSymbol::Cons(vec![number(2), nil()])));
     }
 
     #[test]
