@@ -119,7 +119,7 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 // True
                 Val(True(xs)) if xs.len() == 1 => {
                     // ap ap t x0 x1   =   x0
-                    let x0 = xs[0].clone();
+                    let x0 = eval(&xs[0], env)?;
                     Ok(x0)
                 }
                 Val(True(xs)) => {
@@ -131,7 +131,7 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 // False
                 Val(False(xs)) if xs.len() == 1 => {
                     // ap ap f x0 x1   =   x1
-                    Ok(*x.clone())
+                    Ok(eval(&x, env)?)
                 }
                 Val(False(xs)) => {
                     assert_eq!(xs.len(), 0);
@@ -141,12 +141,8 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 }
                 // Sum (Add)
                 Val(Sum(xs)) if xs.len() == 1 => {
-                    let x_num = eval(&xs[0], env)?
-                        .get_number()
-                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
-                    let x_den = eval(&x, env)?
-                        .get_number()
-                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
+                    let x_num = eval(&xs[0], env)?.get_number().unwrap();
+                    let x_den = eval(&x, env)?.get_number().unwrap();
                     Ok(Val(Number(x_num + x_den)))
                 }
                 Val(Sum(xs)) => {
@@ -156,12 +152,8 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 }
                 // Product
                 Val(Prod(xs)) if xs.len() == 1 => {
-                    let x_num = eval(&xs[0], env)?
-                        .get_number()
-                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
-                    let x_den = eval(&x, env)?
-                        .get_number()
-                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
+                    let x_num = eval(&xs[0], env)?.get_number().unwrap();
+                    let x_den = eval(&x, env)?.get_number().unwrap();
                     Ok(Val(Number(x_num * x_den)))
                 }
                 Val(Prod(xs)) => {
@@ -171,17 +163,13 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 }
                 Val(Neg) => {
                     let x = eval(&x, env)?;
-                    let x = x.get_number().ok_or_else(|| NumberIsExpected(x))?;
+                    let x = x.get_number().unwrap();
                     Ok(Val(Number(-x)))
                 }
                 // Div
                 Val(Div(xs)) if xs.len() == 1 => {
-                    let x_num = eval(&xs[0], env)?
-                        .get_number()
-                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
-                    let x_den = eval(&x, env)?
-                        .get_number()
-                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
+                    let x_num = eval(&xs[0], env)?.get_number().unwrap();
+                    let x_den = eval(&x, env)?.get_number().unwrap();
                     Ok(Val(Number(x_num / x_den)))
                 }
                 Val(Div(xs)) => {
@@ -200,12 +188,8 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 }
                 // Less
                 Val(Less(xs)) if xs.len() == 1 => {
-                    let x0 = xs[0]
-                        .get_number()
-                        .ok_or_else(|| NumberIsExpected(xs[0].clone()))?;
-                    let x1 = eval(&x, env)?
-                        .get_number()
-                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
+                    let x0 = eval(&xs[0], env)?.get_number().unwrap();
+                    let x1 = eval(&x, env)?.get_number().unwrap();
 
                     if x0 < x1 {
                         Ok(Val(True(vec![])))
@@ -220,12 +204,8 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 }
                 // BigEq
                 Val(BigEq(xs)) if xs.len() == 1 => {
-                    let x0 = xs[0]
-                        .get_number()
-                        .ok_or_else(|| NumberIsExpected(xs[0].clone()))?;
-                    let x1 = eval(&x, env)?
-                        .get_number()
-                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
+                    let x0 = eval(&xs[0], env)?.get_number().unwrap();
+                    let x1 = eval(&x, env)?.get_number().unwrap();
 
                     if x0 == x1 {
                         Ok(Val(True(vec![])))
