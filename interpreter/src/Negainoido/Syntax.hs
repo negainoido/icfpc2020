@@ -1,0 +1,2 @@
+module Negainoido.Syntax where
+

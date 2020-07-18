@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-} 
 {-# LANGUAGE DeriveGeneric #-} 
+{-# LANGUAGE RecordWildCards #-} 
 module MyLib  where
 
 import qualified Data.Text as T
@@ -11,7 +12,7 @@ import Data.IORef
 import GHC.Generics
 import System.IO.Unsafe
 import Control.Monad.Except
-import Debug.Trace
+--import Debug.Trace
 import qualified Data.Text.IO as T
 import Text.Builder as B
 import Data.Aeson(ToJSON(..), encodeFile)
@@ -29,49 +30,49 @@ newtype NT = NT Int
     deriving (Eq, Ord, Show)
 
 data Def = Def {
-    head :: NT,
-    body :: Expr
+    defHead :: NT,
+    defBody :: Expr
 } deriving(Eq, Show)
 
-parseDef :: Text  -> Def
-parseDef txt = Def (parseHead head) (parseBody body)
+parseDef :: Text  -> Except String Def
+parseDef txt = Def <$> (parseHead hd) <*> (parseBody body)
     where
-    head: eq: body = T.words txt
+    hd: _eq: body = T.words txt
     
-parseHead :: Text -> NT
+parseHead :: Text -> Except String NT
 parseHead txt =
-    NT (read (T.unpack (T.tail txt)))
+    pure $ NT (read (T.unpack (T.tail txt)))
 
-parseMain :: Text -> Expr
+parseMain :: Text -> Except String Expr
 parseMain = parseBody . T.words
 
-parseBody :: [Text] -> Expr
-parseBody = parse . map parseSymbol
+parseBody :: [Text] -> Except String Expr
+parseBody = mapM parseSymbol >=> parse
 
-parseSymbol :: Text -> Symbol
+parseSymbol :: Text -> Except String Symbol
 parseSymbol x = 
     case x of
-        "add" ->  Add
-        "ap" -> Ap
-        "b" -> B
-        "c" -> C
-        "car" -> Car
-        "cdr" -> Cdr
-        "cons" -> Cons
-        "div" -> Div
-        "eq" -> Eq
-        "i" -> I
-        "isnil" -> IsNil
-        "lt" -> Lt
-        "mul" -> Mul
-        "neg" -> Neg
-        "nil" -> Nil
-        "s" -> S
-        "t" -> T
-        "f" -> F
-        x | T.head x == ':' -> NonTerm (parseHead x)
-          | Just n <- readMaybe (T.unpack x) -> Num n
-        _ -> error $ "unknown symbol:" ++ show x
+        "add" -> pure  Add
+        "ap" -> pure Ap
+        "b" -> pure B
+        "c" -> pure C
+        "car" -> pure Car
+        "cdr" -> pure Cdr
+        "cons" -> pure Cons
+        "div" -> pure Div
+        "eq" -> pure Eq
+        "i" -> pure I
+        "isnil" -> pure IsNil
+        "lt" -> pure Lt
+        "mul" -> pure Mul
+        "neg" -> pure Neg
+        "nil" -> pure Nil
+        "s" -> pure S
+        "t" -> pure T
+        "f" -> pure F
+        _ | T.head x == ':' -> NonTerm <$> (parseHead x)
+          | Just n <- readMaybe (T.unpack x) -> pure $ Num n
+        _ -> throwError $ "unknown symbol:" ++ show x
 
 data Expr = App Symbol [Expr] -- arguments are in reverse order
     | EThunk Thunk [Expr]
@@ -87,15 +88,17 @@ symToExpr :: Symbol -> Expr
 symToExpr x = App x []
 
 data StackElem = SExpr Expr | SAp 
+    deriving(Show)
 
-parse :: [Symbol] -> Expr
+parse :: [Symbol] -> Except String Expr
 parse = go []
   where
-      go :: [StackElem] -> [Symbol] -> Expr
+      go :: [StackElem] -> [Symbol] -> Except String Expr
       go (SExpr c1: SExpr c2: SAp: st) syms = 
           go (SExpr (app c2 c1):st) syms
       go st (c:syms) = go (toStackElem c: st) syms
-      go [SExpr e] [] = e
+      go [SExpr e] [] = pure e
+      go st tokens = throwError $ "Unexpected parse state: Stack = " ++ show st ++ " Token = " ++ show (take 3 tokens)
       toStackElem Ap = SAp
       toStackElem c = SExpr (App c [])
 
@@ -105,6 +108,7 @@ app (EThunk e es) e2 = EThunk e (e2:es)
 
 data Thunk = Thunk Expr (IORef (Either (ExceptT String IO Value) Value))
     deriving(Eq)
+
 
 instance Show Thunk where
     show (Thunk e ref) = unsafePerformIO $ do
@@ -136,27 +140,28 @@ evalMain defs expr =
     runExceptT $ do
         env <- mfix $ \env -> 
             M.fromList <$> (
-                forM defs $ \(Def head body) -> do
+                forM defs $ \(Def hd body) -> do
                     thunk <- mkThunk body (eval env body)
-                    pure (head, thunk))
+                    pure (hd, thunk))
         r <- eval env expr >>= evalForce
         liftIO $ putStrLn "raw output is written at result.txt"
         liftIO $ writeFile "result.txt" (show r)
-        res@(Result r dat imageList imageListAsData) <- dataToResult r
+        res@Result {..}  <- dataToResult r
         liftIO $ putStrLn "result json is written at result.json"
         liftIO $ encodeFile "result.json" res
-        liftIO $ putStrLn $ "Result: " ++ show r
-        liftIO $ T.putStrLn $ "DataAsCode: " <> toCode dat
+        liftIO $ putStrLn $ "Result: " ++ show returnValue
+        liftIO $ T.putStrLn $ "DataAsCode: " <> toCode stateData
         case imageList of 
-            Just imageList -> 
-                forM_ (zip [(1 :: Int)..] imageList)  $ \(i, image) -> do
+            Just imageList' -> 
+                forM_ (zip [(1 :: Int)..] imageList')  $ \(i, image) -> do
                 let filename = "image_" ++ show i ++ ".txt"
                     content = unlines [ show x ++ " "  ++ show y | (x,y) <- image]
                 liftIO $ putStrLn $ "image is written at " ++ filename
                 liftIO $ writeFile filename $ content
             Nothing -> pure ()
-        when (r /= 0) $ liftIO $ T.putStrLn $ "ImageListAsCode: " <> toCode imageListAsData
+        when (returnValue /= 0) $ liftIO $ T.putStrLn $ "ImageListAsCode: " <> toCode imageListAsData
         pure res
+
 
 toCode :: SData -> Text
 toCode = B.run . go
@@ -169,18 +174,19 @@ toCode = B.run . go
 main :: IO ()
 main = do
     content <- T.getContents
-    let (gdef: defs) = reverse $ T.lines content
-        defs1 = map parseDef defs
-        mainExpr = parseMain gdef
-    res <- evalMain defs1 mainExpr
-
-    case res of
-        Left e -> print $ "Error!:" ++ e
-        Right r -> pure ()
+    let doit = do
+            let (gdef: defs) = reverse $ T.lines content 
+            defs1 <- mapM parseDef defs
+            mainExpr <- parseMain gdef
+            pure (defs1, mainExpr)
+    case runExcept doit of
+        Left err -> putStrLn $ "Error:" ++ err
+        Right (defs1, mainExpr) -> do
+            res <- evalMain defs1 mainExpr
+            case res of
+                Left e -> print $ "Error!:" ++ e
+                Right _r -> pure ()
         
-
-         
-
 evalForce :: Value -> ExceptT String IO SData
 evalForce (VNumber v) = pure $ DNumber v
 evalForce VNil = pure $ DNil
@@ -192,38 +198,38 @@ eval :: Env -> Expr -> ExceptT String IO Value
 eval env (EThunk t args) = do
     v <- evalThunk t
     case (v, args) of
-        (VPApp head args', args) -> 
+        (VPApp hd args', _args) -> 
             let toExpr x = EThunk x [] in
-            eval env (App head (args ++ (map toExpr args')))
-        (v, []) -> pure v
-        (v, args) -> throwError $ "cannot apply: " ++ show (v, args)
-eval env (App head args) = 
-    let triOp f args 
+            eval env (App hd (args ++ (map toExpr args')))
+        (_, []) -> pure v
+        (_, _) -> throwError $ "cannot apply: " ++ show (v, args)
+eval env (App hd args) = 
+    let triOp f
             | e0:e1:e2:es <- reverse args = Just $ foldl app (f e0 e1 e2) es  
             | otherwise = Nothing
-        triOpM f args 
+        triOpM f
             | e0:e1:e2:es <- reverse args = Just $ do
                 e' <- f e0 e1 e2
                 pure $ foldl app e' es  
             | otherwise = Nothing 
-        uniOp f args
+        uniOp f 
             | e0: es <- reverse args = Just $ foldl app (f e0) es
             | otherwise = Nothing
-        uniOpM f args
+        uniOpM f
             | e0: es <- reverse args = Just $ do
                 e' <- f e0
                 pure $ foldl app e' es
             | otherwise = Nothing
-        binOp f args
+        binOp f 
             | e0:e1: es <- reverse args = Just $ foldl app (f e0 e1) es
             | otherwise = Nothing
-        binOpM f args
+        binOpM f
             | e0:e1: es <- reverse args = Just $ do
                  e' <- f e0 e1
                  pure $ foldl app e' es
             | otherwise = Nothing
             in
-    case (head, args) of
+    case (hd, args) of
         (Add, [e2, e1]) -> do 
             n1 <- eval env e1 >>= ensureNumber
             n2 <- eval env e2 >>= ensureNumber
@@ -239,29 +245,29 @@ eval env (App head args) =
         (Neg, [e]) -> do
             n <- eval env e >>= ensureNumber
             pure $ VNumber $ negate n
-        (B, _) | Just e <- triOp f args -> eval env e
+        (B, _) | Just e <- triOp f -> eval env e
             where f e0 e1 e2 = app e0 (app e1 e2)
-        (C, _) | Just e <- triOp f args -> eval env e
+        (C, _) | Just e <- triOp f -> eval env e
             where f e0 e1 e2 = app (app e0 e2) e1
-        (S, _) | Just me <- triOpM f args -> me >>= eval env
+        (S, _) | Just me <- triOpM f -> me >>= eval env
             where
             f e0 e1 e2 =  do
                 t2 <- mkThunk e2 (eval env e2)
                 let e2' = EThunk t2 []
                 pure $ app (app e0 e2') (app e1 e2')
-        (I, _) | Just e <- uniOp id args ->  eval env e
-        (T, _) | Just e <- binOp (\x y -> x) args -> eval env e
-        (F, _) | Just e <- binOp (\x y -> y) args -> eval env e
-        (Car, _) | Just e <- uniOp f args ->  eval env e
+        (I, _) | Just e <- uniOp id ->  eval env e
+        (T, _) | Just e <- binOp (\x _ -> x) -> eval env e
+        (F, _) | Just e <- binOp (\_ y -> y) -> eval env e
+        (Car, _) | Just e <- uniOp f ->  eval env e
             where
             f e = app e (symToExpr T)
-        (Cdr, _) | Just e <- uniOp f args ->  eval env e
+        (Cdr, _) | Just e <- uniOp f ->  eval env e
             where
             f e = app e (symToExpr F)
-        (Cons, _) | Just e <- triOp f args -> eval env e
+        (Cons, _) | Just e <- triOp f -> eval env e
             where
             f e0 e1 e2 = app (app e2 e0) e1
-        (IsNil, _) | Just me <- uniOpM f args -> me >>= eval env
+        (IsNil, _) | Just me <- uniOpM f -> me >>= eval env
             where
             f e = do
                 v <- eval env e
@@ -269,7 +275,7 @@ eval env (App head args) =
                     VNil -> pure $ symToExpr T
                     VPApp Cons _ -> pure $ symToExpr F
                     _ -> throwError $ "Nil or Cons is expected but found" ++ show v
-        (Lt, _) | Just me <- binOpM f args -> me >>= eval env
+        (Lt, _) | Just me <- binOpM f -> me >>= eval env
             where
                 f e1 e2 = do
                     n1 <- eval env e1 >>= ensureNumber
@@ -277,7 +283,7 @@ eval env (App head args) =
                     pure $ if n1 < n2
                         then symToExpr T
                         else symToExpr F
-        (Eq, _) | Just me <- binOpM f args -> me >>= eval env
+        (Eq, _) | Just me <- binOpM f -> me >>= eval env
             where
                 f e1 e2 = do
                     n1 <- eval env e1 >>= ensureNumber
@@ -292,8 +298,8 @@ eval env (App head args) =
             eval env (EThunk t es)
         (Num n, []) -> pure $ VNumber n
         (Nil, []) -> pure VNil
-        (head, args) -> 
-            VPApp head <$> forM args (\e -> mkThunk e (eval env e)) 
+        _ -> 
+            VPApp hd <$> forM args (\e -> mkThunk e (eval env e)) 
 
 mkThunk :: Expr -> ExceptT String IO Value -> ExceptT String IO Thunk
 mkThunk e action = liftIO $ Thunk e <$> newIORef (Left action)
@@ -323,7 +329,7 @@ data Result = Result {
     stateData :: SData,
     imageList :: Maybe [[(Integer, Integer)]],
     imageListAsData :: SData
-} deriving(Generic)
+} deriving(Generic, Show, Eq)
 
 instance ToJSON SData where
     toEncoding d = toEncoding (toCode d)
@@ -338,13 +344,14 @@ dataToResult (v1 `DCons` (v2 `DCons` (v3 `DCons` DNil))) = do
         DNumber n -> pure n
         _ -> throwError $ "first element should be number" ++ show v1 
     let dat = v2
-    imageList <- (Just <$> dataToImageList v3) `catchError` (\e -> pure Nothing)
+    imageList <- (Just <$> dataToImageList v3) `catchError` (\_ -> pure Nothing)
     pure Result {
         returnValue = n1, 
         stateData = dat,
         imageList = imageList,
         imageListAsData = v3 
         }
+dataToResult e = throwError $ "Triplet is expected but found: " <> show e
 
 
 dataToNumber :: SData -> ExceptT String IO Integer
