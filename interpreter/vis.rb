@@ -1,12 +1,9 @@
 require 'json'
 require 'pp'
 
-<<<<<<< HEAD
 def point_to_lambda(x, y)
 	"ap ap cons #{x} #{y}"
 end
-=======
->>>>>>> master
 # modulate("nil") == "00"
 # modulate("ap ap cons nil nil") == "110000"
 # modulate("ap ap cons 0 nil") == "1101000"
