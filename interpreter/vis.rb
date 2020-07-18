@@ -1,3 +1,71 @@
+# modulate("nil") == "00"
+# modulate("ap ap cons nil nil") == "110000"
+# modulate("ap ap cons 0 nil") == "1101000"
+# modulate("ap ap cons 1 2") == "110110000101100010"
+# modulate("-1") == "10100001"
+def modulate(s)
+	def f(s)
+		a = s.shift
+		case a
+		when "cons"
+			left = f(s)
+			right = f(s)
+			return "11" + left + right
+		when "nil"
+			return "00"
+		when "0"
+			return "010"
+		when /-?\d+/
+			a = a.to_i
+			sign = a >= 0 ? "01" : "10"
+			a = a.abs
+			bin = a.to_s(2)
+			bin = bin.rjust((bin.length + 3) / 4 * 4, '0')
+			return sign + "1" * (bin.length / 4) + "0" + bin
+		else
+			raise "Modulate match failed! #{s}"
+		end
+	end
+	s = s.split(" ").select {|x| x != "ap"}
+	f(s)
+end
+
+def demodulate(s)
+	def f(s)
+		prefix = s.shift + s.shift
+
+		res = []
+		case prefix
+		when "00"
+			res << "nil"
+		when "11"
+			res << "ap ap cons "
+			res += f(s)
+			res << " "
+			res += f(s)
+		else
+			if prefix == "01"
+				sign = 1
+			else
+				sign = -1
+			end
+			len = 0
+			while s[0] != "0"
+				len += 1
+				s.shift
+			end
+			s.shift
+			len *= 4
+			num =  s[0..len-1].join("").to_i(2)
+			res << sign * num
+			len.times { s.shift }
+		end
+		res
+	end
+	s = s.split("")
+	f(s).join().chomp(" ").chomp(" ")
+end
+
 def pt(x, y)
 	[x, y]
 end
@@ -66,8 +134,8 @@ next_point = "1 4"
 data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 
 
-next_point = "-3 1"
-data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+#next_point = "-3 1"
+#data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 
 @plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
 
@@ -88,9 +156,15 @@ while true
 	else
 		# interact with galaxy
 		puts "Interacting with Galaxy..."
-#		`curl -X POST "https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c" -H "accept: */*" -H "Content-Type: text/plain" -d "string"`
-#		"https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c"
-		next_point = "1 ap ap cons 54978 nil"
+		raise "Could not find ImageListAsCode!" if lines !~/\AImageListAsCode: (.*)/
+		send_data = $1 # "ap ap cons 0 nil"
+		send_data = modulate(send_data)
+		res = `curl -X POST "https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c" -H "accept: */*" -H "Content-Type: text/plain" -d "#{send_data}"`
+		$stderr.puts "Response From Galaxy: #{res}"
+		res = demodulate(res)
+		res.split(" ").select{|x| x =~ /\d/}.map {|x| x.to_i}
+		$stderr.puts "Next Point: #{res}"
+		next_point = "#{res[0]} ap ap cons #{res[1]} nil"
 	end
 end
 
