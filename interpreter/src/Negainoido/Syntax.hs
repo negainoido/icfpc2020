@@ -1,19 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-} 
 module Negainoido.Syntax where
 
-import qualified Data.Text as T
-import qualified Data.Map as M
-import Control.Monad.Fix
 import Data.Text(Text)
-import Text.Read
 import Data.IORef
-import GHC.Generics
 import System.IO.Unsafe
 import Control.Monad.Except
 --import Debug.Trace
-import qualified Data.Text.IO as T
 import Text.Builder as B
-import Data.Aeson(ToJSON(..), encodeFile)
+import Data.Aeson(ToJSON(..))
 
 data Symbol = Add | Ap | B | C 
   | Car | Cdr | Cons | Div | Eq | I 
@@ -47,13 +41,11 @@ instance Show Thunk where
     show (Thunk e ref) = unsafePerformIO $ do
         r <- readIORef ref
         case r of
-            Left _ -> pure (show e)
+            Left _ -> pure "_"
             Right v -> pure $ show v
 
 data Value = 
       VNumber Integer
-    | VCons Thunk Thunk
-    | VNil
     | VPApp Symbol [Thunk] -- arguments are in reverse order
     deriving(Show, Eq)
 
