@@ -1,6 +1,9 @@
 require 'json'
 require 'pp'
 
+def point_to_lambda(x, y)
+	"ap ap cons #{x} #{y}"
+end
 # modulate("nil") == "00"
 # modulate("ap ap cons nil nil") == "110000"
 # modulate("ap ap cons 0 nil") == "1101000"
@@ -85,7 +88,7 @@ end
 
 def exec_autotaker(point, data = "nil")
 	galaxy = File.open("galaxy.txt").read()
-	galaxy.gsub!(/^(:2000 = ap ap cons) (.*)$/, "\\1 #{point}")
+	galaxy.gsub!(/^(:2000 = )(.*)$/, "\\1#{point}")
 	galaxy.gsub!(/^(:2001 = )(.*)$/, "\\1#{data}")
 	puts "point: #{point}"
 	puts "data: #{data}"
@@ -113,6 +116,13 @@ def plot_and_interact(images)
 
 	@plot.puts "set mouse verbose"
 
+	begin
+		while true
+			@plot.read_nonblock(100)
+		end
+	rescue IO::EAGAINWaitReadable
+	end
+
 	while l = @plot.gets
 		puts "gnuplot: #{l}"
 		if l =~ /put `\s*(-?[-0-9\.]*),\s*(-?[0-9\.]*)' to clipboard\./
@@ -124,15 +134,15 @@ def plot_and_interact(images)
 	end
 end
 
-next_point = "0 0"
-data = "nil"
-
-next_point = "1 4"
+#next_point = point_to_lambda(0, 0)
+#data = "nil"
+#
+next_point = point_to_lambda(1, 4)
 data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
-
-
-next_point = "-3 1"
-data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+#
+#
+#next_point = point_to_lambda(-3, 1)
+#data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 
 @plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
 
@@ -149,7 +159,7 @@ while true
 	if result == 0
 		# show images
 		next_point = plot_and_interact(res["imageList"])
-		next_point = "#{next_point[0]} #{next_point[1]}"
+		next_point = point_to_lambda(next_point[0], next_point[1])
 	else
 		# interact with galaxy
 		puts "Interacting with Galaxy..."
@@ -159,10 +169,8 @@ while true
 		$stderr.puts "modulated: #{send_data}"
 		res = `curl -X POST "https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c" -H "accept: */*" -H "Content-Type: text/plain" -d "#{send_data}"`
 		$stderr.puts "Response From Galaxy: #{res}"
-		res = demodulate(res)
-		res = res.split(" ").select{|x| x =~ /\d/}.map {|x| x.to_i}
-		$stderr.puts "Next Point: #{res}"
-		next_point = "#{res[0]} ap ap cons #{res[1]} nil"
+		next_point = demodulate(res)
+		$stderr.puts "Next Point: #{next_point}"
 	end
 end
 
