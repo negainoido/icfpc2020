@@ -42,7 +42,6 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 Val(Cons(xs)) if xs.len() == 2 => {
                     // ap ap ap cons x0 x1 x2   =   ap ap x2 x0 x1
                     let v = app(app(*x.clone(), xs[0].clone()), xs[1].clone());
-                    dbg!(&v);
                     eval(&v, env)
                 }
                 Val(Cons(xs)) => {
