@@ -13,7 +13,7 @@ pub struct Task {
 
 impl Task {
     pub fn new(input: &Vec<String>) -> Task {
-        let input_body = &input[0..input.len() - 1];
+        let input_body = &input[..input.len() - 1];
         let input_target = input.last().unwrap();
 
         let mut variable_to_expr_map = HashMap::new();
@@ -51,7 +51,7 @@ impl Task {
     fn string_to_symbols(s: &String, target: &str) -> Vec<Symbol> {
         return s
             .split_whitespace()
-            .map(|s| Symbol::from_text(s.to_string(), &target.to_string()))
+            .map(|s| Symbol::from_text(s, target))
             .collect();
     }
 }
@@ -59,9 +59,9 @@ impl Task {
 #[test]
 fn test() {
     let input = vec![
-        ":1029 = ap ap cons 7 ap ap cons 123229502148636 nil".to_string(),
-        ":1032 = ap ap cons 7 ap ap cons 560803991675135 nil".to_string(),
-        "galaxy = :1032".to_string(),
+        &":1029 = ap ap cons 7 ap ap cons 123229502148636 nil",
+        &":1032 = ap ap cons 7 ap ap cons 560803991675135 nil",
+        &"galaxy = :1032",
     ];
 
     let task = Task::new(&input);
