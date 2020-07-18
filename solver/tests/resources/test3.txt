@@ -1,0 +1,2 @@
+:1 = ap cons 1
+galaxy = ap ap cons 0 ap :1 2

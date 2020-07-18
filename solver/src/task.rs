@@ -4,6 +4,7 @@ use crate::eval::Evaluator;
 use crate::expr;
 use crate::expr::Expr;
 use crate::symbol::Symbol;
+use crate::typing::TypedSymbol;
 use crate::typing::{ExprNode, TypedExpr};
 
 pub struct Task<'a> {
@@ -46,12 +47,14 @@ impl<'a> Task<'a> {
             .variable_to_expr_map
             .iter()
             .map(|(k, v)| {
+                let k = self.evaluator.get_val(TypedSymbol::Variable(*k));
                 let v: &TypedExpr = self.evaluator.typing(&v).unwrap();
-                (*k, v)
+                (k, (false, v))
             })
             .collect();
         let target_expr = self.evaluator.typing(&self.target).unwrap();
-        self.evaluator.eval(target_expr, &mut env).unwrap()
+        let e = self.evaluator.eval(target_expr, &mut env).unwrap();
+        self.evaluator.peel(&e, &mut env)
     }
 
     fn string_to_symbols(s: &str, target: &str) -> Vec<Symbol> {
