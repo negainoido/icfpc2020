@@ -79,7 +79,7 @@ fn do_modulate<'a>(expr: ExprNode<'a>, str: &mut String) {
             TypedSymbol::Cons(exprs) => {
                 str.push_str("11");
                 for e in exprs {
-                    do_modulate(e.clone(), str);
+                    do_modulate(*e, str);
                 }
             }
             TypedSymbol::Number(v) => {
@@ -95,7 +95,7 @@ fn do_modulate<'a>(expr: ExprNode<'a>, str: &mut String) {
     }
 }
 
-pub fn modulate<'a>(expr: ExprNode<'a>) -> String {
+pub fn modulate(expr: ExprNode) -> String {
     let mut result = String::new();
 
     do_modulate(expr, &mut result);

@@ -42,7 +42,7 @@ impl Symbol {
     fn str2vec(s: &str) -> Vec<Vec<bool>> {
         let mut v = vec![];
 
-        for i in s.trim().split("\n") {
+        for i in s.trim().split('\n') {
             let i = i.trim();
             if i.is_empty() {
                 continue;
@@ -91,7 +91,7 @@ impl Symbol {
         }
     }
 
-    fn is_number(square: (usize, usize, usize, usize), image: &Vec<Vec<bool>>) -> bool {
+    fn is_number(square: (usize, usize, usize, usize), image: &[Vec<bool>]) -> bool {
         let (x, y, height, width) = square;
         if width <= 1 || height <= 1 {
             return false;
@@ -121,7 +121,7 @@ impl Symbol {
 
     fn as_number(
         square: (usize, usize, usize, usize),
-        image: &Vec<Vec<bool>>,
+        image: &[Vec<bool>],
     ) -> Option<(i128, bool)> {
         let (x, y, height, width) = square;
         if height == width || height == width + 1 {
@@ -143,7 +143,7 @@ impl Symbol {
         }
     }
 
-    fn as_variable(square: (usize, usize, usize, usize), image: &Vec<Vec<bool>>) -> Option<i128> {
+    fn as_variable(square: (usize, usize, usize, usize), image: &[Vec<bool>]) -> Option<i128> {
         let (x, y, height, width) = square;
         if height != width {
             return None;
@@ -179,7 +179,7 @@ impl Symbol {
         }
     }
 
-    fn shape_eq(square: (usize, usize, usize, usize), image: &Vec<Vec<bool>>, op: Symbol) -> bool {
+    fn shape_eq(square: (usize, usize, usize, usize), image: &[Vec<bool>], op: Symbol) -> bool {
         let (x, y, height, width) = square;
         let shape = op.shape();
         if x != shape.len() || y != shape[0].len() {
@@ -201,7 +201,7 @@ impl Symbol {
         y: usize,
         height: usize,
         width: usize,
-        image: &Vec<Vec<bool>>,
+        image: &[Vec<bool>],
     ) -> Option<Self> {
         if let Some(id) = Symbol::as_variable((x, y, height, width), &image) {
             return Some(Variable(id));
@@ -248,7 +248,7 @@ impl Symbol {
             symbol
         } else if token.eq(target) {
             Symbol::Target
-        } else if token.starts_with(":") {
+        } else if token.starts_with(':') {
             Symbol::Variable(token[1..].parse::<i128>().unwrap())
         } else {
             Symbol::Number(token.parse::<i128>().unwrap())

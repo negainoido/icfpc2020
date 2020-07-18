@@ -122,7 +122,7 @@ impl<'a> Evaluator<'a> {
                     // Car
                     Val(Car) => {
                         // ap car x   =   ap x t
-                        let v = self.get_app(x.clone(), T);
+                        let v = self.get_app(*x, T);
                         let res = self.eval(v, env)?;
                         env.insert(v, (true, res));
                         Ok(res)
@@ -130,26 +130,26 @@ impl<'a> Evaluator<'a> {
                     // Cdr
                     Val(Cdr) => {
                         // ap cdr x2   =   ap x2 f
-                        let v = self.get_app(x.clone(), F);
+                        let v = self.get_app(*x, F);
                         self.eval(v, env)
                     }
                     // Cons
                     Val(Cons(xs)) if xs.len() == 2 => {
                         // ap ap ap cons x0 x1 x2   =   ap ap x2 x0 x1
-                        let v = self.get_app(self.get_app(x.clone(), xs[0]), xs[1]);
+                        let v = self.get_app(self.get_app(*x, xs[0]), xs[1]);
                         let res = self.eval(v, env)?;
                         env.insert(v, (true, res));
                         Ok(res)
                     }
                     Val(Cons(xs)) => {
                         let mut args = xs.clone();
-                        args.push(x.clone());
+                        args.push(*x);
                         Ok(self.get_val(Cons(args)))
                     }
                     // B-Combinator
                     Val(BComb(xs)) if xs.len() == 2 => {
                         // ap ap ap b x0 x1 x2   =   ap x0 ap x1 x2
-                        let v = self.get_app(xs[0], self.get_app(xs[1], x.clone()));
+                        let v = self.get_app(xs[0], self.get_app(xs[1], *x));
                         let res = self.eval(v, env)?;
                         env.insert(v, (true, res));
                         Ok(res)
@@ -157,13 +157,13 @@ impl<'a> Evaluator<'a> {
                     Val(BComb(xs)) => {
                         assert!(xs.len() < 2);
                         let mut args = xs.clone();
-                        args.push(x.clone());
+                        args.push(*x);
                         Ok(self.get_val(BComb(args)))
                     }
                     // C-Combinator
                     Val(CComb(xs)) if xs.len() == 2 => {
                         // ap ap ap c x0 x1 x2   =   ap ap x0 x2 x1
-                        let v = self.get_app(self.get_app(xs[0], x.clone()), xs[1]);
+                        let v = self.get_app(self.get_app(xs[0], *x), xs[1]);
                         let res = self.eval(v, env)?;
                         env.insert(v, (true, res));
                         Ok(res)
@@ -171,16 +171,13 @@ impl<'a> Evaluator<'a> {
                     Val(CComb(xs)) => {
                         assert!(xs.len() < 2);
                         let mut args = xs.clone();
-                        args.push(x.clone());
+                        args.push(*x);
                         Ok(self.get_val(CComb(args)))
                     }
                     // S-Combinator
                     Val(SComb(xs)) if xs.len() == 2 => {
                         // ap ap ap s x0 x1 x2   =   ap ap x0 x2 ap x1 x2
-                        let v = self.get_app(
-                            self.get_app(xs[0], x.clone()),
-                            self.get_app(xs[1], x.clone()),
-                        );
+                        let v = self.get_app(self.get_app(xs[0], *x), self.get_app(xs[1], *x));
                         let res = self.eval(v, env)?;
                         env.insert(v, (true, res));
                         Ok(res)
@@ -188,13 +185,13 @@ impl<'a> Evaluator<'a> {
                     Val(SComb(xs)) => {
                         assert!(xs.len() < 2);
                         let mut args = xs.clone();
-                        args.push(x.clone());
+                        args.push(*x);
                         Ok(self.get_val(SComb(args)))
                     }
                     // I-Combinator
                     Val(IComb) => {
                         // ap i x0   =   x0
-                        self.eval(x.clone(), env)
+                        self.eval(*x, env)
                     }
                     // True
                     Val(True(xs)) if xs.len() == 1 => {
@@ -205,61 +202,61 @@ impl<'a> Evaluator<'a> {
                     Val(True(xs)) => {
                         assert_eq!(xs.len(), 0);
                         let mut args = xs.clone();
-                        args.push(x.clone());
+                        args.push(*x);
                         Ok(self.get_val(True(args)))
                     }
                     // False
                     Val(False(xs)) if xs.len() == 1 => {
                         // ap ap f x0 x1   =   x1
-                        self.eval(x.clone(), env)
+                        self.eval(*x, env)
                     }
                     Val(False(xs)) => {
                         assert_eq!(xs.len(), 0);
                         let mut args = xs.clone();
-                        args.push(x.clone());
+                        args.push(*x);
                         Ok(self.get_val(False(args)))
                     }
                     // Sum (Add)
                     Val(Sum(xs)) if xs.len() == 1 => {
                         let x0 = self.eval(xs[0], env)?.get_number().unwrap();
-                        let x1 = self.eval(x.clone(), env)?.get_number().unwrap();
+                        let x1 = self.eval(*x, env)?.get_number().unwrap();
                         Ok(self.get_val(Number(x0 + x1)))
                     }
                     Val(Sum(xs)) => {
                         assert_eq!(xs.len(), 0);
-                        let args = vec![x.clone()];
+                        let args = vec![*x];
                         Ok(self.get_val(Sum(args)))
                     }
                     // Product
                     Val(Prod(xs)) if xs.len() == 1 => {
                         let x0 = self.eval(xs[0], env)?.get_number().unwrap();
-                        let x1 = self.eval(x.clone(), env)?.get_number().unwrap();
+                        let x1 = self.eval(*x, env)?.get_number().unwrap();
                         Ok(self.get_val(Number(x0 * x1)))
                     }
                     Val(Prod(xs)) => {
                         assert_eq!(xs.len(), 0);
-                        let args = vec![x.clone()];
+                        let args = vec![*x];
                         Ok(self.get_val(Prod(args)))
                     }
                     Val(Neg) => {
-                        let x = self.eval(x.clone(), env)?;
+                        let x = self.eval(*x, env)?;
                         let x = x.get_number().unwrap();
                         Ok(self.get_val(Number(-x)))
                     }
                     // Div
                     Val(Div(xs)) if xs.len() == 1 => {
                         let x_num = self.eval(xs[0], env)?.get_number().unwrap();
-                        let x_den = self.eval(x.clone(), env)?.get_number().unwrap();
+                        let x_den = self.eval(*x, env)?.get_number().unwrap();
                         Ok(self.get_val(Number(x_num / x_den)))
                     }
                     Val(Div(xs)) => {
                         assert_eq!(xs.len(), 0);
-                        let args = vec![x.clone()];
+                        let args = vec![*x];
                         Ok(self.get_val(Div(args)))
                     }
                     Val(Nil) => Ok(self.get_val(True(vec![]))),
                     Val(IsNil) => {
-                        let e = self.eval(x.clone(), env)?;
+                        let e = self.eval(*x, env)?;
                         match e {
                             Val(Nil) => Ok(self.get_val(True(vec![]))),
                             Val(Cons(_)) => Ok(self.get_val(False(vec![]))),
@@ -269,7 +266,7 @@ impl<'a> Evaluator<'a> {
                     // Less
                     Val(Less(xs)) if xs.len() == 1 => {
                         let x0 = self.eval(xs[0], env)?.get_number().unwrap();
-                        let x1 = self.eval(x.clone(), env)?.get_number().unwrap();
+                        let x1 = self.eval(*x, env)?.get_number().unwrap();
 
                         if x0 < x1 {
                             Ok(self.get_val(True(vec![])))
@@ -279,13 +276,13 @@ impl<'a> Evaluator<'a> {
                     }
                     Val(Less(xs)) => {
                         assert_eq!(xs.len(), 0);
-                        let args = vec![x.clone()];
+                        let args = vec![*x];
                         Ok(self.get_val(Less(args)))
                     }
                     // BigEq
                     Val(BigEq(xs)) if xs.len() == 1 => {
                         let x0 = self.eval(xs[0], env)?.get_number().unwrap();
-                        let x1 = self.eval(x.clone(), env)?.get_number().unwrap();
+                        let x1 = self.eval(*x, env)?.get_number().unwrap();
 
                         if x0 == x1 {
                             Ok(self.get_val(True(vec![])))
@@ -295,7 +292,7 @@ impl<'a> Evaluator<'a> {
                     }
                     Val(BigEq(xs)) => {
                         assert_eq!(xs.len(), 0);
-                        let args = vec![x.clone()];
+                        let args = vec![*x];
                         Ok(self.get_val(BigEq(args)))
                     }
                     _ => {
