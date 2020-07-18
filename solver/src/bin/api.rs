@@ -1,3 +1,4 @@
+use icfpc2020::eval::Evaluator;
 use icfpc2020::modulate::*;
 
 fn send(request: &str) -> String {
@@ -22,6 +23,7 @@ fn main() {
     let request = "1101000";
 
     let res = send(request);
-    let a = demodulate(&res);
-    println!("{:?}", &a);
+    let eval = Evaluator::new();
+    let a = demodulate(&res, &eval);
+    println!("{:?}", a);
 }
