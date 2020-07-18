@@ -40,11 +40,11 @@ fn parse_internal(symbols: &[Symbol], cur: &mut usize) -> Expr {
             *cur += 1;
             let expr1 = parse_internal(&symbols, cur);
             let expr2 = parse_internal(&symbols, cur);
-            return Expr::Apply(Box::<Expr>::new(expr1), Box::<Expr>::new(expr2));
+            Expr::Apply(Box::<Expr>::new(expr1), Box::<Expr>::new(expr2))
         }
         _ => {
             *cur += 1;
-            return Expr::Val(symbols[*cur - 1].clone());
+            Expr::Val(symbols[*cur - 1].clone())
         }
     }
 }

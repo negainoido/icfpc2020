@@ -13,9 +13,9 @@ fn do_demodulate(a: &str) -> (&str, List) {
     if prefix == "11" {
         let (a, car) = do_demodulate(&a[2..]);
         let (a, cdr) = do_demodulate(a);
-        return (a, List::Cons(Box::new(car), Box::new(cdr)));
+        (a, List::Cons(Box::new(car), Box::new(cdr)))
     } else if prefix == "00" {
-        return (&a[2..], List::Nil);
+        (&a[2..], List::Nil)
     } else {
         let sign = if prefix == "01" { 1 } else { -1 };
         let a = &a[2..];
@@ -40,7 +40,7 @@ fn do_demodulate(a: &str) -> (&str, List) {
             }
         };
         let a = &a[len..];
-        return (a, List::Integer(sign * num));
+        (a, List::Integer(sign * num))
     }
 }
 
@@ -119,7 +119,7 @@ pub fn demodulate(a: &str) -> TypedExpr {
         return TypedExpr::Val(TypedSymbol::Nil);
     }
     let (_, l) = do_demodulate(a);
-    return convert_to_expr(&l);
+    convert_to_expr(&l)
 }
 
 #[cfg(test)]
