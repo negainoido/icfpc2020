@@ -5,9 +5,6 @@ use crate::expr;
 use crate::expr::Expr;
 use crate::symbol::Symbol;
 use crate::typing::{ExprNode, TypedExpr};
-use std::cell::RefCell;
-use std::fmt::{Debug, Formatter};
-use std::ops::Deref;
 use typed_arena::Arena;
 
 pub struct Task<'a> {
@@ -15,14 +12,6 @@ pub struct Task<'a> {
     pub target: Expr,
     evaluator: Evaluator<'a>,
     pool: Arena<TypedExpr<'a>>,
-}
-
-impl<'a> Debug for Task<'a> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.target.fmt(f);
-        self.variable_to_expr_map.fmt(f);
-        Ok(())
-    }
 }
 
 impl<'a> Task<'a> {

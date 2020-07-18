@@ -1,7 +1,5 @@
-use crate::eval::static_expr::*;
 use crate::eval::Evaluator;
 use crate::typing::{ExprNode, TypedExpr, TypedSymbol};
-use std::cell::RefCell;
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum List {
@@ -127,7 +125,8 @@ pub fn demodulate<'a>(a: &str, sim: &'a Evaluator<'a>) -> ExprNode<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::eval::{eval, EvalError, Evaluator};
+    use crate::eval::static_expr::*;
+    use crate::eval::Evaluator;
     use std::collections::HashMap;
 
     #[test]

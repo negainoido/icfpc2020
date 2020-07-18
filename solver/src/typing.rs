@@ -1,6 +1,5 @@
 use crate::expr::Expr;
 use crate::symbol::Symbol;
-use std::cell::RefCell;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TypedSymbol<'a> {

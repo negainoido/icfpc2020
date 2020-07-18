@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use crate::eval::static_expr::{CONS, DIV};
 use crate::expr::Expr;
 use crate::typing::*;
-use std::cell::RefCell;
 use typed_arena::Arena;
 
 #[derive(Debug)]
@@ -57,6 +56,7 @@ impl<'a> Evaluator<'a> {
         self.exprs.alloc(TypedExpr::Val(TypedSymbol::Number(v)))
     }
 
+    #[allow(dead_code)]
     fn div(&'a self, e1: ExprNode<'a>, e2: ExprNode<'a>) -> ExprNode<'a> {
         let e3 = self.exprs.alloc(TypedExpr::Apply(DIV, e1));
         self.exprs.alloc(TypedExpr::Apply(e3, e2))
@@ -289,8 +289,6 @@ pub fn eval<'a>(
 mod test {
     use super::*;
     use crate::eval::static_expr::*;
-    use crate::typing::TypedExpr::*;
-    use crate::typing::TypedSymbol::*;
 
     fn empty_env<'a>() -> HashMap<i128, ExprNode<'a>> {
         HashMap::new()
