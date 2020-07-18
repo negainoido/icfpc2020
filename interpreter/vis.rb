@@ -116,6 +116,13 @@ def plot_and_interact(images)
 
 	@plot.puts "set mouse verbose"
 
+	begin
+		while true
+			@plot.read_nonblock(100)
+		end
+	rescue IO::EAGAINWaitReadable
+	end
+
 	while l = @plot.gets
 		puts "gnuplot: #{l}"
 		if l =~ /put `\s*(-?[-0-9\.]*),\s*(-?[0-9\.]*)' to clipboard\./
@@ -127,27 +134,17 @@ def plot_and_interact(images)
 	end
 end
 
-#next_point = point_to_lambda(0, 0)
-#data = "nil"
+next_point = point_to_lambda(0, 0)
+data = "nil"
 
-#next_point = "1 4"
+#next_point = point_to_lambda(1, 4)
+#data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+#
+#
+#next_point = point_to_lambda(-3, 1)
 #data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 
-
-next_point = point_to_lambda(-3, 1)
-data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
-
 @plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
-
-=begin
-@plot_queue = Thread::queue.new 
-@plot = nil
-plot_worker = Thread.new do
-	@plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
-
-#	@plot_queue = 
-end
-=end
 
 while true
 	lines = exec_autotaker(next_point, data)
