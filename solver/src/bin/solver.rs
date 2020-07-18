@@ -14,7 +14,7 @@ struct Opt {
     input: String,
 }
 
-fn main() -> std::io::Result<()> {
+fn run() -> std::io::Result<()> {
     let opt = Opt::from_args();
     common_init(&opt.common);
 
@@ -33,4 +33,13 @@ fn main() -> std::io::Result<()> {
     let final_expr = task.solve();
     println!("{:?}", final_expr);
     Ok(())
+}
+
+fn main() {
+    let _ = ::std::thread::Builder::new()
+        .name("run".to_string())
+        .stack_size(32 * 1024 * 1024)
+        .spawn(run)
+        .unwrap()
+        .join();
 }
