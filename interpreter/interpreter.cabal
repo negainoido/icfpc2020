@@ -20,7 +20,8 @@ library
   exposed-modules:     
     MyLib,
     Negainoido.Syntax,
-    Negainoido.Parser
+    Negainoido.Parser,
+    Negainoido.Eval
     
   -- other-modules:
   -- other-extensions:
@@ -68,7 +69,8 @@ test-suite interpreter-test
   main-is:             Main.hs
   other-modules:
     MyLibSpec,
-    Negainoido.ParserSpec
+    Negainoido.ParserSpec,
+    Negainoido.EvalSpec
   build-depends:       
     base ^>=4.13.0.0,
     hspec ^>=2.7.1,
