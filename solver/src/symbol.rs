@@ -251,7 +251,6 @@ impl Symbol {
         } else if token.starts_with(":") {
             Symbol::Variable(token[1..].parse::<i128>().unwrap())
         } else {
-            dbg!(&token);
             Symbol::Number(token.parse::<i128>().unwrap())
         }
     }
