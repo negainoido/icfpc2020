@@ -12,7 +12,7 @@ pub fn parse(symbols: &Vec<Symbol>) -> Expr {
     for e in symbols {
         match e {
             Symbol::App => {
-                new_symbols.push(e.clone());
+                new_symbols.push(*e);
                 //app_count += 1;
             }
             Symbol::Prod => {
@@ -24,7 +24,7 @@ pub fn parse(symbols: &Vec<Symbol>) -> Expr {
                 //app_count = 0;
             }
             _ => {
-                new_symbols.push(e.clone());
+                new_symbols.push(*e);
                 //app_count = 0;
             }
         }
@@ -44,7 +44,7 @@ fn parse_internal(symbols: &[Symbol], cur: &mut usize) -> Expr {
         }
         _ => {
             *cur += 1;
-            Expr::Val(symbols[*cur - 1].clone())
+            Expr::Val(symbols[*cur - 1])
         }
     }
 }
