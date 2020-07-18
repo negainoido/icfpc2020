@@ -107,17 +107,15 @@ fn main() -> Result<(), Error> {
             let result = ureq::post(&hook_url).send_json(serde_json::to_value(json).unwrap());
 
             println!("{:?}", result);
-        },
+        }
         Action::Send(opt) => {
             let user = env::var("USER")?;
             let keyring = keyring::Keyring::new(ICFPC_KEY, &user);
-            let api_key = opt.api_key.clone()
-                .or_else(|| {
-                    env::var("API_KEY").ok()
-                })
-                .or_else(|| {
-                    keyring.get_password().ok()
-                })
+            let api_key = opt
+                .api_key
+                .clone()
+                .or_else(|| env::var("API_KEY").ok())
+                .or_else(|| keyring.get_password().ok())
                 .ok_or(failure::err_msg("NO API_KEY provided"))?;
             keyring.set_password(&api_key)?;
 
