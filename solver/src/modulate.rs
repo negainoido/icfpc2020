@@ -176,10 +176,7 @@ mod tests {
         let request = "1101100001111101100010110110001100110110010000";
         let expected_expr = cons(
             number(1),
-            cons(
-                cons(number(2), cons(number(3), NIL)),
-                cons(number(4), NIL),
-            ),
+            cons(cons(number(2), cons(number(3), NIL)), cons(number(4), NIL)),
         );
         assert_eq!(modulate(&expected_expr), request);
         assert_eq!(demodulate(request), expected_expr);
