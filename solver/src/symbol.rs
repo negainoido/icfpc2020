@@ -222,7 +222,7 @@ impl Symbol {
         None
     }
 
-    pub fn from_text(token: String, target: &String) -> Symbol {
+    pub fn from_text(token: &str, target: &str) -> Symbol {
         let token = token.trim();
         let option_symbol = match token {
             "add" => Some(Symbol::Sum),

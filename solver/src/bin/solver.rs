@@ -29,7 +29,7 @@ fn main() -> std::io::Result<()> {
         line.clear();
     }
 
-    let task = Task::new(&lines);
+    let task = Task::new(&lines[..]);
     let final_expr = task.solve();
     println!("{:?}", final_expr);
     Ok(())
