@@ -49,10 +49,9 @@ impl Task {
     }
 
     fn string_to_symbols(s: &str, target: &str) -> Vec<Symbol> {
-        return s
-            .split_whitespace()
+        s.split_whitespace()
             .map(|s| Symbol::from_text(s, target))
-            .collect();
+            .collect()
     }
 }
 
