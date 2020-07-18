@@ -88,6 +88,7 @@ while true
 	else
 		# interact with galaxy
 		puts "Interacting with Galaxy..."
+#		`curl -X POST "https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c" -H "accept: */*" -H "Content-Type: text/plain" -d "string"`
 #		"https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c"
 		next_point = "1 ap ap cons 54978 nil"
 	end
