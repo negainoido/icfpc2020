@@ -10,12 +10,29 @@ pub enum EvalError {
     Todo,
 }
 
-fn app(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
+pub fn app(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
     TypedExpr::Apply(Box::new(e1), Box::new(e2))
 }
 
-fn val(sym: TypedSymbol) -> TypedExpr {
+pub fn val(sym: TypedSymbol) -> TypedExpr {
     TypedExpr::Val(sym)
+}
+
+pub fn nil() -> TypedExpr {
+    TypedExpr::Val(TypedSymbol::Nil)
+}
+
+pub fn car() -> TypedExpr {
+    TypedExpr::Val(TypedSymbol::Car)
+}
+
+pub fn cons(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
+    let c = TypedExpr::Val(TypedSymbol::Cons(vec![]));
+    app(app(c, e1), e2)
+}
+
+pub fn number(x: i128) -> TypedExpr {
+    TypedExpr::Val(TypedSymbol::Number(x))
 }
 
 pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExpr, EvalError> {
@@ -24,7 +41,10 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
     use TypedSymbol::*;
 
     match expr {
-        Val(Variable(i)) => env.get(i).map(|v| v.clone()).ok_or(UndefinedVariable(*i)),
+        Val(Variable(i)) => {
+            let v = env.get(i).map(|v| v.clone()).ok_or(UndefinedVariable(*i))?;
+            eval(&v, env)
+        }
         Val(_) => Ok(expr.clone()),
         Apply(f, x) => {
             let f = eval(&f, env)?;
@@ -175,6 +195,7 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                     let args = vec![*x.clone()];
                     Ok(Val(Div(args)))
                 }
+                Val(Nil) => Ok(Val(True(vec![]))),
                 Val(IsNil) => {
                     let e = eval(&x, env)?;
                     match e {
@@ -240,10 +261,6 @@ mod test {
         HashMap::new()
     }
 
-    fn number(x: i128) -> TypedExpr {
-        TypedExpr::Val(TypedSymbol::Number(x))
-    }
-
     fn neg(e: TypedExpr) -> TypedExpr {
         let n = TypedExpr::Val(TypedSymbol::Neg);
         app(n, e)
@@ -257,19 +274,6 @@ mod test {
     fn less(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
         let l = TypedExpr::Val(TypedSymbol::Less(vec![]));
         app(app(l, e1), e2)
-    }
-
-    fn nil() -> TypedExpr {
-        TypedExpr::Val(TypedSymbol::Nil)
-    }
-
-    fn car() -> TypedExpr {
-        TypedExpr::Val(TypedSymbol::Car)
-    }
-
-    fn cons(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
-        let c = TypedExpr::Val(TypedSymbol::Cons(vec![]));
-        app(app(c, e1), e2)
     }
 
     fn variable(x: i128) -> TypedExpr {
