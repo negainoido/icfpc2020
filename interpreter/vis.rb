@@ -1,5 +1,6 @@
 require 'json'
 require 'pp'
+require 'fileutils'
 
 def point_to_lambda(x, y)
 	"ap ap cons #{x} #{y}"
@@ -101,19 +102,26 @@ def exec_autotaker(point, data = "nil")
 	end
 end
 
-def plot_and_interact(images)
+def plot_string_from(images)
+	io = StringIO.new
 	images.length.times do |i|
-		@plot.puts "$image#{i} << EOD"
+		io.puts "$image#{i} << EOD"
 		images[i].each do |x, y|
-			@plot.puts "#{x} #{y}"
+			io.puts "#{x} #{y}"
 		end
-		@plot.puts "EOD"
+		io.puts "EOD"
 	end
 
-	@plot.puts "set yrange [:] reverse"
+	data = images.length.times.map {|i| "$image#{i}"}.join(",")
+	io.puts "plot #{data}"
 
-	data = images.length.times.map {|i| "$image#{i} pt 5 "}.join(",")
-	@plot.puts "plot #{data}"
+	io.rewind
+	io.read
+end
+
+def plot_and_interact(images)
+	@plot.puts plot_string_from(images)
+
 
 	@plot.puts "set mouse verbose"
 
@@ -125,20 +133,48 @@ def plot_and_interact(images)
 	end
 
 	while l = @plot.gets
-		puts "gnuplot: #{l}"
+		$stderr.puts "gnuplot: #{l}"
 		if l =~ /put `\s*(-?[-0-9\.]*),\s*(-?[0-9\.]*)' to clipboard\./
 			x = $1.to_f.round
 			y = $2.to_f.round
-			puts "Clicked: #{x} #{y}"
+			$stderr.puts "Clicked: #{x} #{y}"
 			return [x, y]
 		end
 	end
 end
 
+def save_images_as_png(images, as)
+	IO.popen("gnuplot", "r+", :err => [:child, :out]) do |plot|
+		plot.puts "set terminal png"
+		plot.puts "set output '#{as}'"
+		plot.puts plot_string_from(images)
+	end
+end
+
+def save_data(point, data, json)
+	json = json.clone
+	json["point"] = point
+	json["data"] = data
+	fileprefix = ("%10.9f" % Time.now.to_f).gsub(/\./, "_")
+
+
+	FileUtils.mkdir_p('./log/')
+	File.open("./log/#{fileprefix}.json", "w") do |f|
+		JSON.dump(json, f)
+	end
+
+	images = json["imageList"]
+	save_images_as_png(images, "./log/#{fileprefix}.png") if images
+end
+
 #next_point = point_to_lambda(0, 0)
 #data = "nil"
 #
-next_point = point_to_lambda(1, 4)
+#next_point = point_to_lambda(1, 4)
+#data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+
+next_point = point_to_lambda(-3, 1)
+
 data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 #
 #
@@ -153,9 +189,15 @@ while true
 	$stderr.puts lines
 	$stderr.puts "#################"
 
-	res = JSON.parse(File.open("result.json").read())
+	json = File.open("result.json").read()
+	res = JSON.parse(json)
+
+	save_data(next_point, data, res)
+
 	result = res["returnValue"]
 	data = res["stateData"]
+
+
 
 	if result == 0
 		# show images
