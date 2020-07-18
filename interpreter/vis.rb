@@ -18,9 +18,9 @@ end
 
 def exec_autotaker(point, data = "nil")
 	galaxy = File.open("galaxy.txt").read()
-	galaxy.gsub!(/^(:2000 = ap ap cons) (.*)$/, "\\1 #{point[0]} #{point[1]}")
+	galaxy.gsub!(/^(:2000 = ap ap cons) (.*)$/, "\\1 #{point}")
 	galaxy.gsub!(/^(:2001 = )(.*)$/, "\\1#{data}")
-	puts "point: #{point[0]} #{point[1]}"
+	puts "point: #{point}"
 	puts "data: #{data}"
 
 	lines = IO.popen(["cabal", "new-exec", "interpreter"], "r+") do |autotaker|
@@ -59,11 +59,15 @@ def plot_and_interact(lines)
 	end
 end
 
-next_point = [0, 0]
+next_point = "0 0"
 data = "nil"
 
-#next_point = [1, 4]
-#data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+next_point = "1 4"
+data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+
+
+next_point = "-3 1"
+data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 
 @plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
 
@@ -72,13 +76,21 @@ while true
 	puts "### autotaker"
 	puts lines
 
-	data = lines =~ /DataAsCode: (.*)/ ? $1 : nil
-	if !data
-		$stderr.puts "!!!Warning!!!:  We could not find the next data"
-		data = "nil"
-	end
+	raise "Could not find Result from autotaker!" if lines !~ /Result: (.*)/
+	result = $1.to_i
+	raise "We could not find the next data from autotaker!" if lines !~ /DataAsCode: (.*)/
+	data = $1
 
-	next_point = plot_and_interact(lines)
+	if result == 0
+		# show images
+		next_point = plot_and_interact(lines)
+		next_point = "#{next_point[0]} #{next_point[1]}"
+	else
+		# interact with galaxy
+		puts "Interacting with Galaxy..."
+#		"https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c"
+		next_point = "1 ap ap cons 54978 nil"
+	end
 end
 
 
