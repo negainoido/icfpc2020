@@ -1,18 +1,27 @@
-fn main() -> std::io::Result<()> {
-    let request = "1101000";
+use icfpc2020::modulate::*;
 
+fn send(request: &str) -> String {
     let resp = ureq::post(
         "https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c",
     )
     .send_bytes(&request.as_bytes());
 
-    // .ok() tells if response is 200-299.
     if resp.ok() {
-        println!("success: {}", resp.into_string()?);
+        let res = resp.into_string().unwrap();
+        return res;
     } else {
-        // This can include errors like failure to parse URL or connect timeout.
-        // They are treated as synthetic HTTP-level error statuses.
-        println!("error {}: {}", resp.status(), resp.into_string()?);
+        panic!(
+            "error {} while using the 'send' API: {}",
+            resp.status(),
+            resp.into_string().unwrap()
+        );
     }
-    Ok(())
+}
+
+fn main() {
+    let request = "1101000";
+
+    let res = send(request);
+    let a = demodulate(&res);
+    println!("{:?}", &a);
 }
