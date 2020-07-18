@@ -117,7 +117,12 @@ data Value =
     deriving(Show, Eq)
 
 data SData = DNumber Integer | DCons SData SData | DNil
-    deriving(Show, Eq)
+    deriving(Eq)
+
+instance Show SData where
+    show (DNumber i) = show i
+    show (DCons v1 v2) = "(" ++ unwords ["cons", show v1, show v2] ++  ")"
+    show DNil = "nil"
 
 type Env = M.Map NT Thunk
 
@@ -152,7 +157,7 @@ evalForce (VPApp Cons [t2, t1]) = DCons <$> (evalThunk t1 >>= evalForce) <*> (ev
 evalForce e = throwError $ "cannot force partial application" ++ show e
 
 eval :: Env -> Expr -> ExceptT String IO Value
-eval env e | traceShow ("eval", e) False = undefined
+-- eval env e | traceShow ("eval", e) False = undefined
 eval env (EThunk t args) = do
     v <- evalThunk t
     case (v, args) of
