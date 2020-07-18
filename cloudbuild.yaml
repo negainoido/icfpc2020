@@ -75,6 +75,7 @@ images:
 options:
   env:
     - 'CARGO_HOME=/workspace/cargo_home'
+  machineType: 'N1_HIGHCPU_8'
 
 substitutions:
   _CACHE_BUCKET: negainoido-icfpc-2020_cloudbuild
