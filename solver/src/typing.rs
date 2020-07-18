@@ -41,12 +41,12 @@ impl TypedSymbol {
             Symbol::True => Some(True(vec![])),
             Symbol::False => Some(False(vec![])),
             Symbol::Variable(i) => Some(Variable(*i)),
-            Symbol::SumN(arity) => Some(Sum {
-                arity: *arity,
+            Symbol::Sum => Some(Sum {
+                arity: 2,
                 args: vec![],
             }),
-            Symbol::ProdN(arity) => Some(Prod {
-                arity: *arity,
+            Symbol::Prod => Some(Prod {
+                arity: 2,
                 args: vec![],
             }),
 

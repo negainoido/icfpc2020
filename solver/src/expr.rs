@@ -16,11 +16,11 @@ pub fn parse(symbols: &Vec<Symbol>) -> Expr {
                 //app_count += 1;
             }
             Symbol::Prod => {
-                new_symbols.push(Symbol::ProdN(2));
+                new_symbols.push(Symbol::Prod);
                 //app_count = 0;
             }
             Symbol::Sum => {
-                new_symbols.push(Symbol::SumN(2));
+                new_symbols.push(Symbol::Sum);
                 //app_count = 0;
             }
             _ => {
@@ -71,7 +71,7 @@ mod tests {
         let symbols = vec![App, App, Sum, Number(1), Number(2)];
         let expr = parse(&symbols);
         let expected_expr = Apply(
-            Box::new(Apply(Box::new(Val(SumN(2))), Box::new(Val(Number(1))))),
+            Box::new(Apply(Box::new(Val(Sum)), Box::new(Val(Number(1))))),
             Box::new(Val(Number(2))),
         );
         assert_eq!(expr, expected_expr);
@@ -92,26 +92,11 @@ mod tests {
         ];
         let expr = parse(&symbols);
         let expected_expr = Apply(
-            Box::new(Apply(Box::new(Val(SumN(2))), Box::new(Val(Number(1))))),
+            Box::new(Apply(Box::new(Val(Sum)), Box::new(Val(Number(1))))),
             Box::new(Apply(
-                Box::new(Apply(Box::new(Val(SumN(2))), Box::new(Val(Number(2))))),
+                Box::new(Apply(Box::new(Val(Sum)), Box::new(Val(Number(2))))),
                 Box::new(Val(Number(3))),
             )),
-        );
-        assert_eq!(expr, expected_expr);
-    }
-
-    #[test]
-    #[ignore]
-    fn parse_three_sum() {
-        let symbols = vec![App, App, App, Sum, Number(1), Number(2), Number(3)];
-        let expr = parse(&symbols);
-        let expected_expr = Apply(
-            Box::new(Apply(
-                Box::new(Apply(Box::new(Val(SumN(3))), Box::new(Val(Number(1))))),
-                Box::new(Val(Number(2))),
-            )),
-            Box::new(Val(Number(3))),
         );
         assert_eq!(expr, expected_expr);
     }
