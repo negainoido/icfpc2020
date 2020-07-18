@@ -65,16 +65,13 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 // C-Combinator
                 Val(CComb(xs)) if xs.len() == 2 => {
                     // ap ap ap c x0 x1 x2   =   ap ap x0 x2 x1
-                    eprintln!("!! C({:?}, {:?})", &xs, &x);
                     let v = app(app(xs[0].clone(), *x.clone()), xs[1].clone());
-                    eprintln!("!! v = {:?}", &v);
                     eval(&v, env)
                 }
                 Val(CComb(xs)) => {
                     assert!(xs.len() < 2);
                     let mut args = xs.clone();
                     args.push(*x.clone());
-                    eprintln!("partial C({:?})", &args);
                     Ok(Val(CComb(args)))
                 }
                 // S-Combinator
