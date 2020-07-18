@@ -250,14 +250,11 @@ impl Symbol {
             symbol
         } else if token.eq(target) {
             Symbol::Target
+        } else if token.starts_with(":") {
+            Symbol::Variable(token[1..].parse::<i128>().unwrap())
         } else {
-            match token.chars().next().unwrap() {
-                ':' => Symbol::Variable(token[1..].parse::<i128>().unwrap()),
-                _ => {
-                    dbg!(&token);
-                    Symbol::Number(token.parse::<i128>().unwrap())
-                }
-            }
+            dbg!(&token);
+            Symbol::Number(token.parse::<i128>().unwrap())
         }
     }
 }
