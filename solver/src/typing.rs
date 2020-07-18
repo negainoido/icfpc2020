@@ -1,6 +1,6 @@
 use crate::symbol::Symbol;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TypedSymbol<'a> {
     Number(i128),
     Nil,
@@ -55,7 +55,7 @@ impl<'a> TypedSymbol<'a> {
 
 pub type ExprNode<'a> = &'a TypedExpr<'a>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TypedExpr<'a> {
     Apply(ExprNode<'a>, ExprNode<'a>),
     Val(TypedSymbol<'a>),

@@ -146,8 +146,8 @@ mod tests {
         let expected = "1101000";
         assert_eq!(result, expected);
 
-        let env = HashMap::new();
-        let expr = eval.eval(expr, &env).unwrap();
+        let mut env = HashMap::new();
+        let expr = eval.eval(expr, &mut env).unwrap();
         let result = modulate(expr);
         assert_eq!(result, expected);
     }

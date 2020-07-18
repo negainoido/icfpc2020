@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::eval::static_expr::{CONS, DIV};
+use crate::eval::static_expr::*;
 use crate::expr::Expr;
 use crate::typing::*;
 use typed_arena::Arena;
@@ -16,6 +16,7 @@ pub enum EvalError<'a> {
 pub struct Evaluator<'a> {
     exprs: Arena<TypedExpr<'a>>,
 }
+
 pub mod static_expr {
     use crate::typing::TypedExpr;
     use crate::typing::TypedExpr::*;
@@ -62,6 +63,31 @@ impl<'a> Evaluator<'a> {
         self.exprs.alloc(TypedExpr::Apply(e3, e2))
     }
 
+    pub fn peel(
+        &'a self,
+        expr: ExprNode<'a>,
+        mut env: &mut HashMap<ExprNode<'a>, (bool, ExprNode<'a>)>,
+    ) -> ExprNode<'a> {
+        use TypedExpr::*;
+        use TypedSymbol::*;
+        if let Some((true, evaluated)) = env.get(&expr) {
+            return evaluated;
+        }
+        match expr {
+            Val(Cons(xs)) => {
+                let args = xs
+                    .iter()
+                    .map(|x| {
+                        let e = self.eval(&x, &mut env).unwrap();
+                        self.peel(e, &mut env)
+                    })
+                    .collect();
+                self.get_val(Cons(args))
+            }
+            _ => expr,
+        }
+    }
+
     pub fn get_cons(&'a self, e1: ExprNode<'a>, e2: ExprNode<'a>) -> ExprNode<'a> {
         let e3 = self.exprs.alloc(TypedExpr::Apply(CONS, e1));
         self.exprs.alloc(TypedExpr::Apply(e3, e2))
@@ -70,42 +96,50 @@ impl<'a> Evaluator<'a> {
     pub fn eval(
         &'a self,
         expr: ExprNode<'a>,
-        env: &HashMap<i128, ExprNode<'a>>,
+        mut env: &mut HashMap<ExprNode<'a>, (bool, ExprNode<'a>)>,
     ) -> Result<ExprNode, EvalError> {
         use EvalError::*;
         use TypedExpr::*;
         use TypedSymbol::*;
 
+        if let Some((true, evaluated)) = env.get(&expr) {
+            return Ok(evaluated);
+        }
+
         match expr {
             Val(Variable(i)) => {
-                let v = env
-                    .get(&i)
-                    .map(|v| v.clone())
-                    .ok_or(UndefinedVariable(*i))?;
-                self.eval(v, env)
+                let body = env.get(&expr).ok_or(UndefinedVariable(*i))?.1;
+                let body = self.eval(body, &mut env)?;
+                env.insert(expr, (true, body));
+                Ok(body)
             }
             Val(_) => Ok(expr),
             Apply(f, x) => {
                 let f = self.eval(f, env)?;
+                let func = self.eval(f, env)?;
+                env.insert(f, (true, func));
                 match f {
                     // Car
                     Val(Car) => {
                         // ap car x   =   ap x t
-                        let v = self.get_app(x.clone(), self.get_val(True(vec![])));
-                        self.eval(v, env)
+                        let v = self.get_app(x.clone(), T);
+                        let res = self.eval(v, env)?;
+                        env.insert(v, (true, res));
+                        Ok(res)
                     }
                     // Cdr
                     Val(Cdr) => {
                         // ap cdr x2   =   ap x2 f
-                        let v = self.get_app(x.clone(), self.get_val(False(vec![])));
-                        eprintln!("cdr v = {:?}", &v);
+                        let v = self.get_app(x.clone(), F);
                         self.eval(v, env)
                     }
                     // Cons
                     Val(Cons(xs)) if xs.len() == 2 => {
                         // ap ap ap cons x0 x1 x2   =   ap ap x2 x0 x1
                         let v = self.get_app(self.get_app(x.clone(), xs[0]), xs[1]);
-                        self.eval(v, env)
+                        let res = self.eval(v, env)?;
+                        env.insert(v, (true, res));
+                        Ok(res)
                     }
                     Val(Cons(xs)) => {
                         let mut args = xs.clone();
@@ -116,7 +150,9 @@ impl<'a> Evaluator<'a> {
                     Val(BComb(xs)) if xs.len() == 2 => {
                         // ap ap ap b x0 x1 x2   =   ap x0 ap x1 x2
                         let v = self.get_app(xs[0], self.get_app(xs[1], x.clone()));
-                        self.eval(v, env)
+                        let res = self.eval(v, env)?;
+                        env.insert(v, (true, res));
+                        Ok(res)
                     }
                     Val(BComb(xs)) => {
                         assert!(xs.len() < 2);
@@ -128,7 +164,9 @@ impl<'a> Evaluator<'a> {
                     Val(CComb(xs)) if xs.len() == 2 => {
                         // ap ap ap c x0 x1 x2   =   ap ap x0 x2 x1
                         let v = self.get_app(self.get_app(xs[0], x.clone()), xs[1]);
-                        self.eval(v, env)
+                        let res = self.eval(v, env)?;
+                        env.insert(v, (true, res));
+                        Ok(res)
                     }
                     Val(CComb(xs)) => {
                         assert!(xs.len() < 2);
@@ -143,7 +181,9 @@ impl<'a> Evaluator<'a> {
                             self.get_app(xs[0], x.clone()),
                             self.get_app(xs[1], x.clone()),
                         );
-                        self.eval(v, env)
+                        let res = self.eval(v, env)?;
+                        env.insert(v, (true, res));
+                        Ok(res)
                     }
                     Val(SComb(xs)) => {
                         assert!(xs.len() < 2);
@@ -278,19 +318,11 @@ impl<'a> Evaluator<'a> {
     }
 }
 
-pub fn eval<'a>(
-    _expr: &'a TypedExpr<'a>,
-    _env: &'a HashMap<i128, ExprNode<'a>>,
-) -> Result<TypedExpr<'a>, EvalError<'a>> {
-    unimplemented!();
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::eval::static_expr::*;
 
-    fn empty_env<'a>() -> HashMap<i128, ExprNode<'a>> {
+    fn empty_env<'a>() -> HashMap<ExprNode<'a>, (bool, ExprNode<'a>)> {
         HashMap::new()
     }
 
@@ -299,8 +331,34 @@ mod test {
         let eval = Evaluator::new();
         // ap ap div -5 3   =   -1
         let exp = eval.div(eval.get_number(-5), eval.get_number(3));
-        let e = eval.eval(exp, &empty_env()).unwrap();
+        let e = eval.eval(exp, &mut empty_env()).unwrap();
         assert_eq!(e, eval.get_number(-1))
+    }
+
+    #[test]
+    fn test_variable_func() {
+        use TypedExpr::*;
+        use TypedSymbol::*;
+        let eval = Evaluator::new();
+        // var1 = cons
+        // ap ap cons 0 ap ap var1 1 2
+        let mut env = HashMap::new();
+        let k = eval.get_val(Variable(1));
+        let v = eval.get_val(Cons(vec![]));
+        env.insert(k, (false, v));
+        let v1 = eval.get_val(Variable(1));
+        let n1 = eval.get_number(1);
+        let e2 = eval.get_app(v1, n1);
+        let n2 = eval.get_number(2);
+        let e3 = eval.get_app(e2, n2);
+        let n0 = eval.get_number(0);
+        let e = eval.get_cons(n0, e3);
+
+        let tmp = eval.get_app(v1, n1);
+        let tmp2 = eval.get_app(tmp, n2);
+        let expected = Val(Cons(vec![n0, tmp2]));
+
+        assert_eq!(&expected, eval.eval(&e, &mut env).unwrap());
     }
 
     #[test]
@@ -312,8 +370,8 @@ mod test {
                 eval.get_app(eval.get_app(BCOMB, NEG), NEG),
                 eval.get_number(x),
             );
-            let env = HashMap::new();
-            assert_eq!(eval.get_number(x), eval.eval(&expr, &env).unwrap());
+            let mut env = HashMap::new();
+            assert_eq!(eval.get_number(x), eval.eval(&expr, &mut env).unwrap());
         }
     }
 
@@ -323,14 +381,14 @@ mod test {
         {
             let eval = Evaluator::new();
             let expr = eval.get_app(ICOMB, NEG);
-            let env = HashMap::new();
-            assert_eq!(NEG, eval.eval(&expr, &env).unwrap());
+            let mut env = HashMap::new();
+            assert_eq!(NEG, eval.eval(&expr, &mut env).unwrap());
         }
         {
             let eval = Evaluator::new();
             let expr = eval.get_app(ICOMB, BCOMB);
-            let env = HashMap::new();
-            assert_eq!(BCOMB, eval.eval(&expr, &env).unwrap());
+            let mut env = HashMap::new();
+            assert_eq!(BCOMB, eval.eval(&expr, &mut env).unwrap());
         }
     }
 }

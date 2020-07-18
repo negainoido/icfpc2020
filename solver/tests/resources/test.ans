@@ -1,1 +1,1 @@
-Apply(Apply(Val(Cons([])), Val(Number(7))), Apply(Apply(Val(Cons([])), Val(Number(10880))), Val(Nil)))
+Val(Cons([Val(Number(7)), Val(Cons([Val(Number(10880)), Val(Nil)]))]))
