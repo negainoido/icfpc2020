@@ -14,7 +14,7 @@ type Env = M.Map NT Thunk
 
 evalForce :: Value -> ExceptT String IO SData
 evalForce (VNumber v) = pure $ DNumber v
-evalForce VNil = pure $ DNil
+evalForce (VPApp Nil []) = pure $ DNil
 evalForce (VPApp Cons [t2, t1]) = DCons <$> (evalThunk t1 >>= evalForce) <*> (evalThunk t2 >>= evalForce)
 evalForce e = throwError $ "cannot force partial application" ++ show e
 
@@ -102,6 +102,9 @@ eval env (App hd args) =
         (Cdr, _) | Just e <- uniOp f ->  eval env e
             where
             f e = app e (symToExpr F)
+        (Nil, _) | Just e <- uniOp f -> eval env e
+            where
+            f _ = symToExpr T
         (Cons, _) | Just e <- triOp f -> eval env e
             where
             f e0 e1 e2 = app (app e2 e0) e1
@@ -110,7 +113,7 @@ eval env (App hd args) =
             f e = do
                 v <- eval env e
                 case v of
-                    VNil -> pure $ symToExpr T
+                    VPApp Nil _ -> pure $ symToExpr T
                     VPApp Cons _ -> pure $ symToExpr F
                     _ -> throwError $ "Nil or Cons is expected but found" ++ show v
         (Lt, _) | Just me <- binOpM f -> me >>= eval env
@@ -135,7 +138,6 @@ eval env (App hd args) =
                 Just v -> pure v
             eval env (EThunk t es)
         (Num n, []) -> pure $ VNumber n
-        (Nil, []) -> pure VNil
         _ -> 
             VPApp hd <$> forM args (\e -> mkThunk e (eval env e)) 
 
@@ -155,7 +157,3 @@ evalThunk (Thunk _ ref) = do
 ensureNumber :: Value -> ExceptT String IO Integer
 ensureNumber (VNumber x) = pure x
 ensureNumber e = throwError $ "Number is expected but found: " ++ show e 
-
-ensureCons :: Value -> ExceptT String IO (Thunk,Thunk)
-ensureCons (VCons t1 t2) = pure (t1, t2)
-ensureCons e = throwError $ "Cons is expected but found: " ++ show e 
