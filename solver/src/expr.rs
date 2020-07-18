@@ -102,6 +102,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn parse_three_sum() {
         let symbols = vec![App, App, App, Sum, Number(1), Number(2), Number(3)];
         let expr = parse(&symbols);
