@@ -45,12 +45,17 @@ impl TypedSymbol {
                 arity: *arity,
                 args: vec![],
             }),
+            Symbol::ProdN(arity) => Some(Prod {
+                arity: *arity,
+                args: vec![],
+            }),
+
             Symbol::Neg => Some(Neg),
             Symbol::Div => Some(Div(vec![])),
             Symbol::Less => Some(Less(vec![])),
             Symbol::IsNil => Some(IsNil),
             Symbol::BigEq => Some(BigEq(vec![])),
-            _ => todo!("todo"),
+            _ => todo!("todo: {:?}", sym),
         }
     }
 }

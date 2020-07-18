@@ -7,7 +7,7 @@ pub enum Symbol {
     Eq,
     Succ,
     Pred,
-    PredN(u32), // Used only in the eval step.
+    ProdN(u32), // Used only in the eval step.
     Sum,
     SumN(u32), // Used only in the eval step.
     Variable(i128),
@@ -23,7 +23,6 @@ pub enum Symbol {
     BComb,
     CComb,
     SComb,
-    TComb,
     IComb,
     Car,
     Cdr,
@@ -243,7 +242,7 @@ impl Symbol {
             "neg" => Some(Symbol::Neg),
             "nil" => Some(Symbol::Nil),
             "s" => Some(Symbol::SComb),
-            "t" => Some(Symbol::TComb),
+            "t" => Some(Symbol::True),
             _ => None,
         };
 
