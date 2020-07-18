@@ -134,11 +134,11 @@ def plot_and_interact(images)
 	end
 end
 
-next_point = point_to_lambda(0, 0)
-data = "nil"
-
-#next_point = point_to_lambda(1, 4)
-#data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+#next_point = point_to_lambda(0, 0)
+#data = "nil"
+#
+next_point = point_to_lambda(1, 4)
+data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 #
 #
 #next_point = point_to_lambda(-3, 1)
