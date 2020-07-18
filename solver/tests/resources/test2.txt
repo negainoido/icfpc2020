@@ -1,0 +1,1 @@
+galaxy = ap ap cons 0 ap ap cons 1 ap ap cons 2 ap ap cons 5 nil

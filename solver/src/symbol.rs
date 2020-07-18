@@ -1,3 +1,5 @@
+use Symbol::*;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Symbol {
     Number(i128),
@@ -5,9 +7,9 @@ pub enum Symbol {
     Eq,
     Succ,
     Pred,
-    PredN(i128), // Used only in the eval step.
+    PredN(u32), // Used only in the eval step.
     Sum,
-    SumN(i128), // Used only in the eval step.
+    SumN(u32), // Used only in the eval step.
     Variable(i128),
     Prod,
     Div,
@@ -17,14 +19,24 @@ pub enum Symbol {
     Less,
     Mod,
     DeMod,
-    // Neg,
+    Neg,
+    BComb,
+    CComb,
+    SComb,
+    TComb,
+    IComb,
+    Car,
+    Cdr,
+    Cons,
+    Nil,
+    IsNil,
     Ellipsis,
     Lpar,
     Rpar,
     Sep,
+    Target,
 }
 
-use Symbol::*;
 impl Symbol {
     const OPS: [Symbol; 16] = [
         App, Eq, Succ, Pred, Sum, Prod, Div, True, False, BigEq, Less, Mod, DeMod, Lpar, Rpar, Sep,
@@ -209,6 +221,45 @@ impl Symbol {
         }
 
         None
+    }
+
+    pub fn from_text(token: String, target: &String) -> Symbol {
+        let token = token.trim();
+        let option_symbol = match token {
+            "add" => Some(Symbol::Sum),
+            "ap" => Some(Symbol::App),
+            "b" => Some(Symbol::BComb),
+            "c" => Some(Symbol::CComb),
+            "car" => Some(Symbol::Car),
+            "cdr" => Some(Symbol::Cdr),
+            "cons" => Some(Symbol::Cons),
+            "div" => Some(Symbol::Div),
+            "=" => Some(Symbol::Eq),
+            "eq" => Some(Symbol::BigEq),
+            "i" => Some(Symbol::IComb),
+            "isnil" => Some(Symbol::IsNil),
+            "lt" => Some(Symbol::Less),
+            "mul" => Some(Symbol::Prod),
+            "neg" => Some(Symbol::Neg),
+            "nil" => Some(Symbol::Nil),
+            "s" => Some(Symbol::SComb),
+            "t" => Some(Symbol::TComb),
+            _ => None,
+        };
+
+        if let Some(symbol) = option_symbol {
+            symbol
+        } else if token.eq(target) {
+            Symbol::Target
+        } else {
+            match token.chars().next().unwrap() {
+                ':' => Symbol::Variable(token[1..].parse::<i128>().unwrap()),
+                _ => {
+                    dbg!(&token);
+                    Symbol::Number(token.parse::<i128>().unwrap())
+                }
+            }
+        }
     }
 }
 
