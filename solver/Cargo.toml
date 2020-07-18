@@ -15,12 +15,14 @@ assert_cmd = "1.0.1"
 tempfile = "3.1.0"
 proconio = "0.4.1"
 ureq = "1.3.0"
-
-[[bin]]
-name = "solver1"
-
-[[bin]]
-name = "cympfh"
+url = "2.1"
+lazy_static = "1.4"
+failure = "0.1"
+sexp = "1.1.4"
+typed-arena = "2.0"
+[dev-dependencies]
+glob = "0.3"
+regex = "1.3"
 
 # [[bin]]
 # name = "wav2png"

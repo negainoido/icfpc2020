@@ -1,0 +1,4 @@
+:1 = ap ap c :2 :3
+:2 = ap ap b b ap ap b ap b ap cons 0 ap ap c ap ap b b cons ap ap c cons nil
+:3 = ap ap c ap ap b cons ap ap c cons nil nil
+galaxy = ap ap :1 nil ap ap cons 0 0

@@ -7,9 +7,7 @@ pub enum Symbol {
     Eq,
     Succ,
     Pred,
-    PredN(u32), // Used only in the eval step.
     Sum,
-    SumN(u32), // Used only in the eval step.
     Variable(i128),
     Prod,
     Div,
@@ -23,7 +21,6 @@ pub enum Symbol {
     BComb,
     CComb,
     SComb,
-    TComb,
     IComb,
     Car,
     Cdr,
@@ -223,7 +220,7 @@ impl Symbol {
         None
     }
 
-    pub fn from_text(token: String, target: &String) -> Symbol {
+    pub fn from_text(token: &str, target: &str) -> Symbol {
         let token = token.trim();
         let option_symbol = match token {
             "add" => Some(Symbol::Sum),
@@ -243,7 +240,7 @@ impl Symbol {
             "neg" => Some(Symbol::Neg),
             "nil" => Some(Symbol::Nil),
             "s" => Some(Symbol::SComb),
-            "t" => Some(Symbol::TComb),
+            "t" => Some(Symbol::True),
             _ => None,
         };
 
@@ -251,14 +248,10 @@ impl Symbol {
             symbol
         } else if token.eq(target) {
             Symbol::Target
+        } else if token.starts_with(":") {
+            Symbol::Variable(token[1..].parse::<i128>().unwrap())
         } else {
-            match token.chars().next().unwrap() {
-                ':' => Symbol::Variable(token[1..].parse::<i128>().unwrap()),
-                _ => {
-                    dbg!(&token);
-                    Symbol::Number(token.parse::<i128>().unwrap())
-                }
-            }
+            Symbol::Number(token.parse::<i128>().unwrap())
         }
     }
 }
