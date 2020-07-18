@@ -32,6 +32,7 @@ library
         monad-logger ^>= 0.3.32,
         pretty ^>= 1.1.3.6,
         text-show ^>= 3.8.5,
+        text-builder ^>= 0.6.6.1,
         mtl -any,
         containers -any,
         text -any,

@@ -11,6 +11,7 @@ import System.IO.Unsafe
 import Control.Monad.Except
 import Debug.Trace
 import qualified Data.Text.IO as T
+import Text.Builder as B
 
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
@@ -127,14 +128,31 @@ instance Show SData where
 type Env = M.Map NT Thunk
 
 evalMain :: [Def] -> Expr -> IO (Either String SData)
-evalMain defs expr = traceShow ("evalMain", defs, expr) $ 
+evalMain defs expr =  
     runExceptT $ do
         env <- mfix $ \env -> 
             M.fromList <$> (
                 forM defs $ \(Def head body) -> do
                     thunk <- mkThunk (eval env body)
                     pure (head, thunk))
-        eval env expr >>= evalForce
+        r <- eval env expr >>= evalForce
+        catchError (do
+            Result r dat imageList imageListAsData <- dataToResult r
+            liftIO $ putStrLn $ "Result: " ++ show r
+            liftIO $ putStrLn $ "Data: " ++ show dat
+            liftIO $ T.putStrLn $ "DataAsCode: " <> toCode dat
+            liftIO $ putStrLn $ "ImageList: " ++ show imageList
+            liftIO $ T.putStrLn $ "ImageListAsCode: " <> toCode imageListAsData
+            ) (\e -> liftIO $ putStrLn $ "Error: " ++ e)
+        return r
+
+toCode :: SData -> Text
+toCode = B.run . go
+    where
+    sp = B.char ' '
+    go (DCons a b) = "ap" <> sp <> "ap" <> sp <> "cons" <> sp <> go a <> sp <> go b
+    go DNil = "nil"
+    go (DNumber n) = B.decimal n
 
 main :: IO ()
 main = do
@@ -143,6 +161,7 @@ main = do
         defs1 = map parseDef defs
         mainExpr = parseMain gdef
     res <- evalMain defs1 mainExpr
+
     case res of
         Left e -> print $ "Error!:" ++ e
         Right r -> print r
@@ -227,9 +246,9 @@ eval env (App head args) =
         (Cdr, _) | Just e <- uniOp f args ->  eval env e
             where
             f e = app e (symToExpr F)
-        (Cons, _) | e0:e1:e2:es <- reverse args -> do
-            let rhs = app (app e2 e0) e1
-            eval env (foldl app rhs es)
+        (Cons, _) | Just e <- triOp f args -> eval env e
+            where
+            f e0 e1 e2 = app (app e2 e0) e1
         (IsNil, _) | Just me <- uniOpM f args -> me >>= eval env
             where
             f e = do
@@ -287,3 +306,46 @@ ensureCons :: Value -> ExceptT String IO (Thunk,Thunk)
 ensureCons (VCons t1 t2) = pure (t1, t2)
 ensureCons e = throwError $ "Cons is expected but found: " ++ show e 
 
+data Result = Result {
+    returnValue :: Integer,
+    stateData :: SData,
+    imageList :: [[(Integer, Integer)]],
+    imageListAsData :: SData
+}
+
+dataToResult :: SData -> ExceptT String IO Result
+dataToResult (v1 `DCons` (v2 `DCons` (v3 `DCons` DNil))) = do
+    n1 <- case v1 of  
+        DNumber n -> pure n
+        _ -> throwError $ "first element should be number" ++ show v1 
+    let dat = v2
+    imageList <- dataToImageList v3
+    pure Result {
+        returnValue = n1, 
+        stateData = dat,
+        imageList = imageList,
+        imageListAsData = v3 
+        }
+
+
+dataToNumber :: SData -> ExceptT String IO Integer
+dataToNumber (DNumber n) = pure n
+dataToNumber e = throwError $ "expected number but found :" ++ show e
+
+dataToImageList :: SData -> ExceptT String IO [[(Integer, Integer)]]
+dataToImageList (DCons x xs) = (:) <$> dataToImage x <*> dataToImageList xs
+dataToImageList DNil = pure []
+dataToImageList e = throwError $ "expected nil or cons but found :" ++ show e
+
+dataToImage :: SData -> ExceptT String IO [(Integer, Integer)]
+dataToImage (DCons x xs) = (:) <$> dataToPoint x <*> dataToImage xs
+dataToImage DNil = pure []
+dataToImage e = throwError $ "expected nil or cons but found : " ++ show e
+
+dataToPoint :: SData -> ExceptT String IO (Integer, Integer)
+dataToPoint (DCons x y)  = do 
+    n1 <- dataToNumber x
+    n2 <- dataToNumber y
+    pure (n1, n2)
+dataToPoint e = throwError $ "expected point but found: " ++ show e
+        
