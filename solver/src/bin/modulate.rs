@@ -1,8 +1,24 @@
+use icfpc2020::opt::{common_init, CommonOpt};
+use structopt::StructOpt;
+
 #[derive(Debug)]
 enum List {
     Cons(Box<List>, Box<List>),
     Integer(i128),
     Nil,
+}
+
+#[derive(Debug, StructOpt)]
+struct Opt {
+    #[structopt(flatten)]
+    common: CommonOpt,
+
+    #[structopt(
+        short,
+        long,
+        default_value = "110110000111011111100001001010100000110000"
+    )]
+    input: String,
 }
 
 fn do_demodulate(a: &str) -> (&str, List) {
@@ -25,9 +41,19 @@ fn do_demodulate(a: &str) -> (&str, List) {
         }
         let a = &a[len + 1..];
         len *= 4;
-        let res: i128 = i128::from_str_radix(&a[0..len], 2).unwrap();
+        if len == 0 {
+            return (a, List::Integer(0));
+        }
+        let res = i128::from_str_radix(&a[0..len], 2);
+        let num = match res {
+            Ok(b) => b,
+            Err(e) => {
+                eprintln!("error while demodulating: {}", &a);
+                panic!(e)
+            }
+        };
         let a = &a[len..];
-        return (a, List::Integer(sign * res));
+        return (a, List::Integer(sign * num));
     }
 }
 fn demodulate(a: &str) -> List {
@@ -35,8 +61,10 @@ fn demodulate(a: &str) -> List {
     return l;
 }
 fn main() {
-    //    let request = "1101000";
-    let request = "110110000111011111100001001010100000110000";
+    let opt = Opt::from_args();
+    common_init(&opt.common);
+
+    let request = &opt.input; //    let request = "1101000";
     let res = demodulate(request);
     println!("result: {:?}", res);
 }
