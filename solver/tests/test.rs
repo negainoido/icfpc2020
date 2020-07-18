@@ -1,12 +1,12 @@
-use std::fs::File;
-use std::io::{Write, Read};
-use std::path::{Path, PathBuf};
 use glob::glob;
+use std::fs::File;
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 
 use assert_cmd::Command;
 
-use tempfile::tempdir;
 use regex::Regex;
+use tempfile::tempdir;
 
 #[test]
 fn basic() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -52,7 +52,9 @@ fn basic() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_solver() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    let d: PathBuf = [env!("CARGO_MANIFEST_DIR"), "tests", "resources"].iter().collect();
+    let d: PathBuf = [env!("CARGO_MANIFEST_DIR"), "tests", "resources"]
+        .iter()
+        .collect();
     let re = Regex::new("txt$")?;
     for entry in glob(d.join("*.txt").to_str().unwrap()).unwrap() {
         let mut cmd = Command::cargo_bin("solver")?;

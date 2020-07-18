@@ -22,9 +22,7 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
     use TypedSymbol::*;
 
     match expr {
-        Val(Variable(i)) => {
-            env.get(i).map(|v| v.clone()).ok_or(UndefinedVariable(*i))
-        },
+        Val(Variable(i)) => env.get(i).map(|v| v.clone()).ok_or(UndefinedVariable(*i)),
         Val(_) => Ok(expr.clone()),
         Apply(f, x) => {
             let f = eval(&f, env)?;
