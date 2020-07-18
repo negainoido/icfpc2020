@@ -119,8 +119,8 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 // True
                 Val(True(xs)) if xs.len() == 1 => {
                     // ap ap t x0 x1   =   x0
-                    let x0 = eval(&xs[0], env)?;
-                    Ok(x0)
+                    let x0 = xs[0].clone();
+                    eval(&x0, env)
                 }
                 Val(True(xs)) => {
                     assert_eq!(xs.len(), 0);
@@ -131,7 +131,7 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 // False
                 Val(False(xs)) if xs.len() == 1 => {
                     // ap ap f x0 x1   =   x1
-                    Ok(eval(&x, env)?)
+                    eval(&x, env)
                 }
                 Val(False(xs)) => {
                     assert_eq!(xs.len(), 0);
