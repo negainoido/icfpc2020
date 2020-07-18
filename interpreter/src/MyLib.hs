@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-} 
+{-# LANGUAGE DeriveGeneric #-} 
 module MyLib  where
 
 import qualified Data.Text as T
@@ -7,11 +8,13 @@ import Control.Monad.Fix
 import Data.Text(Text)
 import Text.Read
 import Data.IORef
+import GHC.Generics
 import System.IO.Unsafe
 import Control.Monad.Except
 import Debug.Trace
 import qualified Data.Text.IO as T
 import Text.Builder as B
+import Data.Aeson(ToJSON(..), encodeFile)
 
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
@@ -128,7 +131,7 @@ instance Show SData where
 
 type Env = M.Map NT Thunk
 
-evalMain :: [Def] -> Expr -> IO (Either String SData)
+evalMain :: [Def] -> Expr -> IO (Either String Result)
 evalMain defs expr =  
     runExceptT $ do
         env <- mfix $ \env -> 
@@ -137,21 +140,23 @@ evalMain defs expr =
                     thunk <- mkThunk body (eval env body)
                     pure (head, thunk))
         r <- eval env expr >>= evalForce
-        catchError (do
-            Result r dat imageList imageListAsData <- dataToResult r
-            liftIO $ putStrLn $ "Result: " ++ show r
-            --liftIO $ putStrLn $ "Data: " ++ show dat
-            liftIO $ T.putStrLn $ "DataAsCode: " <> toCode dat
-            case imageList of 
-                Just imageList -> 
-                    forM_ (zip [(1 :: Int)..] imageList)  $ \(i, image) -> do
-                    let filename = "image_" ++ show i ++ ".txt"
-                        content = unlines [ show x ++ " "  ++ show y | (x,y) <- image]
-                    liftIO $ writeFile filename $ content
-                Nothing -> pure ()
-            when (r /= 0) $ liftIO $ T.putStrLn $ "ImageListAsCode: " <> toCode imageListAsData
-            ) (\e -> liftIO $ putStrLn $ "Error: " ++ e)
-        return r
+        liftIO $ putStrLn "raw output is written at result.txt"
+        liftIO $ writeFile "result.txt" (show r)
+        res@(Result r dat imageList imageListAsData) <- dataToResult r
+        liftIO $ putStrLn "result json is written at result.json"
+        liftIO $ encodeFile "result.json" res
+        liftIO $ putStrLn $ "Result: " ++ show r
+        liftIO $ T.putStrLn $ "DataAsCode: " <> toCode dat
+        case imageList of 
+            Just imageList -> 
+                forM_ (zip [(1 :: Int)..] imageList)  $ \(i, image) -> do
+                let filename = "image_" ++ show i ++ ".txt"
+                    content = unlines [ show x ++ " "  ++ show y | (x,y) <- image]
+                liftIO $ putStrLn $ "image is written at " ++ filename
+                liftIO $ writeFile filename $ content
+            Nothing -> pure ()
+        when (r /= 0) $ liftIO $ T.putStrLn $ "ImageListAsCode: " <> toCode imageListAsData
+        pure res
 
 toCode :: SData -> Text
 toCode = B.run . go
@@ -318,7 +323,14 @@ data Result = Result {
     stateData :: SData,
     imageList :: Maybe [[(Integer, Integer)]],
     imageListAsData :: SData
-}
+} deriving(Generic)
+
+instance ToJSON SData where
+    toEncoding d = toEncoding (toCode d)
+    toJSON d = toJSON (toCode d)
+
+instance ToJSON Result
+
 
 dataToResult :: SData -> ExceptT String IO Result
 dataToResult (v1 `DCons` (v2 `DCons` (v3 `DCons` DNil))) = do
