@@ -2,7 +2,6 @@ require 'json'
 require 'pp'
 require 'fileutils'
 
-
 def point_to_lambda(x, y)
 	"ap ap cons #{x} #{y}"
 end
@@ -123,6 +122,7 @@ end
 def plot_and_interact(images)
 	@plot.puts plot_string_from(images)
 
+
 	@plot.puts "set mouse verbose"
 
 	begin
@@ -174,7 +174,12 @@ end
 #data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 
 next_point = point_to_lambda(-3, 1)
+
 data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+#
+#
+#next_point = point_to_lambda(-3, 1)
+#data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 
 @plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
 
