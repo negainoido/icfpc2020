@@ -23,7 +23,6 @@ pub enum Symbol {
     BComb,
     CComb,
     SComb,
-    TComb,
     IComb,
     Car,
     Cdr,
@@ -243,7 +242,7 @@ impl Symbol {
             "neg" => Some(Symbol::Neg),
             "nil" => Some(Symbol::Nil),
             "s" => Some(Symbol::SComb),
-            "t" => Some(Symbol::TComb),
+            "t" => Some(Symbol::True),
             _ => None,
         };
 
