@@ -56,7 +56,7 @@ fn test_solver() -> std::result::Result<(), Box<dyn std::error::Error>> {
         .iter()
         .collect();
     let re = Regex::new("txt$")?;
-    for entry in glob(d.join("*.txt").to_str().unwrap()).unwrap() {
+    for entry in glob(d.join("test*.txt").to_str().unwrap()).unwrap() {
         let mut cmd = Command::cargo_bin("solver")?;
         let input = entry.unwrap();
         cmd.args(&["--input", input.to_str().unwrap()]);
