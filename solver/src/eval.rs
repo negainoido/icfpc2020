@@ -140,40 +140,34 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                     Ok(Val(False(args)))
                 }
                 // Sum (Add)
-                Val(Sum { arity, args }) if args.len() + 1 == (arity as usize) => {
-                    let mut ret: i128 = eval(&x, env)?
+                Val(Sum(xs)) if xs.len() == 1 => {
+                    let x_num = eval(&xs[0], env)?
                         .get_number()
                         .ok_or_else(|| NumberIsExpected(*x.clone()))?;
-                    for arg in args {
-                        let n = eval(&arg, env)?
-                            .get_number()
-                            .ok_or_else(|| NumberIsExpected(arg))?;
-                        ret = ret + n;
-                    }
-                    Ok(Val(Number(ret)))
+                    let x_den = eval(&x, env)?
+                        .get_number()
+                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
+                    Ok(Val(Number(x_num + x_den)))
                 }
-                Val(Sum { arity, args }) => {
-                    let mut args = args.clone();
-                    args.push(*x.clone());
-                    Ok(Val(Sum { arity, args }))
+                Val(Sum(xs)) => {
+                    assert_eq!(xs.len(), 0);
+                    let args = vec![*x.clone()];
+                    Ok(Val(Sum(args)))
                 }
                 // Product
-                Val(Prod { arity, args }) if args.len() + 1 == (arity as usize) => {
-                    let mut ret: i128 = eval(&x, env)?
+                Val(Prod(xs)) if xs.len() == 1 => {
+                    let x_num = eval(&xs[0], env)?
                         .get_number()
                         .ok_or_else(|| NumberIsExpected(*x.clone()))?;
-                    for arg in args {
-                        let n = eval(&arg, env)?
-                            .get_number()
-                            .ok_or_else(|| NumberIsExpected(arg))?;
-                        ret = ret * n;
-                    }
-                    Ok(Val(Number(ret)))
+                    let x_den = eval(&x, env)?
+                        .get_number()
+                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
+                    Ok(Val(Number(x_num * x_den)))
                 }
-                Val(Prod { arity, args }) => {
-                    let mut args = args.clone();
-                    args.push(*x.clone());
-                    Ok(Val(Prod { arity, args }))
+                Val(Prod(xs)) => {
+                    assert_eq!(xs.len(), 0);
+                    let args = vec![*x.clone()];
+                    Ok(Val(Prod(args)))
                 }
                 Val(Neg) => {
                     let x = eval(&x, env)?;
@@ -280,11 +274,8 @@ mod test {
         TypedExpr::Val(TypedSymbol::Variable(x))
     }
 
-    fn sum_n(arity: u32) -> TypedExpr {
-        TypedExpr::Val(TypedSymbol::Sum {
-            arity,
-            args: vec![],
-        })
+    fn sum() -> TypedExpr {
+        TypedExpr::Val(TypedSymbol::Sum(vec![]))
     }
 
     fn big_eq(x1: TypedExpr, x2: TypedExpr) -> TypedExpr {
@@ -436,11 +427,8 @@ mod test {
     #[test]
     fn test_sum() {
         let env = HashMap::new();
-        let expr = app(app(app(sum_n(3), number(1)), number(2)), number(3));
-        assert_eq!(number(6), eval(&expr, &env).unwrap());
-
-        let expr = app(app(sum_n(2), number(-100)), number(101));
-        assert_eq!(number(1), eval(&expr, &env).unwrap());
+        let expr = app(app(sum(), number(1)), number(2));
+        assert_eq!(number(3), eval(&expr, &env).unwrap());
     }
 
     #[test]
