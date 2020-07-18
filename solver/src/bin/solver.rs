@@ -21,7 +21,7 @@ fn read_lines(reader: &mut dyn BufRead) -> Vec<String> {
         if size == 0 {
             break;
         }
-        if line.trim() == "" || line.trim().chars().next() == Some('#') {
+        if line.trim() == "" || line.trim().starts_with('#') {
             continue;
         }
         lines.push(line.trim().to_string());
