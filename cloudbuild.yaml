@@ -45,19 +45,6 @@ steps:
   waitFor: ['cargo-home', 'cargo-target', 'build_rust_base', 'sccache']
   id: 'cargo-build'
 
-- name: 'gcr.io/cloud-builders/docker'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    find target/ -maxdepth 2 -executable -type f | sed -e s/^/\!/ >> .dockerignore
-
-    docker build -t gcr.io/$PROJECT_ID/solver \
-    -t gcr.io/$PROJECT_ID/solver:$COMMIT_SHA \
-    --build-arg SOLVER_REVISION=$COMMIT_SHA \
-    .
-  waitFor: ['cargo-build']
-
 # from https://hub.docker.com/_/rust
 - name: 'gcr.io/$PROJECT_ID/rust_base'
   args: ['cargo', 'test']
@@ -97,8 +84,6 @@ steps:
 timeout: 1200s
 
 images:
-- 'gcr.io/$PROJECT_ID/solver'
-- 'gcr.io/$PROJECT_ID/solver:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/rust_base'
 - 'gcr.io/$PROJECT_ID/rust_base:$COMMIT_SHA'
 
