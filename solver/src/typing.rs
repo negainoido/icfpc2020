@@ -15,12 +15,13 @@ pub enum TypedSymbol {
     True(Vec<TypedExpr>),
     False(Vec<TypedExpr>),
     Variable(i128),
-    Sum { arity: u32, args: Vec<i128> },
     Neg,
-    Div(Vec<i128>),
-    Less(Vec<i128>),
+    Sum { arity: u32, args: Vec<TypedExpr> },
+    Prod { arity: u32, args: Vec<TypedExpr> },
+    Div(Vec<TypedExpr>),
+    Less(Vec<TypedExpr>),
     IsNil,
-    BigEq(Vec<i128>),
+    BigEq(Vec<TypedExpr>),
 }
 
 impl TypedSymbol {

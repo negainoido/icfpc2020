@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::collections::HashMap;
 
 use crate::typing::*;
@@ -16,6 +14,10 @@ fn app(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
     TypedExpr::Apply(Box::new(e1), Box::new(e2))
 }
 
+fn val(sym: TypedSymbol) -> TypedExpr {
+    TypedExpr::Val(sym)
+}
+
 pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExpr, EvalError> {
     use EvalError::*;
     use TypedExpr::*;
@@ -26,85 +28,67 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
         Val(_) => Ok(expr.clone()),
         Apply(f, x) => {
             let f = eval(&f, env)?;
-            let x = eval(&x, env)?;
             match f {
                 // Car
                 Val(Car) => {
                     // ap car x   =   ap x t
-                    let v = app(x, Val(True(vec![])));
+                    let v = app(*x.clone(), val(True(vec![])));
                     eval(&v, env)
                 }
                 // Cdr
                 Val(Cdr) => {
                     // ap cdr x2   =   ap x2 f
-                    let v = app(x, Val(False(vec![])));
+                    let v = app(*x.clone(), val(False(vec![])));
                     eval(&v, env)
                 }
                 // Cons
                 Val(Cons(xs)) if xs.len() == 2 => {
                     // ap ap ap cons x0 x1 x2   =   ap ap x2 x0 x1
-                    let x0 = xs[0].clone();
-                    let x1 = xs[1].clone();
-                    let x2 = eval(&x, env)?;
-
-                    let v = app(app(x2, x0), x1);
+                    let v = app(app(*x.clone(), xs[0].clone()), xs[1].clone());
                     eval(&v, env)
                 }
                 Val(Cons(xs)) => {
                     let mut args = xs.clone();
-                    let e = eval(&x, env)?;
-                    args.push(e);
+                    args.push(*x.clone());
                     Ok(Val(Cons(args)))
                 }
                 // B-Combinator
                 Val(BComb(xs)) if xs.len() == 2 => {
                     // ap ap ap b x0 x1 x2   =   ap x0 ap x1 x2
-                    let x0 = xs[0].clone();
-                    let x1 = xs[1].clone();
-                    let x2 = eval(&x, env)?;
-
-                    let v = app(x0, app(x1, x2));
+                    let v = app(xs[0].clone(), app(xs[1].clone(), *x.clone()));
                     eval(&v, env)
                 }
                 Val(BComb(xs)) => {
                     assert!(xs.len() < 2);
                     let mut args = xs.clone();
-                    let e = eval(&x, env)?;
-                    args.push(e);
+                    args.push(*x.clone());
                     Ok(Val(BComb(args)))
                 }
                 // C-Combinator
                 Val(CComb(xs)) if xs.len() == 2 => {
                     // ap ap ap c x0 x1 x2   =   ap ap x0 x2 x1
-                    let x0 = xs[0].clone();
-                    let x1 = xs[1].clone();
-                    let x2 = eval(&x, env)?;
-
-                    let v = app(app(x0, x2), x1);
+                    let v = app(app(xs[0].clone(), *x.clone()), xs[1].clone());
                     eval(&v, env)
                 }
                 Val(CComb(xs)) => {
                     assert!(xs.len() < 2);
                     let mut args = xs.clone();
-                    let e = eval(&x, env)?;
-                    args.push(e);
+                    args.push(*x.clone());
                     Ok(Val(CComb(args)))
                 }
                 // S-Combinator
                 Val(SComb(xs)) if xs.len() == 2 => {
                     // ap ap ap s x0 x1 x2   =   ap ap x0 x2 ap x1 x2
-                    let x0 = xs[0].clone();
-                    let x1 = xs[1].clone();
-                    let x2 = eval(&x, env)?;
-
-                    let v = app(app(x0, x2.clone()), app(x1, x2));
+                    let v = app(
+                        app(xs[0].clone(), *x.clone()),
+                        app(xs[1].clone(), *x.clone()),
+                    );
                     eval(&v, env)
                 }
                 Val(SComb(xs)) => {
                     assert!(xs.len() < 2);
                     let mut args = xs.clone();
-                    let e = eval(&x, env)?;
-                    args.push(e);
+                    args.push(*x.clone());
                     Ok(Val(SComb(args)))
                 }
                 // I-Combinator
@@ -121,36 +105,55 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 Val(True(xs)) => {
                     assert_eq!(xs.len(), 0);
                     let mut args = xs.clone();
-                    let e = eval(&x, env)?;
-                    args.push(e);
+                    args.push(*x.clone());
                     Ok(Val(True(args)))
                 }
                 // False
                 Val(False(xs)) if xs.len() == 1 => {
                     // ap ap f x0 x1   =   x1
-                    let x1 = xs[1].clone();
-                    Ok(x1)
+                    Ok(*x.clone())
                 }
                 Val(False(xs)) => {
                     assert_eq!(xs.len(), 0);
                     let mut args = xs.clone();
-                    let e = eval(&x, env)?;
-                    args.push(e);
+                    args.push(*x.clone());
                     Ok(Val(False(args)))
                 }
                 // Sum (Add)
-                Val(Sum { arity, args }) => {
-                    let x = eval(&x, env)?;
-                    let n: i128 = x.get_number().ok_or_else(|| NumberIsExpected(x))?;
-
-                    if args.len() + 1 == (arity as usize) {
-                        let v = n + args.iter().sum::<i128>();
-                        Ok(Val(Number(v)))
-                    } else {
-                        let mut args = args.clone();
-                        args.push(n);
-                        Ok(Val(Sum { arity, args }))
+                Val(Sum { arity, args }) if args.len() + 1 == (arity as usize) => {
+                    let mut ret: i128 = eval(&x, env)?
+                        .get_number()
+                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
+                    for arg in args {
+                        let n = eval(&arg, env)?
+                            .get_number()
+                            .ok_or_else(|| NumberIsExpected(arg))?;
+                        ret = ret + n;
                     }
+                    Ok(Val(Number(ret)))
+                }
+                Val(Sum { arity, args }) => {
+                    let mut args = args.clone();
+                    args.push(*x.clone());
+                    Ok(Val(Sum { arity, args }))
+                }
+                // Product
+                Val(Prod { arity, args }) if args.len() + 1 == (arity as usize) => {
+                    let mut ret: i128 = eval(&x, env)?
+                        .get_number()
+                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
+                    for arg in args {
+                        let n = eval(&arg, env)?
+                            .get_number()
+                            .ok_or_else(|| NumberIsExpected(arg))?;
+                        ret = ret * n;
+                    }
+                    Ok(Val(Number(ret)))
+                }
+                Val(Prod { arity, args }) => {
+                    let mut args = args.clone();
+                    args.push(*x.clone());
+                    Ok(Val(Prod { arity, args }))
                 }
                 Val(Neg) => {
                     let x = eval(&x, env)?;
@@ -159,35 +162,18 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 }
                 // Div
                 Val(Div(xs)) if xs.len() == 1 => {
-                    let x_num = xs[0];
-                    let x = eval(&x, env)?;
-                    let x_den = x.get_number().ok_or_else(|| NumberIsExpected(x))?;
+                    let x_num = eval(&xs[0], env)?
+                        .get_number()
+                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
+                    let x_den = eval(&x, env)?
+                        .get_number()
+                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
                     Ok(Val(Number(x_num / x_den)))
                 }
                 Val(Div(xs)) => {
                     assert_eq!(xs.len(), 0);
-                    let mut args = vec![];
-                    let x_num = eval(&x, env)?;
-                    args.push(x_num.get_number().ok_or_else(|| NumberIsExpected(x))?);
+                    let args = vec![*x.clone()];
                     Ok(Val(Div(args)))
-                }
-                // Less
-                Val(Less(xs)) if xs.len() == 1 => {
-                    let x = eval(&x, env)?;
-                    let x0 = xs[0];
-                    let x1 = x.get_number().ok_or_else(|| NumberIsExpected(x))?;
-                    if x0 < x1 {
-                        Ok(Val(True(vec![])))
-                    } else {
-                        Ok(Val(False(vec![])))
-                    }
-                }
-                Val(Less(xs)) => {
-                    assert_eq!(xs.len(), 0);
-                    let mut args = vec![];
-                    let x0 = eval(&x, env)?;
-                    args.push(x0.get_number().ok_or_else(|| NumberIsExpected(x))?);
-                    Ok(Val(Less(args)))
                 }
                 Val(IsNil) => {
                     let e = eval(&x, env)?;
@@ -197,11 +183,36 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                         _ => Err(ListIsExpected(e)),
                     }
                 }
+                // Less
+                Val(Less(xs)) if xs.len() == 1 => {
+                    let x0 = xs[0]
+                        .get_number()
+                        .ok_or_else(|| NumberIsExpected(xs[0].clone()))?;
+                    let x1 = eval(&x, env)?
+                        .get_number()
+                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
+
+                    if x0 < x1 {
+                        Ok(Val(True(vec![])))
+                    } else {
+                        Ok(Val(False(vec![])))
+                    }
+                }
+                Val(Less(xs)) => {
+                    assert_eq!(xs.len(), 0);
+                    let args = vec![*x.clone()];
+                    Ok(Val(Less(args)))
+                }
+                // BigEq
                 Val(BigEq(xs)) if xs.len() == 1 => {
-                    let x_num = xs[0];
-                    let y = eval(&x, env)?;
-                    let y_num = y.get_number().ok_or_else(|| NumberIsExpected(y))?;
-                    if x_num == y_num {
+                    let x0 = xs[0]
+                        .get_number()
+                        .ok_or_else(|| NumberIsExpected(xs[0].clone()))?;
+                    let x1 = eval(&x, env)?
+                        .get_number()
+                        .ok_or_else(|| NumberIsExpected(*x.clone()))?;
+
+                    if x0 == x1 {
                         Ok(Val(True(vec![])))
                     } else {
                         Ok(Val(False(vec![])))
@@ -209,9 +220,7 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 }
                 Val(BigEq(xs)) => {
                     assert_eq!(xs.len(), 0);
-                    let mut args = vec![];
-                    let x_num = eval(&x, env)?;
-                    args.push(x_num.get_number().ok_or_else(|| NumberIsExpected(x))?);
+                    let args = vec![*x.clone()];
                     Ok(Val(BigEq(args)))
                 }
                 t => {
@@ -356,16 +365,16 @@ mod test {
 
     #[test]
     fn test_cons_galaxy_line1() {
-        use TypedExpr::*;
         use TypedSymbol::*;
 
         // ap ap cons 7 ap ap cons 123 nil
         let x = cons(number(7), cons(number(123), nil()));
 
-        let expected = Val(Cons(vec![
-            Val(Number(7)),
-            Val(Cons(vec![Val(Number(123)), Val(Nil)])),
+        let expected = val(Cons(vec![
+            val(Number(7)),
+            app(app(val(Cons(vec![])), val(Number(123))), val(Nil)),
         ]));
+
         assert_eq!(expected, eval(&x, &empty_env()).unwrap());
     }
 
@@ -380,7 +389,7 @@ mod test {
         let e = cons(number(0), cons(variable(1), number(2)));
         let expected = Val(Cons(vec![
             Val(Number(0)),
-            Val(Cons(vec![Val(Number(123)), Val(Number(2))])),
+            app(app(val(Cons(vec![])), val(Variable(1))), val(Number(2))),
         ]));
 
         assert_eq!(expected, eval(&e, &env).unwrap());
@@ -397,7 +406,7 @@ mod test {
         let e = cons(number(0), app(app(variable(1), number(1)), number(2)));
         let expected = Val(Cons(vec![
             Val(Number(0)),
-            Val(Cons(vec![Val(Number(1)), Val(Number(2))])),
+            app(app(val(Variable(1)), val(Number(1))), val(Number(2))),
         ]));
 
         assert_eq!(expected, eval(&e, &env).unwrap());
@@ -414,7 +423,7 @@ mod test {
         let e = cons(number(0), app(variable(1), number(2)));
         let expected = Val(Cons(vec![
             Val(Number(0)),
-            Val(Cons(vec![Val(Number(1)), Val(Number(2))])),
+            app(val(Variable(1)), val(Number(2))),
         ]));
 
         assert_eq!(expected, eval(&e, &env).unwrap());
