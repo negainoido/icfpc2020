@@ -110,9 +110,10 @@ def plot_and_interact(images)
 		@plot.puts "EOD"
 	end
 
-	data = images.length.times.map {|i| "$image#{i}"}.join(",")
-	@plot.puts "plot #{data}"
+	@plot.puts "set yrange [:] reverse"
 
+	data = images.length.times.map {|i| "$image#{i} pt 5 "}.join(",")
+	@plot.puts "plot #{data}"
 
 	@plot.puts "set mouse verbose"
 
