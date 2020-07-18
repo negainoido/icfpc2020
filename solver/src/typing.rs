@@ -18,10 +18,10 @@ pub enum TypedSymbol {
     Neg,
     Sum { arity: u32, args: Vec<TypedExpr> },
     Prod { arity: u32, args: Vec<TypedExpr> },
-    Div(Vec<i128>),
-    Less(Vec<i128>),
+    Div(Vec<TypedExpr>),
+    Less(Vec<TypedExpr>),
     IsNil,
-    BigEq(Vec<i128>),
+    BigEq(Vec<TypedExpr>),
 }
 
 impl TypedSymbol {
