@@ -100,15 +100,16 @@ app :: Expr -> Expr -> Expr
 app (App c es) e2 = App c (e2:es)
 app (EThunk e es) e2 = EThunk e (e2:es) 
 
-newtype Thunk = Thunk (IORef (Either (ExceptT String IO Value) Value))
+data Thunk = Thunk Expr (IORef (Either (ExceptT String IO Value) Value))
     deriving(Eq)
 
 instance Show Thunk where
-    show (Thunk ref) = unsafePerformIO $ do
+    show (Thunk e ref) = unsafePerformIO $ do
         r <- readIORef ref
         case r of
-            Left _ -> pure "_"
+            Left _ -> pure (show e)
             Right v -> pure $ show v
+
 
 data Value = 
       VNumber Integer
@@ -133,16 +134,22 @@ evalMain defs expr =
         env <- mfix $ \env -> 
             M.fromList <$> (
                 forM defs $ \(Def head body) -> do
-                    thunk <- mkThunk (eval env body)
+                    thunk <- mkThunk body (eval env body)
                     pure (head, thunk))
         r <- eval env expr >>= evalForce
         catchError (do
             Result r dat imageList imageListAsData <- dataToResult r
             liftIO $ putStrLn $ "Result: " ++ show r
-            liftIO $ putStrLn $ "Data: " ++ show dat
+            --liftIO $ putStrLn $ "Data: " ++ show dat
             liftIO $ T.putStrLn $ "DataAsCode: " <> toCode dat
-            liftIO $ putStrLn $ "ImageList: " ++ show imageList
-            liftIO $ T.putStrLn $ "ImageListAsCode: " <> toCode imageListAsData
+            case imageList of 
+                Just imageList -> 
+                    forM_ (zip [(1 :: Int)..] imageList)  $ \(i, image) -> do
+                    let filename = "image_" ++ show i ++ ".txt"
+                        content = unlines [ show x ++ " "  ++ show y | (x,y) <- image]
+                    liftIO $ writeFile filename $ content
+                Nothing -> pure ()
+            when (r /= 0) $ liftIO $ T.putStrLn $ "ImageListAsCode: " <> toCode imageListAsData
             ) (\e -> liftIO $ putStrLn $ "Error: " ++ e)
         return r
 
@@ -164,7 +171,7 @@ main = do
 
     case res of
         Left e -> print $ "Error!:" ++ e
-        Right r -> print r
+        Right r -> pure ()
         
 
          
@@ -176,7 +183,7 @@ evalForce (VPApp Cons [t2, t1]) = DCons <$> (evalThunk t1 >>= evalForce) <*> (ev
 evalForce e = throwError $ "cannot force partial application" ++ show e
 
 eval :: Env -> Expr -> ExceptT String IO Value
--- eval env e | traceShow ("eval", e) False = undefined
+--eval env e | traceShow ("eval", e) False = undefined
 eval env (EThunk t args) = do
     v <- evalThunk t
     case (v, args) of
@@ -234,7 +241,7 @@ eval env (App head args) =
         (S, _) | Just me <- triOpM f args -> me >>= eval env
             where
             f e0 e1 e2 =  do
-                t2 <- mkThunk (eval env e2)
+                t2 <- mkThunk e2 (eval env e2)
                 let e2' = EThunk t2 []
                 pure $ app (app e0 e2') (app e1 e2')
         (I, _) | Just e <- uniOp id args ->  eval env e
@@ -281,14 +288,14 @@ eval env (App head args) =
         (Num n, []) -> pure $ VNumber n
         (Nil, []) -> pure VNil
         (head, args) -> 
-            VPApp head <$> forM args (\e -> mkThunk (eval env e)) 
+            VPApp head <$> forM args (\e -> mkThunk e (eval env e)) 
 
-mkThunk :: ExceptT String IO Value -> ExceptT String IO Thunk
-mkThunk action = liftIO $ Thunk <$> newIORef (Left action)
+mkThunk :: Expr -> ExceptT String IO Value -> ExceptT String IO Thunk
+mkThunk e action = liftIO $ Thunk e <$> newIORef (Left action)
 
 
 evalThunk :: Thunk -> ExceptT String IO Value
-evalThunk (Thunk ref) = do
+evalThunk (Thunk _ ref) = do
     r <- liftIO $ readIORef ref
     case r of
         Right v -> pure v
@@ -309,7 +316,7 @@ ensureCons e = throwError $ "Cons is expected but found: " ++ show e
 data Result = Result {
     returnValue :: Integer,
     stateData :: SData,
-    imageList :: [[(Integer, Integer)]],
+    imageList :: Maybe [[(Integer, Integer)]],
     imageListAsData :: SData
 }
 
@@ -319,7 +326,7 @@ dataToResult (v1 `DCons` (v2 `DCons` (v3 `DCons` DNil))) = do
         DNumber n -> pure n
         _ -> throwError $ "first element should be number" ++ show v1 
     let dat = v2
-    imageList <- dataToImageList v3
+    imageList <- (Just <$> dataToImageList v3) `catchError` (\e -> pure Nothing)
     pure Result {
         returnValue = n1, 
         stateData = dat,
