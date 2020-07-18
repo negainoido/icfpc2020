@@ -4,7 +4,6 @@ module Negainoido.EvalSpec where
 import Test.Hspec
 import Test.HUnit
 
-import MyLib
 import Negainoido.Syntax
 import Negainoido.Parser
 import Negainoido.Eval

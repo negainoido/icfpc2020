@@ -3,7 +3,6 @@
 {-# LANGUAGE RecordWildCards #-} 
 module Negainoido.Eval where
 
-import qualified Data.Text as T
 import qualified Data.Map as M
 import Control.Monad.Fix
 import Data.IORef
