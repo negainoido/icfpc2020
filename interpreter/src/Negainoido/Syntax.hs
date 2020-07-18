@@ -76,3 +76,11 @@ toCode = B.run . go
     go (DCons a b) = "ap" <> sp <> "ap" <> sp <> "cons" <> sp <> go a <> sp <> go b
     go DNil = "nil"
     go (DNumber n) = B.decimal n
+
+symToExpr :: Symbol -> Expr
+symToExpr x = App x []
+
+
+app :: Expr -> Expr -> Expr
+app (App c es) e2 = App c (e2:es)
+app (EThunk e es) e2 = EThunk e (e2:es) 
