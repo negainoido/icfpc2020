@@ -92,13 +92,13 @@ pub mod raku {
         TypedExpr::Val(sym)
     }
     pub const NIL: TypedExpr = Val(Nil);
-    pub const CONS: TypedExpr = Val(Cons(vec![]));
+    pub const CONS: TypedExpr = Val(Cons(Vec::new()));
     pub const CAR: TypedExpr = Val(Car);
     pub const CDR: TypedExpr = Val(Cdr);
-    pub const BCOMB: TypedExpr = Val(BComb(vec![]));
-    pub const CCOMB: TypedExpr = Val(CComb(vec![]));
+    pub const BCOMB: TypedExpr = Val(BComb(Vec::new()));
+    pub const CCOMB: TypedExpr = Val(CComb(Vec::new()));
     pub const ICOMB: TypedExpr = Val(IComb);
-    pub const SUM: TypedExpr = Val(Sum(vec![]));
+    pub const SUM: TypedExpr = Val(Sum(Vec::new()));
     pub const NEG: TypedExpr = Val(Neg);
     pub fn cons(e1: TypedExpr, e2: TypedExpr) -> TypedExpr {
         app(app(val(Cons(vec![])), e1), e2)
@@ -128,6 +128,6 @@ pub mod raku {
         let eq = Val(BigEq(vec![]));
         app(app(eq, x1), x2)
     }
-    pub const T: TypedExpr = Val(True(vec![]));
-    pub const F: TypedExpr = Val(False(vec![]));
+    pub const T: TypedExpr = Val(True(Vec::new()));
+    pub const F: TypedExpr = Val(False(Vec::new()));
 }
