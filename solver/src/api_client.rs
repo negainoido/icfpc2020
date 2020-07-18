@@ -17,7 +17,7 @@ type Error = Box<dyn std::error::Error>;
 impl ApiClient {
     pub fn new(key: &str) -> Self {
         ApiClient {
-            key: key.clone().to_owned(),
+            key: key.to_owned(),
         }
     }
 

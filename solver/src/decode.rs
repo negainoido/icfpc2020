@@ -19,8 +19,8 @@ use crate::symbol::Symbol;
 // }
 
 fn is_zero_column(arr: &Vec<Vec<bool>>, x: usize, h: usize, y: usize) -> bool {
-    for i in x..x + h {
-        if arr[i][y] {
+    for a in &arr[x..x + h] {
+        if a[y] {
             return false;
         }
     }
