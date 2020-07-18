@@ -12,6 +12,8 @@ struct Opt {
     common: CommonOpt,
     #[structopt(short, long, default_value = "")]
     input: String,
+    #[structopt(short, long)]
+    strict: bool,
 }
 
 fn run() -> std::io::Result<()> {
@@ -30,7 +32,7 @@ fn run() -> std::io::Result<()> {
     }
 
     let task = Task::new(&lines[..]);
-    let final_expr = task.solve();
+    let final_expr = task.solve(opt.strict);
     println!("{:?}", final_expr);
     Ok(())
 }

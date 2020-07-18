@@ -38,14 +38,19 @@ impl Task {
     }
 
     // Currently, it works only when target statement doesn't contain any variable
-    pub fn solve(&self) -> TypedExpr {
+    pub fn solve(&self, strict: bool) -> TypedExpr {
         let mut env = self
             .variable_to_expr_map
             .iter()
             .map(|(k, v)| (*k, TypedExpr::typing(&v).unwrap()))
             .collect();
         let target_expr = TypedExpr::typing(&self.target).unwrap();
-        eval::eval(&target_expr, &mut env).unwrap()
+        if strict {
+            let e = eval::eval(&target_expr, &mut env, false).unwrap();
+            eval::eval(&e, &mut env, true).unwrap()
+        } else {
+            eval::eval(&target_expr, &mut env, false).unwrap()
+        }
     }
 
     fn string_to_symbols(s: &str, target: &str) -> Vec<Symbol> {
