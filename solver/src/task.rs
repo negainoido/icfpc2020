@@ -56,50 +56,54 @@ impl Task {
     }
 }
 
-#[test]
-fn test() {
-    let input = vec![
-        ":1029 = ap ap cons 7 ap ap cons 123229502148636 nil".to_string(),
-        ":1032 = ap ap cons 7 ap ap cons 560803991675135 nil".to_string(),
-        "galaxy = :1032".to_string(),
-    ];
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test() {
+        let input = vec![
+            ":1029 = ap ap cons 7 ap ap cons 123229502148636 nil".to_string(),
+            ":1032 = ap ap cons 7 ap ap cons 560803991675135 nil".to_string(),
+            "galaxy = :1032".to_string(),
+        ];
 
-    let task = Task::new(&input[..]);
-    let mut expected_expr_map = HashMap::new();
-    expected_expr_map.insert(
-        1029,
-        expr::parse(&vec![
-            Symbol::App,
-            Symbol::App,
-            Symbol::Cons,
-            Symbol::Number(7),
-            Symbol::App,
-            Symbol::App,
-            Symbol::Cons,
-            Symbol::Number(123229502148636),
-            Symbol::Nil,
-        ]),
-    );
-    expected_expr_map.insert(
-        1032,
-        expr::parse(&vec![
-            Symbol::App,
-            Symbol::App,
-            Symbol::Cons,
-            Symbol::Number(7),
-            Symbol::App,
-            Symbol::App,
-            Symbol::Cons,
-            Symbol::Number(560803991675135),
-            Symbol::Nil,
-        ]),
-    );
+        let task = Task::new(&input[..]);
+        let mut expected_expr_map = HashMap::new();
+        expected_expr_map.insert(
+            1029,
+            expr::parse(&vec![
+                Symbol::App,
+                Symbol::App,
+                Symbol::Cons,
+                Symbol::Number(7),
+                Symbol::App,
+                Symbol::App,
+                Symbol::Cons,
+                Symbol::Number(123229502148636),
+                Symbol::Nil,
+            ]),
+        );
+        expected_expr_map.insert(
+            1032,
+            expr::parse(&vec![
+                Symbol::App,
+                Symbol::App,
+                Symbol::Cons,
+                Symbol::Number(7),
+                Symbol::App,
+                Symbol::App,
+                Symbol::Cons,
+                Symbol::Number(560803991675135),
+                Symbol::Nil,
+            ]),
+        );
 
-    assert_eq!(
-        task,
-        Task {
-            variable_to_expr_map: expected_expr_map,
-            target: expr::parse(&vec![Symbol::Variable(1032)]),
-        }
-    );
+        assert_eq!(
+            task,
+            Task {
+                variable_to_expr_map: expected_expr_map,
+                target: expr::parse(&vec![Symbol::Variable(1032)]),
+            }
+        );
+    }
 }
