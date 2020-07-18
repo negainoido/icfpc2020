@@ -6,8 +6,6 @@ module MyLib  where
 import qualified Data.Text as T
 import qualified Data.Map as M
 import Control.Monad.Fix
-import Data.Text(Text)
-import Text.Read
 import Data.IORef
 import GHC.Generics
 import Control.Monad.Except
@@ -15,70 +13,7 @@ import Control.Monad.Except
 import qualified Data.Text.IO as T
 import Data.Aeson(ToJSON(..), encodeFile)
 import Negainoido.Syntax
-
-
-parseDef :: Text  -> Except String Def
-parseDef txt = Def <$> (parseHead hd) <*> (parseBody body)
-    where
-    hd: _eq: body = T.words txt
-    
-parseHead :: Text -> Except String NT
-parseHead txt =
-    pure $ NT (read (T.unpack (T.tail txt)))
-
-parseMain :: Text -> Except String Expr
-parseMain = parseBody . T.words
-
-parseBody :: [Text] -> Except String Expr
-parseBody = mapM parseSymbol >=> parse
-
-parseSymbol :: Text -> Except String Symbol
-parseSymbol x = 
-    case x of
-        "add" -> pure  Add
-        "ap" -> pure Ap
-        "b" -> pure B
-        "c" -> pure C
-        "car" -> pure Car
-        "cdr" -> pure Cdr
-        "cons" -> pure Cons
-        "div" -> pure Div
-        "eq" -> pure Eq
-        "i" -> pure I
-        "isnil" -> pure IsNil
-        "lt" -> pure Lt
-        "mul" -> pure Mul
-        "neg" -> pure Neg
-        "nil" -> pure Nil
-        "s" -> pure S
-        "t" -> pure T
-        "f" -> pure F
-        _ | T.head x == ':' -> NonTerm <$> (parseHead x)
-          | Just n <- readMaybe (T.unpack x) -> pure $ Num n
-        _ -> throwError $ "unknown symbol:" ++ show x
-
-
-symToExpr :: Symbol -> Expr
-symToExpr x = App x []
-
-data StackElem = SExpr Expr | SAp 
-    deriving(Show)
-
-parse :: [Symbol] -> Except String Expr
-parse = go []
-  where
-      go :: [StackElem] -> [Symbol] -> Except String Expr
-      go (SExpr c1: SExpr c2: SAp: st) syms = 
-          go (SExpr (app c2 c1):st) syms
-      go st (c:syms) = go (toStackElem c: st) syms
-      go [SExpr e] [] = pure e
-      go st tokens = throwError $ "Unexpected parse state: Stack = " ++ show st ++ " Token = " ++ show (take 3 tokens)
-      toStackElem Ap = SAp
-      toStackElem c = SExpr (App c [])
-
-app :: Expr -> Expr -> Expr
-app (App c es) e2 = App c (e2:es)
-app (EThunk e es) e2 = EThunk e (e2:es) 
+import Negainoido.Parser
 
 type Env = M.Map NT Thunk
 
