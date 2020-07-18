@@ -62,10 +62,14 @@ def demodulate(s)
 				s.shift
 			end
 			s.shift
-			len *= 4
-			num =  s[0..len-1].join("").to_i(2)
-			res << sign * num
-			len.times { s.shift }
+      if len == 0
+        res << 0
+      else
+        len *= 4
+        num =  s[0..len-1].join("").to_i(2)
+        res << sign * num
+        len.times { s.shift }
+      end
 		end
 		res
 	end
@@ -252,4 +256,3 @@ for y in ymin..ymax
 	end
 end
 =end
-
