@@ -22,20 +22,20 @@ pub mod static_expr {
     use crate::typing::TypedExpr::*;
     use crate::typing::TypedSymbol::*;
 
-    pub const NIL: &'static TypedExpr<'static> = &Val(Nil);
-    pub const CONS: &'static TypedExpr<'static> = &Val(Cons(Vec::new()));
-    pub const CAR: &'static TypedExpr<'static> = &Val(Car);
-    pub const CDR: &'static TypedExpr<'static> = &Val(Cdr);
-    pub const BCOMB: &'static TypedExpr<'static> = &Val(BComb(Vec::new()));
-    pub const CCOMB: &'static TypedExpr<'static> = &Val(CComb(Vec::new()));
-    pub const ICOMB: &'static TypedExpr<'static> = &Val(IComb);
-    pub const SUM: &'static TypedExpr<'static> = &Val(Sum(Vec::new()));
-    pub const NEG: &'static TypedExpr<'static> = &Val(Neg);
-    pub const DIV: &'static TypedExpr<'static> = &Val(Div(Vec::new()));
-    pub const LESS: &'static TypedExpr<'static> = &Val(Less(Vec::new()));
-    pub const EQ: &'static TypedExpr<'static> = &Val(BigEq(Vec::new()));
-    pub const T: &'static TypedExpr<'static> = &Val(True(Vec::new()));
-    pub const F: &'static TypedExpr<'static> = &Val(False(Vec::new()));
+    pub const NIL: &TypedExpr<'static> = &Val(Nil);
+    pub const CONS: &TypedExpr<'static> = &Val(Cons(Vec::new()));
+    pub const CAR: &TypedExpr<'static> = &Val(Car);
+    pub const CDR: &TypedExpr<'static> = &Val(Cdr);
+    pub const BCOMB: &TypedExpr<'static> = &Val(BComb(Vec::new()));
+    pub const CCOMB: &TypedExpr<'static> = &Val(CComb(Vec::new()));
+    pub const ICOMB: &TypedExpr<'static> = &Val(IComb);
+    pub const SUM: &TypedExpr<'static> = &Val(Sum(Vec::new()));
+    pub const NEG: &TypedExpr<'static> = &Val(Neg);
+    pub const DIV: &TypedExpr<'static> = &Val(Div(Vec::new()));
+    pub const LESS: &TypedExpr<'static> = &Val(Less(Vec::new()));
+    pub const EQ: &TypedExpr<'static> = &Val(BigEq(Vec::new()));
+    pub const T: &TypedExpr<'static> = &Val(True(Vec::new()));
+    pub const F: &TypedExpr<'static> = &Val(False(Vec::new()));
 }
 
 impl<'a> Evaluator<'a> {
