@@ -1,12 +1,11 @@
 use glob::glob;
 use std::fs::File;
-use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::io::Read;
+use std::path::PathBuf;
 
 use assert_cmd::Command;
 
 use regex::Regex;
-use tempfile::tempdir;
 
 #[test]
 fn test_solver() -> std::result::Result<(), Box<dyn std::error::Error>> {
