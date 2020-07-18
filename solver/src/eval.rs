@@ -141,13 +141,13 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 }
                 // Sum (Add)
                 Val(Sum(xs)) if xs.len() == 1 => {
-                    let x_num = eval(&xs[0], env)?
+                    let x0 = eval(&xs[0], env)?
                         .get_number()
                         .ok_or_else(|| NumberIsExpected(*x.clone()))?;
-                    let x_den = eval(&x, env)?
+                    let x1 = eval(&x, env)?
                         .get_number()
                         .ok_or_else(|| NumberIsExpected(*x.clone()))?;
-                    Ok(Val(Number(x_num + x_den)))
+                    Ok(Val(Number(x0 + x1)))
                 }
                 Val(Sum(xs)) => {
                     assert_eq!(xs.len(), 0);
@@ -156,13 +156,13 @@ pub fn eval(expr: &TypedExpr, env: &HashMap<i128, TypedExpr>) -> Result<TypedExp
                 }
                 // Product
                 Val(Prod(xs)) if xs.len() == 1 => {
-                    let x_num = eval(&xs[0], env)?
+                    let x0 = eval(&xs[0], env)?
                         .get_number()
                         .ok_or_else(|| NumberIsExpected(*x.clone()))?;
-                    let x_den = eval(&x, env)?
+                    let x1 = eval(&x, env)?
                         .get_number()
                         .ok_or_else(|| NumberIsExpected(*x.clone()))?;
-                    Ok(Val(Number(x_num * x_den)))
+                    Ok(Val(Number(x0 * x1)))
                 }
                 Val(Prod(xs)) => {
                     assert_eq!(xs.len(), 0);
