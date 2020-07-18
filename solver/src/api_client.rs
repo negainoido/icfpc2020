@@ -1,7 +1,7 @@
-use url::Url;
-use ureq::{Response};
 use failure::err_msg;
 use lazy_static::lazy_static;
+use ureq::Response;
+use url::Url;
 
 const DOMAIN: &str = "https://icfpc2020-api.testkontur.ru";
 lazy_static! {

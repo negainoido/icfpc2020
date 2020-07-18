@@ -1,5 +1,5 @@
-pub mod api_client;
 pub mod ai;
+pub mod api_client;
 pub mod decode;
 pub mod eval;
 pub mod expr;
