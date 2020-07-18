@@ -42,7 +42,7 @@ impl Symbol {
     fn str2vec(s: &str) -> Vec<Vec<bool>> {
         let mut v = vec![];
 
-        for i in s.trim().split("\n") {
+        for i in s.trim().split('\n') {
             let i = i.trim();
             if i.is_empty() {
                 continue;
@@ -248,7 +248,7 @@ impl Symbol {
             symbol
         } else if token.eq(target) {
             Symbol::Target
-        } else if token.starts_with(":") {
+        } else if token.starts_with(':') {
             Symbol::Variable(token[1..].parse::<i128>().unwrap())
         } else {
             Symbol::Number(token.parse::<i128>().unwrap())
