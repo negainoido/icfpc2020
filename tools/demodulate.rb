@@ -7,11 +7,14 @@ def demodulate(s)
 	when "00"
 		res << "nil"
 	when "11"
+    res << "ap ap cons "
 		res += demodulate(s)
+    res << " "
 		res += demodulate(s)
+    res << " "
 	else
 		if prefix == "01"
-			sign = 1 
+			sign = 1
 		else
 			sign = -1
 		end
@@ -28,7 +31,7 @@ def demodulate(s)
 	end
 	res
 end
-p demodulate(ARGV[0].split(""))
+p demodulate(ARGV[0].split("")).join
 =begin
 a = "110110000111011111100001001111110101000000".split("")
 #a = "1101000".split("")
@@ -48,4 +51,3 @@ p demodulate("110110000111011111100001001101010110011100".split(""))
 
 p demodulate("110110000111011111100001001101001001111000".split(""))
 =end
-
