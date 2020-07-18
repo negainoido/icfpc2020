@@ -1,18 +1,19 @@
 use std::collections::HashMap;
 
+use crate::eval::Evaluator;
+use crate::expr;
 use crate::expr::Expr;
 use crate::symbol::Symbol;
-use crate::typing::TypedExpr;
-use crate::{eval, expr};
+use crate::typing::{ExprNode, TypedExpr};
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct Task {
+pub struct Task<'a> {
     pub variable_to_expr_map: HashMap<i128, Expr>,
     pub target: Expr,
+    evaluator: Evaluator<'a>,
 }
 
-impl Task {
-    pub fn new(input: &[String]) -> Task {
+impl<'a> Task<'a> {
+    pub fn new(input: &[String]) -> Self {
         let input_body = &input[..input.len() - 1];
         let input_target = input.last().unwrap();
 
@@ -31,21 +32,26 @@ impl Task {
         let target_symbols = Task::string_to_symbols(input_target, "galaxy");
         assert_eq!(target_symbols[0], Symbol::Target);
         assert_eq!(target_symbols[1], Symbol::Eq);
+        let evaluator = Evaluator::new();
         Task {
             variable_to_expr_map,
             target: expr::parse(&target_symbols[2..].to_vec()),
+            evaluator,
         }
     }
 
     // Currently, it works only when target statement doesn't contain any variable
-    pub fn solve(&self) -> TypedExpr {
+    pub fn solve(&'a self) -> ExprNode<'a> {
         let mut env = self
             .variable_to_expr_map
             .iter()
-            .map(|(k, v)| (*k, TypedExpr::typing(&v).unwrap()))
+            .map(|(k, v)| {
+                let v: &TypedExpr = self.evaluator.typing(&v).unwrap();
+                (*k, v)
+            })
             .collect();
-        let target_expr = TypedExpr::typing(&self.target).unwrap();
-        eval::eval(&target_expr, &mut env).unwrap()
+        let target_expr = self.evaluator.typing(&self.target).unwrap();
+        self.evaluator.eval(target_expr, &mut env).unwrap()
     }
 
     fn string_to_symbols(s: &str, target: &str) -> Vec<Symbol> {
@@ -97,12 +103,7 @@ mod test {
             ]),
         );
 
-        assert_eq!(
-            task,
-            Task {
-                variable_to_expr_map: expected_expr_map,
-                target: expr::parse(&vec![Symbol::Variable(1032)]),
-            }
-        );
+        assert_eq!(task.variable_to_expr_map, expected_expr_map);
+        assert_eq!(expr::parse(&vec![Symbol::Variable(1032)]), task.target);
     }
 }
