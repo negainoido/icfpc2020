@@ -34,24 +34,21 @@ end
 def plot_and_interact(lines)
 	images = read_image_from_string(lines)
 
-	#plot = IO.popen("gnuplot", "r+")
-	plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
-
 	images.length.times do |i|
-		plot.puts "$image#{i} << EOD"
+		@plot.puts "$image#{i} << EOD"
 		images[i].each do |x, y|
-			plot.puts "#{x} #{y}"
+			@plot.puts "#{x} #{y}"
 		end
-		plot.puts "EOD"
+		@plot.puts "EOD"
 	end
 
 	data = images.length.times.map {|i| "$image#{i}"}.join(",")
-	plot.puts "plot #{data}"
+	@plot.puts "plot #{data}"
 
 
-	plot.puts "set mouse verbose"
+	@plot.puts "set mouse verbose"
 
-	while l = plot.gets
+	while l = @plot.gets
 		puts "gnuplot: #{l}"
 		if l =~ /put `\s*(-?[-0-9\.]*),\s*(-?[0-9\.]*)' to clipboard\./
 			x = $1.to_f.round
@@ -68,6 +65,7 @@ data = "nil"
 #next_point = [1, 4]
 #data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 
+@plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
 
 while true
 	lines = exec_autotaker(next_point, data)
