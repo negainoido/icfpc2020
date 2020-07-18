@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Stdin};
 
 use structopt::StructOpt;
 
@@ -14,20 +14,34 @@ struct Opt {
     input: String,
 }
 
-fn run() -> std::io::Result<()> {
-    let opt = Opt::from_args();
-    common_init(&opt.common);
-
-    let mut reader = BufReader::new(File::open(&opt.input)?);
+fn read_lines(reader: &mut dyn BufRead) -> Vec<String> {
     let mut line = String::new();
     let mut lines = vec![];
     while let Ok(size) = reader.read_line(&mut line) {
         if size == 0 {
             break;
         }
+        if line.trim() == "" || line.trim().chars().next() == Some('#') {
+            continue;
+        }
         lines.push(line.trim().to_string());
         line.clear();
     }
+    lines
+}
+
+fn run() -> std::io::Result<()> {
+    let opt = Opt::from_args();
+    common_init(&opt.common);
+
+    let lines = if opt.input != "" {
+        let mut reader = BufReader::new(File::open(&opt.input)?);
+        read_lines(&mut reader)
+    } else {
+        let stdin: Stdin = std::io::stdin();
+        let mut reader = BufReader::new(stdin);
+        read_lines(&mut reader)
+    };
 
     let task = Task::new(&lines[..]);
     let final_expr = task.solve();
