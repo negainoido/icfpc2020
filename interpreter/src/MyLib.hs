@@ -17,7 +17,7 @@ someFunc = putStrLn "someFunc"
 
 data Symbol = Add | Ap | B | C 
   | Car | Cdr | Cons | Div | Eq | I 
-  | IsNil | Lt | Mul | Neg | Nil | S | T
+  | IsNil | Lt | Mul | Neg | Nil | S | T | F
   | NonTerm NT
   | Num Integer
   deriving (Eq, Show)
@@ -64,6 +64,7 @@ parseSymbol x =
         "nil" -> Nil
         "s" -> S
         "t" -> T
+        "f" -> F
         x | T.head x == ':' -> NonTerm (parseHead x)
           | Just n <- readMaybe (T.unpack x) -> Num n
         _ -> error $ "unknown symbol:" ++ show x
@@ -146,8 +147,8 @@ main = do
 
 evalForce :: Value -> ExceptT String IO SData
 evalForce (VNumber v) = pure $ DNumber v
-evalForce (VCons t1 t2) = DCons <$> (evalThunk t1 >>= evalForce) <*> (evalThunk t2 >>= evalForce)
 evalForce VNil = pure $ DNil
+evalForce (VPApp Cons [t2, t1]) = DCons <$> (evalThunk t1 >>= evalForce) <*> (evalThunk t2 >>= evalForce)
 evalForce e = throwError $ "cannot force partial application" ++ show e
 
 eval :: Env -> Expr -> ExceptT String IO Value
@@ -161,6 +162,31 @@ eval env (EThunk t args) = do
         (v, []) -> pure v
         (v, args) -> throwError $ "cannot apply: " ++ show (v, args)
 eval env (App head args) = 
+    let triOp f args 
+            | e0:e1:e2:es <- reverse args = Just $ foldl app (f e0 e1 e2) es  
+            | otherwise = Nothing
+        triOpM f args 
+            | e0:e1:e2:es <- reverse args = Just $ do
+                e' <- f e0 e1 e2
+                pure $ foldl app e' es  
+            | otherwise = Nothing 
+        uniOp f args
+            | e0: es <- reverse args = Just $ foldl app (f e0) es
+            | otherwise = Nothing
+        uniOpM f args
+            | e0: es <- reverse args = Just $ do
+                e' <- f e0
+                pure $ foldl app e' es
+            | otherwise = Nothing
+        binOp f args
+            | e0:e1: es <- reverse args = Just $ foldl app (f e0 e1) es
+            | otherwise = Nothing
+        binOpM f args
+            | e0:e1: es <- reverse args = Just $ do
+                 e' <- f e0 e1
+                 pure $ foldl app e' es
+            | otherwise = Nothing
+            in
     case (head, args) of
         (Add, [e2, e1]) -> do 
             n1 <- eval env e1 >>= ensureNumber
@@ -177,40 +203,52 @@ eval env (App head args) =
         (Neg, [e]) -> do
             n <- eval env e >>= ensureNumber
             pure $ VNumber $ negate n
-        (B, _) | e0:e1:e2:es <- reverse args -> do
-            let rhs = app e0 (app e1 e2) 
+        (B, _) | Just e <- triOp f args -> eval env e
+            where f e0 e1 e2 = app e0 (app e1 e2)
+        (C, _) | Just e <- triOp f args -> eval env e
+            where f e0 e1 e2 = app (app e0 e2) e1
+        (S, _) | Just me <- triOpM f args -> me >>= eval env
+            where
+            f e0 e1 e2 =  do
+                t2 <- mkThunk (eval env e2)
+                let e2' = EThunk t2 []
+                pure $ app (app e0 e2') (app e1 e2')
+        (I, _) | Just e <- uniOp id args ->  eval env e
+        (T, _) | Just e <- binOp (\x y -> x) args -> eval env e
+        (F, _) | Just e <- binOp (\x y -> y) args -> eval env e
+        (Car, _) | Just e <- uniOp f args ->  eval env e
+            where
+            f e = app e (symToExpr T)
+        (Cdr, _) | Just e <- uniOp f args ->  eval env e
+            where
+            f e = app e (symToExpr F)
+        (Cons, _) | e0:e1:e2:es <- reverse args -> do
+            let rhs = app (app e2 e0) e1
             eval env (foldl app rhs es)
-        (C, _) | e0:e1:e2:es <- reverse args -> do
-            let rhs = app (app e0 e2) e1
-            eval env (foldl app rhs es)
-        (S, _) | e0:e1:e2:es <- reverse args -> do
-            t2 <- mkThunk (eval env e2)
-            let e2' = EThunk t2 []
-                rhs = app (app e0 e2') (app e1 e2')
-            eval env (foldl app rhs es)
-        (I, [e]) -> eval env e
-        (Car, [e]) -> do
-            (t1, _) <- eval env e >>= ensureCons 
-            evalThunk t1
-        (Cdr, [e]) -> do
-            (_, t2) <- eval env e >>= ensureCons 
-            evalThunk t2
-        (Cons, [e2, e1]) -> do
-            t1 <- mkThunk (eval env e1)
-            t2 <- mkThunk (eval env e2)
-            pure $ VCons t1 t2
-        (IsNil, [eElse, eThen, eCond]) -> do
-            v <- eval env eCond
-            case v of
-                VNil -> eval env eThen
-                VCons {} -> eval env eElse
-                _ -> throwError $ "Nil or Cons is expected but found" ++ show v
-        (Lt, [eElse, eThen, e2, e1]) -> do
-            n1 <- eval env e1 >>= ensureNumber
-            n2 <- eval env e2 >>= ensureNumber
-            if n1 < n2
-                then eval env eThen
-                else eval env eElse
+        (IsNil, _) | Just me <- uniOpM f args -> me >>= eval env
+            where
+            f e = do
+                v <- eval env e
+                case v of
+                    VNil -> pure $ symToExpr T
+                    VPApp Cons _ -> pure $ symToExpr F
+                    _ -> throwError $ "Nil or Cons is expected but found" ++ show v
+        (Lt, _) | Just me <- binOpM f args -> me >>= eval env
+            where
+                f e1 e2 = do
+                    n1 <- eval env e1 >>= ensureNumber
+                    n2 <- eval env e2 >>= ensureNumber
+                    pure $ if n1 < n2
+                        then symToExpr T
+                        else symToExpr F
+        (Eq, _) | Just me <- binOpM f args -> me >>= eval env
+            where
+                f e1 e2 = do
+                    n1 <- eval env e1 >>= ensureNumber
+                    n2 <- eval env e2 >>= ensureNumber
+                    pure $ if n1 == n2
+                        then symToExpr T
+                        else symToExpr F
         (NonTerm n, es) -> do -- es [ e_n, ... , e2, e1, e0]
             t <- case M.lookup n env of
                 Nothing -> throwError $  "Undefined Nonterminal: " ++ show n
