@@ -13,12 +13,4 @@ pub fn common_init(opt: &CommonOpt) {
     } else {
         env_logger::init();
     }
-
-    match std::env::var("SOLVER_REVISION") {
-        Ok(val) => eprintln!(
-            "solver revison is https://github.com/negainoido/icfpc2020/commit/{}",
-            val
-        ),
-        Err(e) => eprintln!("solver revision is unknown: {}", e),
-    }
 }
