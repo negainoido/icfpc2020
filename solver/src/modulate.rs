@@ -1,4 +1,5 @@
-use crate::typing::raku::cons;
+use crate::eval::static_expr::*;
+use crate::eval::Evaluator;
 use crate::typing::{ExprNode, TypedExpr, TypedSymbol};
 use std::cell::RefCell;
 
@@ -103,90 +104,100 @@ pub fn modulate<'a>(expr: ExprNode<'a>) -> String {
     result
 }
 
-fn convert_to_expr<'a>(list: &List) -> TypedExpr<'a> {
+fn convert_to_expr<'a>(list: &List, sim: &'a Evaluator<'a>) -> ExprNode<'a> {
     match list {
-        List::Nil => TypedExpr::Val(TypedSymbol::Nil),
-        List::Integer(i) => TypedExpr::Val(TypedSymbol::Number(*i)),
+        List::Nil => sim.get_val(TypedSymbol::Nil),
+        List::Integer(i) => sim.get_val(TypedSymbol::Number(*i)),
         List::Cons(l, r) => {
-            let l = convert_to_expr(&l);
-            let r = convert_to_expr(&r);
-            cons(&l, &r)
+            let l = convert_to_expr(&l, sim);
+            let r = convert_to_expr(&r, sim);
+            sim.get_cons(l, r)
         }
     }
 }
 
-pub fn demodulate<'a>(a: &str) -> TypedExpr<'a> {
+pub fn demodulate<'a>(a: &str, sim: &'a Evaluator<'a>) -> ExprNode<'a> {
     if a == "11" {
-        return TypedExpr::Val(TypedSymbol::Nil);
+        return sim.get_val(TypedSymbol::Nil);
     }
     let (_, l) = do_demodulate(a);
-    convert_to_expr(&l)
+    convert_to_expr(&l, sim)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::eval::{eval, EvalError, Evaluator};
-    use crate::typing::raku::{number, NIL};
     use std::collections::HashMap;
 
     #[test]
     fn demodulate_simple() {
+        let eval = Evaluator::new();
         let request = "1101000";
-        let expr = demodulate(request);
-        let expected_expr = cons(&number(0), &NIL);
+        let expr = demodulate(request, &eval);
+        let expected_expr = eval.get_cons(eval.get_number(0), NIL);
         assert_eq!(expr, expected_expr);
     }
 
     #[test]
-    fn modulate_simple()  {
-        let expr = cons(&number(0), &NIL);
+    fn modulate_simple() {
+        let eval = Evaluator::new();
+        let expr = eval.get_cons(eval.get_number(0), NIL);
         let result = modulate(&expr);
         let expected = "1101000";
         assert_eq!(result, expected);
 
         let env = HashMap::new();
-        let expr = Evaluator::new().eval(&expr, &env).unwrap();
+        let expr = eval.eval(expr, &env).unwrap();
         let result = modulate(expr);
         assert_eq!(result, expected);
     }
 
     #[test]
     fn modulate_number() {
+        let eval = Evaluator::new();
         let expected = "01100001";
-        assert_eq!(modulate(&number(1)), expected);
+        assert_eq!(modulate(eval.get_number(1)), expected);
         let expected = "10100010";
-        assert_eq!(modulate(&number(-2)), expected);
+        assert_eq!(modulate(eval.get_number(-2)), expected);
         let expected = "0111000100010";
-        assert_eq!(modulate(&number(34)), expected);
+        assert_eq!(modulate(eval.get_number(34)), expected);
     }
 
     #[test]
     fn examples() {
+        let eval = Evaluator::new();
         let request = "00";
         let expected_expr = TypedExpr::Val(TypedSymbol::Nil);
         assert_eq!(modulate(&expected_expr), request);
-        assert_eq!(demodulate(request), expected_expr);
+        assert_eq!(demodulate(request, &eval), &expected_expr);
 
         let request = "110000";
-        let expected_expr = cons(&NIL, &NIL);
+        let expected_expr = eval.get_cons(NIL, NIL);
         assert_eq!(modulate(&expected_expr), request);
-        assert_eq!(demodulate(request), expected_expr);
+        assert_eq!(demodulate(request, &eval), expected_expr);
 
         let request = "1101100001111101100010110110001100110110010000";
-        let expected_expr = cons(
-            &number(1),
-            &cons(&cons(&number(2), &cons(&number(3), &NIL)), &cons(&number(4), &NIL)),
+        let expected_expr = eval.get_cons(
+            eval.get_number(1),
+            eval.get_cons(
+                eval.get_cons(eval.get_number(2), eval.get_cons(eval.get_number(3), NIL)),
+                eval.get_cons(eval.get_number(4), NIL),
+            ),
         );
         assert_eq!(modulate(&expected_expr), request);
-        assert_eq!(demodulate(request), expected_expr);
+        assert_eq!(demodulate(request, &eval), expected_expr);
     }
 
     #[test]
     fn demodulate_complex() {
+        let eval = Evaluator::new();
         let request = "110110000111011111100001001010100000110000";
-        let expr = demodulate(request);
-        let expected = cons(&number(1), &cons(&number(76300), &NIL));
+        let expr = demodulate(request, &eval);
+        let expected = eval.get_cons(
+            eval.get_number(1),
+            eval.get_cons(eval.get_number(76300), NIL),
+        );
 
         assert_eq!(expr, expected);
     }

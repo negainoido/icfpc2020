@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
+use crate::eval::Evaluator;
+use crate::expr;
 use crate::expr::Expr;
 use crate::symbol::Symbol;
-use crate::typing::{TypedExpr, ExprNode};
-use crate::expr;
-use crate::eval::Evaluator;
+use crate::typing::{ExprNode, TypedExpr};
 use std::cell::RefCell;
-use typed_arena::Arena;
-use std::ops::Deref;
 use std::fmt::{Debug, Formatter};
+use std::ops::Deref;
+use typed_arena::Arena;
 
 pub struct Task<'a> {
     pub variable_to_expr_map: HashMap<i128, Expr>,
@@ -61,11 +61,8 @@ impl<'a> Task<'a> {
             .variable_to_expr_map
             .iter()
             .map(|(k, v)| {
-                let v:&TypedExpr = self.pool.alloc(TypedExpr::typing(&v).unwrap());
-                (
-                    *k,
-                    v,
-                )
+                let v: &TypedExpr = self.pool.alloc(TypedExpr::typing(&v).unwrap());
+                (*k, v)
             })
             .collect();
         let target_expr = self.pool.alloc(TypedExpr::typing(&self.target).unwrap());
@@ -123,5 +120,5 @@ mod test {
 
         assert_eq!(task.variable_to_expr_map, expected_expr_map);
         assert_eq!(expr::parse(&vec![Symbol::Variable(1032)]), task.target);
-}
+    }
 }

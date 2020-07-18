@@ -80,12 +80,6 @@ pub mod raku {
     use super::TypedExpr::*;
     use super::TypedSymbol::*;
     use super::*;
-    pub fn app<'a>(e1: ExprNode<'a>, e2: ExprNode<'a>) -> TypedExpr<'a> {
-        TypedExpr::Apply(e1, e2)
-    }
-    pub fn val<'a>(sym: TypedSymbol<'a>) -> TypedExpr<'a> {
-        TypedExpr::Val(sym)
-    }
     pub const NIL: TypedExpr<'static> = Val(Nil);
     pub const CONS: TypedExpr<'static> = Val(Cons(Vec::new()));
     pub const CAR: TypedExpr<'static> = Val(Car);
@@ -95,34 +89,9 @@ pub mod raku {
     pub const ICOMB: TypedExpr<'static> = Val(IComb);
     pub const SUM: TypedExpr<'static> = Val(Sum(Vec::new()));
     pub const NEG: TypedExpr<'static> = Val(Neg);
-    pub fn cons<'a>(e1: ExprNode<'a>, e2: ExprNode<'a>) -> TypedExpr<'a> {
-        app(&app(&val(Cons(vec![])), e1), e2)
-    }
-    pub fn isnil<'a>(x: ExprNode<'a>) -> TypedExpr<'a> {
-        app(&val(IsNil), x)
-    }
-    pub fn number<'a>(x: i128) -> TypedExpr<'a> {
-        val(Number(x))
-    }
-    pub fn neg<'a>(e: ExprNode<'a>) -> TypedExpr<'a> {
-        app(&Val(Neg), e)
-    }
-    pub fn div<'a>(e1: ExprNode<'a>, e2: ExprNode<'a>) -> TypedExpr<'a> {
-        app(&app(&Val(Div(vec![])), e1), e2)
-    }
-    pub fn less<'a>(e1: ExprNode<'a>, e2: ExprNode<'a>) -> TypedExpr<'a> {
-        app(&app(&Val(Less(vec![])), e1), e2)
-    }
-    pub fn variable<'a>(x: i128) -> TypedExpr<'a> {
-        Val(Variable(x))
-    }
-    pub fn sum<'a>(x: ExprNode<'a>, y: ExprNode<'a>) -> TypedExpr<'a> {
-        app(&app(&val(Sum(vec![])), x), y)
-    }
-    pub fn big_eq<'a>(x1: ExprNode<'a>, x2: ExprNode<'a>) -> TypedExpr<'a> {
-        let eq = Val(BigEq(vec![]));
-        app(&app(&eq, x1), x2)
-    }
+    pub const DIV: TypedExpr<'static> = Val(Div(Vec::new()));
+    pub const LESS: TypedExpr<'static> = Val(Less(Vec::new()));
+    pub const EQ: TypedExpr<'static> = Val(BigEq(Vec::new()));
     pub const T: TypedExpr<'static> = Val(True(Vec::new()));
     pub const F: TypedExpr<'static> = Val(False(Vec::new()));
 }
