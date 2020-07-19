@@ -133,9 +133,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Turn {}", turn);
         turn += 1;
 
-        println!("state: {:?}", state);
+        println!("state: {}", serde_json::to_string(&state).unwrap());
         let commands = ai.main(&info, &state);
-        println!("command: {:?}", commands);
+        println!("command: {}", serde_json::to_string(&commands).unwrap());
         let request = make_command_request(player_key, commands);
         let resp = send(server_url, &request);
         if let Err(e) = resp {
@@ -144,7 +144,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         let game_response: GameResponse = GameResponse::try_from(resp.unwrap()).unwrap();
-        println!("game_response: {:?}", game_response);
+        println!(
+            "game_response: {}",
+            serde_json::to_string(&game_response).unwrap()
+        );
         if game_response.is_finished() {
             println!("Game is successfully finished!!");
             break;
