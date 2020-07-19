@@ -279,7 +279,7 @@ while true
 	$stderr.puts lines
 	$stderr.puts "#################"
 
-	json = File.open("result.json").read()
+	json = lines
 	res = JSON.parse(json)
 
 	save_data(next_point, data, res)
