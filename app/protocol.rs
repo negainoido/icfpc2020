@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use std::convert::TryFrom;
 
 use num_derive::FromPrimitive;
@@ -12,25 +10,25 @@ type ShipId = i128;
 type Coord = (i128, i128);
 
 #[derive(FromPrimitive, Debug, PartialEq, Eq)]
-enum GameStage {
+pub enum GameStage {
     NotStarted = 0,
     Started = 1,
     Finished = 2,
 }
 
 #[derive(FromPrimitive, Debug, PartialEq, Eq)]
-enum Role {
+pub enum Role {
     Attacker = 0,
     Defender = 1,
 }
 
 #[derive(Debug)]
-struct GameInfo {
-    x0: String,
-    role: Role,
-    x2: String,
-    x3: String,
-    x4: String,
+pub struct GameInfo {
+    pub x0: String,
+    pub role: Role,
+    pub x2: String,
+    pub x3: String,
+    pub x4: String,
 }
 
 impl TryFrom<List> for GameInfo {
@@ -57,11 +55,11 @@ impl TryFrom<List> for GameInfo {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-struct Ship {
-    role: Role,
-    id: ShipId,
-    position: Coord,
-    velocity: Coord,
+pub struct Ship {
+    pub role: Role,
+    pub id: ShipId,
+    pub position: Coord,
+    pub velocity: Coord,
 }
 
 impl TryFrom<List> for Ship {
@@ -91,7 +89,7 @@ impl TryFrom<List> for Ship {
 }
 
 #[derive(Debug)]
-enum Command {
+pub enum Command {
     Accelerate {
         ship_id: ShipId,
         vector: Coord,
@@ -136,10 +134,10 @@ impl From<Command> for List {
 }
 
 #[derive(Default, Debug)]
-struct GameState {
-    tick: i128,
-    x1: String,
-    ship_and_commands: Vec<(Ship, Vec<Command>)>,
+pub struct GameState {
+    pub tick: i128,
+    pub x1: String,
+    pub ship_and_commands: Vec<(Ship, Vec<Command>)>,
 }
 
 impl TryFrom<List> for GameState {
@@ -183,9 +181,9 @@ impl TryFrom<List> for GameState {
 
 #[derive(Debug)]
 pub struct GameResponse {
-    stage: GameStage,
-    info: GameInfo,
-    state: GameState,
+    pub stage: GameStage,
+    pub info: GameInfo,
+    pub state: GameState,
 }
 
 impl TryFrom<List> for GameResponse {

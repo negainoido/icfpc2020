@@ -6,7 +6,7 @@ use std::env;
 use ureq;
 
 use icfpc2020::modulate::{cons, List};
-use protocol::GameResponse;
+use protocol::{GameResponse, GameStage};
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
@@ -78,8 +78,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("error: {}", e);
             break;
         }
-        let game_response = GameResponse::try_from(resp.unwrap()).unwrap();
+        let game_response: GameResponse = GameResponse::try_from(resp.unwrap()).unwrap();
         println!("game_response: {:?}", game_response);
+        if game_response.stage == GameStage::Finished {
+            break;
+        }
     }
 
     Ok(())
