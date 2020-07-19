@@ -98,9 +98,18 @@ impl TryFrom<List> for Ship {
 
 #[derive(Debug)]
 pub enum Command {
-    Accelerate { ship_id: ShipId, vector: Coord },
-    Detonate { ship_id: ShipId },
-    Shoot { ship_id: ShipId, target: Coord },
+    Accelerate {
+        ship_id: ShipId,
+        vector: Coord,
+    },
+    Detonate {
+        ship_id: ShipId,
+    },
+    Shoot {
+        ship_id: ShipId,
+        target: Coord,
+        power: i128,
+    },
 }
 
 impl From<Command> for List {
@@ -120,11 +129,12 @@ impl From<Command> for List {
             Shoot {
                 ship_id,
                 target: (x, y),
+                power,
             } => cons(
                 Integer(2),
                 cons(
                     Integer(ship_id),
-                    cons(cons(Integer(x), Integer(y)), cons(Integer(4), Nil)),
+                    cons(cons(Integer(x), Integer(y)), cons(Integer(power), Nil)),
                 ),
             ),
         }
