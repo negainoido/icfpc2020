@@ -2,8 +2,7 @@ use std::env;
 
 use ureq;
 
-mod sexpr2binary;
-use sexpr2binary::*;
+use icfpc2020::modulate::{cons, List};
 
 fn send(server_url: &str, request: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("request: {}", request);
@@ -14,40 +13,43 @@ fn send(server_url: &str, request: &str) -> Result<(), Box<dyn std::error::Error
     );
 
     let resp = ureq::post(&url).send_string(&request);
-
     if resp.ok() {
-        println!("success: {}", resp.into_string()?);
+        println!("success");
     } else {
         // This can include errors like failure to parse URL or connect timeout.
         // They are treated as synthetic HTTP-level error statuses.
-        println!("error {}: {}", resp.status(), resp.into_string()?);
+        println!("error {}", resp.status());
     }
+
+    println!("response: {:?}", List::demodulate(&resp.into_string()?));
 
     Ok(())
 }
 
-fn make_join_request(player_key: &str) -> String {
-    modulate_sexp(&format!("(cons 2 (cons {} (cons nil nil)))", &player_key)).unwrap()
+fn make_join_request(player_key: &i128) -> String {
+    use List::*;
+    let sexp = cons(Integer(2), cons(Integer(*player_key), cons(Nil, Nil)));
+    sexp.modulate()
 }
 
-fn make_start_request(player_key: &str) -> String {
-    let state = format!("(cons 1 (cons 1 (cons 1 (cons 1 nil))))");
-    modulate_sexp(&format!(
-        "(cons 3 (cons {} (cons {} nil)))",
-        &player_key, state
-    ))
-    .unwrap()
+fn make_start_request(player_key: &i128) -> String {
+    use List::*;
+    let state = List::from(vec![1, 1, 1, 1]);
+    let sexp = cons(Integer(3), cons(Integer(*player_key), cons(state, Nil)));
+    sexp.modulate()
 }
 
-fn make_game_request(player_key: &str) -> String {
-    modulate_sexp(&format!("(cons 4 (cons {} (cons nil nil)))", &player_key)).unwrap()
+fn make_game_request(player_key: &i128) -> String {
+    use List::*;
+    let sexp = cons(Integer(3), cons(Integer(*player_key), cons(Nil, Nil)));
+    sexp.modulate()
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     let server_url = &args[1];
-    let player_key = &args[2];
+    let player_key = &args[2].parse::<i128>().expect("failed parsing");
 
     println!("ServerUrl: {}; PlayerKey: {}", server_url, player_key);
 
