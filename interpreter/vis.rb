@@ -4,6 +4,12 @@ require 'fileutils'
 require_relative 'json_to_ppm'
 require 'stringio'
 
+
+class HistoryPrev < StandardError
+end
+class HistoryNext < StandardError
+end
+
 def point_to_lambda(x, y)
 	"ap ap cons #{x} #{y}"
 end
@@ -172,7 +178,8 @@ def plot_and_interact(images)
 				$stderr.puts "Command: random walk"
 				$stderr.puts "Command: fix X Y"
 				$stderr.puts "Command: stop"
-				# $stderr.puts "Command: back (or b)"
+				$stderr.puts "Command: back (or b)"
+				$stderr.puts "Command: next (or n)"
 			when /put `\s*(-?[-0-9\.]*),\s*(-?[0-9\.]*)' to clipboard\./i
 				x = $1.to_f.round
 				y = $2.to_f.round
@@ -192,8 +199,10 @@ def plot_and_interact(images)
 				@point_choicer = lambda {|images|
 					[x, y]
 				}
-			# when /\Ab\Z|back/i
-
+			when /\Ab\Z|back/i
+				raise HistoryPrev
+			when /\An\Z|next/i
+				raise HistoryNext
 			end
 		end if rs
 
@@ -315,11 +324,11 @@ end
 
 last_filename = nil
 
+history = []
+future = []
+
 while true
-	p state
 	$stderr.puts "### running autotaker ###"
-	puts state["point"]
-	puts state["data"]
 	json_text = exec_autotaker(state["point"], state["data"])
 	# $stderr.puts json_text
 	$stderr.puts "done"
@@ -339,8 +348,36 @@ while true
 
 	if result == 0
 		# show images
-		next_point = plot_and_interact(res["imageList"])
-		next_point = point_to_lambda(next_point[0], next_point[1])
+		while true
+			begin
+				next_point = plot_and_interact(res["imageList"])
+				next_point = point_to_lambda(next_point[0], next_point[1])
+				break
+			rescue HistoryPrev
+				if history.empty?
+					$stderr.puts "there is no previous history"
+					next
+				end
+				next_state = history.pop
+				future.push res.clone
+				res = next_state
+				next
+			rescue HistoryNext
+				if future.empty?
+					$stderr.puts "there is no next history"
+					next
+				end
+				next_state = future.pop
+				history.push res.clone
+				res = next_state
+				next
+			end
+		end
+
+		if state["returnValue"] == 0
+			history << res.clone
+			future = []
+		end
 	else
 		# interact with galaxy
 		$stderr.puts "Interacting with Galaxy..."
