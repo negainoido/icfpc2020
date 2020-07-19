@@ -374,6 +374,7 @@ while true
 
 	result = res["returnValue"]
 	data = res["stateData"]
+	res["data"] = data
 
 	if result == 0
 		# show images
@@ -405,10 +406,8 @@ while true
 			end
 		end
 
-		if state["returnValue"] == 0
-			history << res.clone
-			future = []
-		end
+		history << res.clone
+		future = []
 	else
 		# interact with galaxy
 		$stderr.puts "Interacting with Galaxy..."
@@ -421,7 +420,6 @@ while true
 		next_point = demodulate(response)
 		# $stderr.puts "Next Point: #{next_point}"
 	end
-	res["data"] = data
 	res["point"] = next_point
 
 	state = res
