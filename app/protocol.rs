@@ -135,7 +135,7 @@ impl From<Command> for List {
 pub struct GameState {
     pub tick: i128,
     pub x1: Vec<i128>,
-    pub ship_and_commands: Vec<(Ship, Vec<Command>)>,
+    pub ship_and_commands: Vec<(Ship, String)>,
 }
 
 impl TryFrom<List> for GameState {
@@ -155,9 +155,9 @@ impl TryFrom<List> for GameState {
         loop {
             let (cur, cdr) = cur_ship_and_commands.decompose().unwrap();
 
-            let (ship, _command) = cur.decompose().unwrap();
+            let (ship, command) = cur.decompose().unwrap();
             // TODO: parse _command;
-            ship_commands.push((Ship::try_from(*ship).unwrap(), vec![]));
+            ship_commands.push((Ship::try_from(*ship).unwrap(), format!("{}", command)));
 
             if cdr.is_nil() {
                 break;
