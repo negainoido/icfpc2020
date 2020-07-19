@@ -133,6 +133,7 @@ def plot_string_from(images, options = {})
 	end
 
 	io.puts "set yrange [:] reverse"
+	io.puts "set size square"
 
 	images.length.times do |i|
 		io.puts "$image#{i} << EOD"
