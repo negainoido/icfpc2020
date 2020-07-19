@@ -2,20 +2,20 @@ use crate::eval::Evaluator;
 use crate::typing::{ExprNode, TypedExpr, TypedSymbol};
 
 #[derive(Debug, Eq, PartialEq)]
-pub enum List {
-    Cons(Box<List>, Box<List>),
+pub enum Sexp {
+    Cons(Box<Sexp>, Box<Sexp>),
     Integer(i128),
     Nil,
 }
 
-fn do_demodulate(a: &str) -> (&str, List) {
+fn do_demodulate(a: &str) -> (&str, Sexp) {
     let prefix = &a[..2];
     if prefix == "11" {
         let (a, car) = do_demodulate(&a[2..]);
         let (a, cdr) = do_demodulate(a);
-        (a, List::Cons(Box::new(car), Box::new(cdr)))
+        (a, Sexp::Cons(Box::new(car), Box::new(cdr)))
     } else if prefix == "00" {
-        (&a[2..], List::Nil)
+        (&a[2..], Sexp::Nil)
     } else {
         let sign = if prefix == "01" { 1 } else { -1 };
         let a = &a[2..];
@@ -29,7 +29,7 @@ fn do_demodulate(a: &str) -> (&str, List) {
         let a = &a[len + 1..];
         len *= 4;
         if len == 0 {
-            return (a, List::Integer(0));
+            return (a, Sexp::Integer(0));
         }
         let res = i128::from_str_radix(&a[0..len], 2);
         let num = match res {
@@ -40,11 +40,11 @@ fn do_demodulate(a: &str) -> (&str, List) {
             }
         };
         let a = &a[len..];
-        (a, List::Integer(sign * num))
+        (a, Sexp::Integer(sign * num))
     }
 }
 
-fn modulate_number(value: i128) -> String {
+pub fn modulate_number(value: i128) -> String {
     let mut res = String::new();
     if value >= 0 {
         res.push_str("01");
@@ -102,11 +102,11 @@ pub fn modulate(expr: ExprNode) -> String {
     result
 }
 
-fn convert_to_expr<'a>(list: &List, sim: &'a Evaluator<'a>) -> ExprNode<'a> {
+fn convert_to_expr<'a>(list: &Sexp, sim: &'a Evaluator<'a>) -> ExprNode<'a> {
     match list {
-        List::Nil => sim.get_val(TypedSymbol::Nil),
-        List::Integer(i) => sim.get_val(TypedSymbol::Number(*i)),
-        List::Cons(l, r) => {
+        Sexp::Nil => sim.get_val(TypedSymbol::Nil),
+        Sexp::Integer(i) => sim.get_val(TypedSymbol::Number(*i)),
+        Sexp::Cons(l, r) => {
             let l = convert_to_expr(&l, sim);
             let r = convert_to_expr(&r, sim);
             sim.get_cons(l, r)
