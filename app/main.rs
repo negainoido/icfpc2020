@@ -74,15 +74,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let server_url = &args[1];
     if args.len() == 2 {
+        // https://message-from-space.readthedocs.io/en/latest/game.html#create
         let request = make_create_request();
+
+        // (1, ((0, attackPlayerKey), (1, defenderPlayerKey)))
         let resp = send(server_url, &request)?;
+
         let resp = resp.cdr().unwrap();
         let resp = resp.car().unwrap();
         let (car, cdr) = resp.decompose().unwrap();
         let car = car.cdr().unwrap().car().unwrap();
         let cdr = cdr.car().unwrap();
         let cdr = cdr.cdr().unwrap().car().unwrap();
-        // let resp = resp.car().unwrap();
         println!("{} {}", car, cdr);
 
         return Ok(());
