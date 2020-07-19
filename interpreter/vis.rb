@@ -117,7 +117,7 @@ def exec_autotaker(point, data = "nil")
 	json_text = Open3.popen3(cmd) do |stdin, stdout, stderr, wait_thr|
 		stdin.puts submit_data
 		stdin.close
-		File.open("laststderr.txt", "w") {|f| f.write stderr.read}
+		#File.open("laststderr.txt", "w") {|f| f.write stderr.read}
 		stdout.read()
 	end
 	return json_text
