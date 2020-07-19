@@ -69,6 +69,10 @@ impl TryFrom<List> for Ship {
         let (shipid, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (position, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (velocity, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (_x4, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (_x5, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (_x6, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (_x7, l) = l.decompose().expect(&format!("not pair: {}", l));
         if l.is_nil() {
             Ok(Ship {
                 role: FromPrimitive::from_i64(role.as_int().unwrap() as i64).unwrap(),
