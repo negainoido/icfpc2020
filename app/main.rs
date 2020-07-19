@@ -31,6 +31,7 @@ fn send(server_url: &str, request: &str) -> Result<(), Box<dyn std::error::Error
 fn make_join_request(player_key: &i128) -> String {
     use List::*;
     let sexp = cons(Integer(2), cons(Integer(*player_key), cons(Nil, Nil)));
+    println!("join request: {}", sexp);
     sexp.modulate()
 }
 
@@ -38,12 +39,14 @@ fn make_start_request(player_key: &i128) -> String {
     use List::*;
     let state = List::from(vec![1, 1, 1, 1]);
     let sexp = cons(Integer(3), cons(Integer(*player_key), cons(state, Nil)));
+    println!("start request: {}", sexp);
     sexp.modulate()
 }
 
 fn make_game_request(player_key: &i128) -> String {
     use List::*;
     let sexp = cons(Integer(3), cons(Integer(*player_key), cons(Nil, Nil)));
+    println!("game request: {}", sexp);
     sexp.modulate()
 }
 
