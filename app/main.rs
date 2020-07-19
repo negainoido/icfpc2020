@@ -8,7 +8,7 @@ use ureq;
 use icfpc2020::modulate::{cons, List};
 use protocol::GameResponse;
 
-fn send(server_url: &str, request: &str) -> Result<GameResponse, Box<dyn std::error::Error>> {
+fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
 
     let url = format!(
@@ -29,9 +29,7 @@ fn send(server_url: &str, request: &str) -> Result<GameResponse, Box<dyn std::er
     println!("binary response: {}", resp);
     let list = List::demodulate(&resp).unwrap();
     println!("response: {}", list);
-    let game_response = GameResponse::try_from(list).unwrap();
-    println!("game_response: {:?}", game_response);
-    Ok(game_response)
+    Ok(list)
 }
 
 fn make_join_request(player_key: &i128) -> String {
@@ -75,9 +73,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Game start
     loop {
         let request = make_command_request(player_key);
-        if let Err(_) = send(server_url, &request) {
+        let resp = send(server_url, &request);
+        if let Err(e) = send(server_url, &request) {
+            println!("error: {}", e);
             break;
         }
+        let game_response = GameResponse::try_from(resp.unwrap()).unwrap();
+        println!("game_response: {:?}", game_response);
     }
 
     Ok(())
