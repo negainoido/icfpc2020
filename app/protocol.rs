@@ -5,9 +5,9 @@ use num_traits::FromPrimitive;
 
 use icfpc2020::modulate::List;
 
-type ShipId = i128;
+pub type ShipId = i128;
 
-type Coord = (i128, i128);
+pub type Coord = (i128, i128);
 
 #[derive(FromPrimitive, Debug, PartialEq, Eq)]
 pub enum GameStage {
