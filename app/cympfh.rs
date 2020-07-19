@@ -131,7 +131,18 @@ fn add(a: &Coord, b: &Coord) -> Coord {
     (a.0 + b.0, a.1 + b.1)
 }
 
-fn close(a: &Ship, b: &Ship, dist_sup: i128) -> bool {
+const DETONATE_DIST: i128 = 10;
+const BEAM_DIST: i128 = 64;
+
+fn dist_max(x: &Coord, y: &Coord) -> i128 {
+    std::cmp::max((x.0 - y.0).abs(), (x.1 - y.1).abs())
+}
+
+fn dist_manhattan(x: &Coord, y: &Coord) -> i128 {
+    (x.0 - y.0).abs() + (x.1 - y.1).abs()
+}
+
+fn close_manhattan(a: &Ship, b: &Ship, dist_sup: i128) -> bool {
     let x = add(
         &add(&a.position, &a.velocity),
         &Section::from(&a.position).gravity(),
@@ -140,8 +151,19 @@ fn close(a: &Ship, b: &Ship, dist_sup: i128) -> bool {
         &add(&b.position, &b.velocity),
         &Section::from(&b.position).gravity(),
     );
-    let d = (x.0 - y.0).abs() + (x.1 - y.1).abs();
-    d <= dist_sup
+    dist_manhattan(&x, &y) < dist_sup
+}
+
+fn close_max(a: &Ship, b: &Ship, dist_sup: i128) -> bool {
+    let x = add(
+        &add(&a.position, &a.velocity),
+        &Section::from(&a.position).gravity(),
+    );
+    let y = add(
+        &add(&b.position, &b.velocity),
+        &Section::from(&b.position).gravity(),
+    );
+    dist_max(&x, &y) < dist_sup
 }
 
 impl AI for CympfhAI {
@@ -176,7 +198,23 @@ impl AI for CympfhAI {
             .unwrap();
 
         let boost = Moon::get_boost(&ship_self.position, &ship_self.velocity);
-        if ship_self.role == Role::Attacker && close(&ship_self, &ship_enemy, 1) {
+        if ship_self.role == Role::Attacker && close_max(&ship_self, &ship_enemy, DETONATE_DIST) {
+            {
+                let a = ship_self.clone();
+                let b = ship_enemy.clone();
+                let x = add(
+                    &add(&a.position, &a.velocity),
+                    &Section::from(&a.position).gravity(),
+                );
+                let y = add(
+                    &add(&b.position, &b.velocity),
+                    &Section::from(&b.position).gravity(),
+                );
+                let d = dist_max(&x, &y);
+                eprintln!("!!! self={:?} => {:?}", &a.position, &x);
+                eprintln!("!!! enemy={:?} => {:?}", &b.position, &y);
+                eprintln!("!!! d = {}", d);
+            }
             return vec![Command::Detonate {
                 ship_id: ship_self.id,
             }];
@@ -185,7 +223,7 @@ impl AI for CympfhAI {
                 ship_id: ship_self.id,
                 vector: boost,
             }];
-        } else if close(&ship_self, &ship_enemy, 64)
+        } else if close_manhattan(&ship_self, &ship_enemy, BEAM_DIST)
             && commands_enemy.is_empty()
             && ship_enemy.x4[0] > 0
         {
@@ -197,7 +235,9 @@ impl AI for CympfhAI {
                 ship_id: ship_self.id,
                 target: y,
             }];
-        } else if ship_self.role == Role::Defender && close(&ship_self, &ship_enemy, 2) {
+        } else if ship_self.role == Role::Defender
+            && close_max(&ship_self, &ship_enemy, DETONATE_DIST)
+        {
             // 自爆回避
             let g = Section::from(&ship_self.position).gravity();
             let boost = (g.0, g.1);
