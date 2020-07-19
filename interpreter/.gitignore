@@ -3,3 +3,4 @@ dist-newstyle/
 image*.txt
 result.txt
 result.json
+log/
