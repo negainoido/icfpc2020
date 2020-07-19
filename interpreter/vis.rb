@@ -106,8 +106,15 @@ def exec_autotaker(point, data = "nil")
 	end
 end
 
-def plot_string_from(images)
+def plot_string_from(images, options = {})
 	io = StringIO.new
+
+	io.puts "unset object 1"
+	if options[:click]
+		pt = options[:click]
+		io.puts "set object 1 circle at first #{pt[0]},#{pt[1]} radius char 0.5 fillstyle empty border lc rgb '#ff0000' lw 2"
+	end
+
 	images.length.times do |i|
 		io.puts "$image#{i} << EOD"
 		images[i].each do |x, y|
@@ -135,7 +142,6 @@ end
 def plot_and_interact(images)
 	@plot.puts plot_string_from(images)
 
-
 	@plot.puts "set mouse verbose"
 
 	ignore_inputs(@plot)
@@ -162,6 +168,7 @@ def plot_and_interact(images)
 				x = $1.to_f.round
 				y = $2.to_f.round
 				$stderr.puts "Clicked: #{x} #{y}"
+				@plot.puts plot_string_from(images, {:click => [x, y]})
 				return [x, y]
 			when /random walk/i
 				@random_walk = true
@@ -170,8 +177,9 @@ def plot_and_interact(images)
 	end
 
 	if @random_walk
-		random_point = images.sample.sample
+		random_point = images.select{|x| !x.empty?}.sample.sample
 		$stderr.puts "random walk: choose #{random_point}"
+		@plot.puts plot_string_from(images, {:click => random_point})
 		return random_point
 	end
 end
