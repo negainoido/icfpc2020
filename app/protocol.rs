@@ -26,11 +26,11 @@ enum Role {
 
 #[derive(Default, Debug)]
 struct GameInfo {
-    x0: Option<()>,
+    x0: String,
     role: Option<Role>,
-    x2: Option<()>,
-    x3: Option<()>,
-    x4: Option<()>,
+    x2: String,
+    x3: String,
+    x4: String,
 }
 
 impl TryFrom<List> for GameInfo {
@@ -97,7 +97,7 @@ enum Command {
 #[derive(Default, Debug)]
 struct GameState {
     tick: i128,
-    x1: Option<()>,
+    x1: String,
     ship_and_commands: Vec<(Ship, Vec<Command>)>,
 }
 
@@ -215,5 +215,7 @@ mod test {
         assert_eq!(game_info.role.unwrap(), Role::Defender);
         let game_state = game_resp.state;
         assert_eq!(game_state.tick, 0);
+
+        assert!(false);
     }
 }
