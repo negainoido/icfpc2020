@@ -305,6 +305,10 @@ state = {
 	"point" => point_to_lambda(0, 0),
 	"data" => "nil"
 }
+state = {
+	"point" => point_to_lambda(-3, 1),
+	"data" => "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+}
 
 if ARGV.length > 0
 	file = ARGV[0]
@@ -385,9 +389,9 @@ while true
 		$stderr.puts "send_data: #{send_data}"
 		send_data = modulate(send_data)
 		$stderr.puts "modulated: #{send_data}"
-		res = `curl -X POST "https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c" -H "accept: */*" -H "Content-Type: text/plain" -d "#{send_data}"`
-		$stderr.puts "Response From Galaxy: #{res}"
-		next_point = demodulate(res)
+		response = `curl -X POST "https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c" -H "accept: */*" -H "Content-Type: text/plain" -d "#{send_data}"`
+		$stderr.puts "Response From Galaxy: #{response}"
+		next_point = demodulate(response)
 		$stderr.puts "Next Point: #{next_point}"
 	end
 	res["data"] = data
