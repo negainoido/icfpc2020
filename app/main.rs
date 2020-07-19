@@ -63,10 +63,23 @@ fn make_command_request(player_key: &i128, commands: Vec<Command>) -> String {
     sexp.modulate()
 }
 
+fn make_create_request() -> String {
+    let create = List::from(vec![1, 0]);
+    println!("game request: {}", create);
+    create.modulate()
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     let server_url = &args[1];
+    if args.len() == 2 {
+        let request = make_create_request();
+        let resp = send(server_url, &request)?;
+        println!("{}", resp);
+        return Ok(());
+    }
+
     let player_key = &args[2].parse::<i128>().expect("failed parsing");
 
     println!("ServerUrl: {}; PlayerKey: {}", server_url, player_key);
