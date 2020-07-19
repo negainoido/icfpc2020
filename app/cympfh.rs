@@ -25,9 +25,9 @@ enum Section {
 }
 
 impl Section {
-    fn from(x: Coord) -> Section {
+    fn from(x: &Coord) -> Section {
         use Section::*;
-        let (x0, x1) = x;
+        let (x0, x1) = *x;
         if x0 + x1 == 0 && x0 > 0 {
             DiagRU
         } else if x0 == x1 && x0 > 0 {
@@ -46,6 +46,19 @@ impl Section {
             Up
         } else {
             O
+        }
+    }
+    fn gravity(&self) -> Coord {
+        match self {
+            Section::Up => (0, 1),
+            Section::Right => (-1, 0),
+            Section::Left => (1, 0),
+            Section::Down => (0, -1),
+            Section::DiagRU => (-1, 1),
+            Section::DiagRD => (-1, -1),
+            Section::DiagLU => (1, 1),
+            Section::DiagLD => (1, -1),
+            Section::O => (0, 0),
         }
     }
 }
@@ -119,8 +132,14 @@ fn add(a: &Coord, b: &Coord) -> Coord {
 }
 
 fn close(a: &Ship, b: &Ship) -> bool {
-    let x = add(&a.position, &a.velocity);
-    let y = add(&b.position, &b.velocity);
+    let x = add(
+        &add(&a.position, &a.velocity),
+        &Section::from(&a.position).gravity(),
+    );
+    let y = add(
+        &add(&b.position, &b.velocity),
+        &Section::from(&b.position).gravity(),
+    );
     let d = (x.0 - y.0).abs() + (x.1 - y.1).abs();
     d <= 2
 }
@@ -159,12 +178,13 @@ impl AI for CympfhAI {
                 vector: boost,
             }];
         } else if ship_self.role == Role::Attacker {
+            let y = add(
+                &add(&ship_enemy.position, &ship_enemy.velocity),
+                &Section::from(&ship_enemy.position).gravity(),
+            );
             return vec![Command::Shoot {
                 ship_id: ship_self.id,
-                target: (
-                    ship_enemy.position.0 + ship_enemy.velocity.0,
-                    ship_enemy.position.1 + ship_enemy.velocity.1,
-                ),
+                target: y,
             }];
         } else {
             return vec![];
