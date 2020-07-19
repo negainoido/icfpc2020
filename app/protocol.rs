@@ -158,6 +158,7 @@ mod test {
 
     #[test]
     fn join() {
+        // https://icfpc2020-api.testkontur.ru/logs/?logKey=6QcVllpAF%2BrDE%2BLh1mU37FG5ZyIlbx93Si%2BG%2BIls370%3D&apiKey=9ffa61129e0c45378b01b0817117622c
         let join_resp = "110110000111010111101111000010000000011010111101111000100000000011011000011101110010000000011110111000010000110111010000000001111011000011101100001110110000111011000010000110000";
         /*
 
@@ -167,6 +168,22 @@ mod test {
 
         let game_resp = GameResponse::try_from(l).unwrap();
         assert_eq!(game_resp.stage, GameStage::NotStarted);
+        let game_info = game_resp.info;
+        assert_eq!(game_info.role.unwrap(), Role::Attacker);
+    }
+
+    #[test]
+    fn start() {
+        // https://icfpc2020-api.testkontur.ru/logs?logKey=BvVVF1rAhqmTR9a0eTKCBMhNL4AZg7cor7gztcr%2B18k%3D&apiKey=9ffa61129e0c45378b01b0817117622c
+        let start_resp = "1101100001110110000111110111100001000000001101100001111101111000011100000011011000011101110010000000011110111000010000110111010000000001100001111010111101110000100001101110100000000011111111011000011101011111011000010111101100011000011110100101111011000011101100001110110000111011000010011010110111001000000110110000100110000111111010110110000111110111000010111011100011000011110100101111011000011101100001110110000111011000010011010110111001000000110110000100110000000000";
+        /*
+
+        (1 (1 ((256 (1 ((448 (1 (64 nil))) ((16 (128 nil)) (nil nil))))) ((0 ((16 (128 nil)) ((((1 (0 ((-23 -48) ((0 0) ((1 (1 (1 (1 nil)))) (0 (64 (1 nil)))))))) (nil nil)) (((0 (1 ((23 48) ((0 0) ((1 (1 (1 (1 nil)))) (0 (64 (1 nil)))))))) (nil nil)) nil)) nil))) nil))))
+         */
+        let l = List::demodulate(&start_resp).unwrap();
+
+        let game_resp = GameResponse::try_from(l).unwrap();
+        assert_eq!(game_resp.stage, GameStage::Started);
         let game_info = game_resp.info;
         assert_eq!(game_info.role.unwrap(), Role::Attacker);
     }
