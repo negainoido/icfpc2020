@@ -5,7 +5,7 @@ use ureq;
 mod sexpr2binary;
 use sexpr2binary::*;
 
-fn send(server_url: &str, request: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+fn send(server_url: &str, request: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("request: {}", request);
 
     let url = format!(
@@ -43,7 +43,7 @@ fn make_game_request(player_key: &str) -> String {
     modulate_sexp(&format!("(cons 4 (cons {} (cons nil nil)))", &player_key)).unwrap()
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     let server_url = &args[1];
