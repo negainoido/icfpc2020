@@ -185,7 +185,10 @@ impl AI for CympfhAI {
                 ship_id: ship_self.id,
                 vector: boost,
             }];
-        } else if close(&ship_self, &ship_enemy, 64) && commands_enemy.is_empty() {
+        } else if close(&ship_self, &ship_enemy, 64)
+            && commands_enemy.is_empty()
+            && ship_enemy.x4[0] > 0
+        {
             let y = add(
                 &add(&ship_enemy.position, &ship_enemy.velocity),
                 &Section::from(&ship_enemy.position).gravity(),
