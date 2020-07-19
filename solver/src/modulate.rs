@@ -74,15 +74,9 @@ impl List {
         } else {
             let sign = if prefix == "01" { 1 } else { -1 };
             let a = &a[2..];
-            let mut len = 0;
-            for c in a.chars() {
-                if c == '0' {
-                    break;
-                }
-                len += 1;
-            }
+            let len = a.find('0').unwrap();
             let a = &a[len + 1..];
-            len *= 4;
+            let len = len * 4;
             if len == 0 {
                 return (a, List::Integer(0));
             }
