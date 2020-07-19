@@ -5,6 +5,7 @@ pub struct Moon {}
 
 const LEN: i128 = 16;
 
+#[derive(Debug)]
 enum WallType {
     A, // x = LEN
     B, // y = -LEN
@@ -26,8 +27,10 @@ impl AI for Moon {
             .map(|(s, _)| s)
             .collect();
         let mut commands = Vec::<Command>::new();
+        dbg!(my_ships.len());
         for ship in my_ships {
             let boost = Moon::get_boost(&ship.position, &ship.velocity);
+            dbg!(&boost);
             if boost != (0, 0) {
                 commands.push(Command::Accelerate {
                     ship_id: ship.id.clone(),
@@ -42,12 +45,15 @@ impl AI for Moon {
 impl Moon {
     fn get_boost(pos: &Coord, velocity: &Coord) -> Coord {
         let wall = Moon::ground_wall(pos);
-        let (mut gdx, mut gdy) = Moon::base_gravity(&wall);
+        let (gdx, gdy) = Moon::base_gravity(&wall);
         let complete = Moon::complete_func(&wall);
         let is_crash = Moon::is_crash_func(&wall);
         let mut cur_pos = pos.clone();
         let mut cur_velocity = velocity.clone();
+        dbg!(&wall);
         loop {
+            dbg!(cur_pos);
+            dbg!(cur_velocity);
             cur_pos.0 += cur_velocity.0;
             cur_pos.1 += cur_velocity.1;
             if is_crash(cur_pos) {
@@ -57,14 +63,9 @@ impl Moon {
                 // No boost is needed
                 return (0, 0);
             }
+            dbg!(gdx, gdy);
             cur_velocity.0 += gdx;
-            cur_velocity.1 += gdx;
-            if gdx > 0 {
-                gdx += 1;
-            }
-            if gdy > 0 {
-                gdy += 1;
-            }
+            cur_velocity.1 += gdy;
         }
     }
 
