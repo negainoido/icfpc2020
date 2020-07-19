@@ -131,7 +131,7 @@ fn add(a: &Coord, b: &Coord) -> Coord {
     (a.0 + b.0, a.1 + b.1)
 }
 
-fn close(a: &Ship, b: &Ship) -> bool {
+fn close(a: &Ship, b: &Ship, dist_sup: i128) -> bool {
     let x = add(
         &add(&a.position, &a.velocity),
         &Section::from(&a.position).gravity(),
@@ -141,7 +141,7 @@ fn close(a: &Ship, b: &Ship) -> bool {
         &Section::from(&b.position).gravity(),
     );
     let d = (x.0 - y.0).abs() + (x.1 - y.1).abs();
-    d <= 2
+    d <= dist_sup
 }
 
 impl AI for CympfhAI {
@@ -167,8 +167,16 @@ impl AI for CympfhAI {
             .next()
             .unwrap();
 
+        let commands_enemy = _state
+            .ship_and_commands
+            .iter()
+            .filter(|&(ship, _)| ship.role != role_self)
+            .map(|(_, commands)| commands)
+            .next()
+            .unwrap();
+
         let boost = Moon::get_boost(&ship_self.position, &ship_self.velocity);
-        if ship_self.role == Role::Attacker && close(&ship_self, &ship_enemy) {
+        if ship_self.role == Role::Attacker && close(&ship_self, &ship_enemy, 2) {
             return vec![Command::Detonate {
                 ship_id: ship_self.id,
             }];
@@ -177,7 +185,7 @@ impl AI for CympfhAI {
                 ship_id: ship_self.id,
                 vector: boost,
             }];
-        } else if ship_self.role == Role::Attacker {
+        } else if close(&ship_self, &ship_enemy, 64) && commands_enemy.is_empty() {
             let y = add(
                 &add(&ship_enemy.position, &ship_enemy.velocity),
                 &Section::from(&ship_enemy.position).gravity(),
