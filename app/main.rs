@@ -13,6 +13,11 @@ use protocol::{Command, GameResponse};
 
 use crate::ai::AI;
 
+/*****************************
+ * Change this type to your AI
+ */
+type MyAI = nop_ai::NopAI;
+
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
 
@@ -44,9 +49,9 @@ fn make_join_request(player_key: &i128) -> String {
     sexp.modulate()
 }
 
-fn make_start_request(player_key: &i128) -> String {
+fn make_start_request(player_key: &i128, (a, b, c, d): (u32, u32, u32, u32)) -> String {
     use List::*;
-    let state = List::from(vec![1, 1, 1, 1]);
+    let state = List::from(vec![a as i128, b as i128, c as i128, d as i128]);
     let sexp = cons(Integer(3), cons(Integer(*player_key), cons(state, Nil)));
     println!("start request: {}", sexp);
     sexp.modulate()
@@ -73,16 +78,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     let server_url = &args[1];
+
+    // Create
+    // If player_key is not given, send a create command.
     if args.len() == 2 {
+        // https://message-from-space.readthedocs.io/en/latest/game.html#create
         let request = make_create_request();
+
+        // (1, ((0, attackPlayerKey), (1, defenderPlayerKey)))
         let resp = send(server_url, &request)?;
+
         let resp = resp.cdr().unwrap();
         let resp = resp.car().unwrap();
         let (car, cdr) = resp.decompose().unwrap();
         let car = car.cdr().unwrap().car().unwrap();
         let cdr = cdr.car().unwrap();
         let cdr = cdr.cdr().unwrap().car().unwrap();
-        // let resp = resp.car().unwrap();
         println!("{} {}", car, cdr);
 
         return Ok(());
@@ -94,10 +105,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Join
     let request = make_join_request(player_key);
-    send(server_url, &request)?;
+    let resp = send(server_url, &request)?;
+    let game_response: GameResponse = GameResponse::try_from(resp).unwrap();
+    if game_response.is_finished() {
+        println!("Game is finished before Joining");
+        return Ok(());
+    }
+    let mut info = game_response.info;
+    println!("info: {:?}", info);
 
     // Start
-    let request = make_start_request(player_key);
+    let request = make_start_request(player_key, MyAI::initial_params(&info));
     let resp = send(server_url, &request)?;
 
     let game_response: GameResponse = GameResponse::try_from(resp).unwrap();
@@ -106,11 +124,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
-    let mut info = game_response.info;
     let mut state = game_response.state;
-    println!("info: {:?}", info);
 
-    let mut ai = nop_ai::NopAI::new();
+    let mut ai = MyAI::new();
     let mut turn = 0;
     // Game start
     loop {
