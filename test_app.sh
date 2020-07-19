@@ -15,4 +15,6 @@ echo $attacker $defender
 cargo run --bin app -- https://icfpc2020-api.testkontur.ru $attacker &
 cargo run --bin app -- https://icfpc2020-api.testkontur.ru $defender &
 
+trap "kill 0" EXIT
+
 wait
