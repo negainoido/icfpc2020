@@ -9,14 +9,14 @@ pub type ShipId = i128;
 
 pub type Coord = (i128, i128);
 
-#[derive(FromPrimitive, Debug, PartialEq, Eq)]
+#[derive(FromPrimitive, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GameStage {
     NotStarted = 0,
     Started = 1,
     Finished = 2,
 }
 
-#[derive(FromPrimitive, Debug, PartialEq, Eq)]
+#[derive(FromPrimitive, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Role {
     Attacker = 0,
     Defender = 1,
@@ -54,7 +54,7 @@ impl TryFrom<List> for GameInfo {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Ship {
     pub role: Role,
     pub id: ShipId,
