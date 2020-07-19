@@ -5,11 +5,9 @@ require_relative 'json_to_ppm'
 require 'stringio'
 require 'open3'
 
-
-class HistoryPrev < StandardError
-end
-class HistoryNext < StandardError
-end
+class HistoryPrev < StandardError; end
+class HistoryNext < StandardError; end
+class SaveAs < StandardError; end
 
 def point_to_lambda(x, y)
 	"ap ap cons #{x} #{y}"
@@ -178,41 +176,48 @@ def plot_and_interact(images)
 
 			if io == @plot
 				$stderr.puts "gnuplot: #{l}"
+				case l
+				when /\Aput `\s*(-?[-0-9\.]*),\s*(-?[0-9\.]*)' to clipboard\./i
+					x = $1.to_f.round
+					y = $2.to_f.round
+					$stderr.puts "Clicked: #{x} #{y}"
+					@plot.puts plot_string_from(images, {:click => [x, y]})
+					return [x, y]
+				end
 			else
 				$stderr.puts "stdin: #{l}"
-			end
-			case l
-			when /help/i
-				$stderr.puts "help (Command list)"
-				$stderr.puts "Command: put `X, Y' to clipboard\."
-				$stderr.puts "Command: random walk"
-				$stderr.puts "Command: fix X Y"
-				$stderr.puts "Command: stop"
-				$stderr.puts "Command: back (or b)"
-				$stderr.puts "Command: next (or n)"
-			when /put `\s*(-?[-0-9\.]*),\s*(-?[0-9\.]*)' to clipboard\./i
-				x = $1.to_f.round
-				y = $2.to_f.round
-				$stderr.puts "Clicked: #{x} #{y}"
-				@plot.puts plot_string_from(images, {:click => [x, y]})
-				return [x, y]
-			when /stop/i
-				@point_choicer = nil
-			when /random walk/i
-				@point_choicer = lambda {|images|
-					random_point = images.select{|x| !x.empty?}.sample.sample
-					random_point
-				}
-			when /fix\s*(.*)\s*(.*)/i
-				x = $1.to_i
-				y = $2.to_i
-				@point_choicer = lambda {|images|
-					[x, y]
-				}
-			when /\Ab\Z|back/i
-				raise HistoryPrev
-			when /\An\Z|next/i
-				raise HistoryNext
+				case l
+				when /\Ahelp/i
+					$stderr.puts "help (Command list)"
+					$stderr.puts "Command: put `X, Y' to clipboard\."
+					$stderr.puts "Command: random walk"
+					$stderr.puts "Command: fix X Y"
+					$stderr.puts "Command: stop"
+					$stderr.puts "Command: back (or b, prev, p)"
+					$stderr.puts "Command: next (or n)"
+					$stderr.puts "Command: save as FILENAME"
+				when /\Astop/i
+					@point_choicer = nil
+				when /\Arandom walk/i
+					@point_choicer = lambda {|images|
+						random_point = images.select{|x| !x.empty?}.sample.sample
+						random_point
+					}
+				when /\Afix\s*(.*)\s*(.*)/i
+					x = $1.to_i
+					y = $2.to_i
+					@point_choicer = lambda {|images|
+						[x, y]
+					}
+				when /\Asave\s*as\s+(.*)/
+					raise SaveAs, $1
+				when /\Ab\Z|back|\Ap\Z|prev/i
+					raise HistoryPrev
+				when /\An\Z|next/i
+					raise HistoryNext
+				else
+					$stderr.puts "Unknown command: #{l}"
+				end
 			end
 		end if rs
 
@@ -239,9 +244,10 @@ def filename_of_now()
 end
 
 # return filename
-def save_data(json, fileid)
+def save_data(json, filename = nil)
 	json["logVersion"] = 1.0
-	filename = "./log/#{fileid}.json"
+	fileid = json["FileID"]
+	filename = "./log/#{fileid}.json" if !filename
 	FileUtils.mkdir_p('./log/')
 	File.open(filename, "w") do |f|
 		JSON.dump(json, f)
@@ -257,44 +263,6 @@ def save_data(json, fileid)
 	end
 
 	$stderr.puts "Log is written as #{filename}"
-end
-
-def load_data(file)
-	json = JSON.load(File.open(file).read)
-	json
-end
-
-def load_data(file)
-	json = JSON.load(File.open(file).read)
-	json
-end
-
-def operate(next_point, data, last_filename = nil)
-	result = res["returnValue"]
-	data = res["stateData"]
-
-	if result == 0
-		# show images
-		next_point = plot_and_interact(res["imageList"]).reverse
-		next_point = point_to_lambda(next_point[0], next_point[1])
-	else
-		# interact with galaxy
-		$stderr.puts "Interacting with Galaxy..."
-		send_data = res["imageListAsData"] # "ap ap cons 0 nil"
-		$stderr.puts "send_data: #{send_data}"
-		send_data = modulate(send_data)
-		$stderr.puts "modulated: #{send_data}"
-		res = `curl -X POST "https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c" -H "accept: */*" -H "Content-Type: text/plain" -d "#{send_data}"`
-		$stderr.puts "Response From Galaxy: #{res}"
-		next_point = demodulate(res)
-		$stderr.puts "Next Point: #{next_point}"
-	end
-
-	if previous_fileid
-		json["previousFileID"] = previous_fileid
-	end
-
-	return next_filename
 end
 
 
@@ -337,7 +305,7 @@ if $options[:file]
 		exit 1
 	end
 	$stderr.puts "Loading file: #{file}"
-	state = load_data(file)
+	state = JSON.load(File.open(file).read)
 end
 
 
@@ -371,7 +339,8 @@ while true
 	next_filename = filename_of_now()
 	res["FileID"] = next_filename
 	#save_data(next_point, data, res, next_filename, last_filename)
-	save_data(res, next_filename)
+	saving_data = res.clone
+	save_data(saving_data)
 	last_filename = next_filename
 
 	result = res["returnValue"]
@@ -380,32 +349,32 @@ while true
 
 	if result == 0
 		# show images
-		while true
-			begin
-				next_point = plot_and_interact(res["imageList"])
-				next_point = point_to_lambda(next_point[0], next_point[1])
-				break
-			rescue HistoryPrev
-				if history.empty?
-					$stderr.puts "there is no previous history"
-					next
-				end
-				next_state = history.pop
-				future.push res.clone
-				res = next_state
-				$stderr.puts "CurrentID: #{res["FileID"]}"
-				next
-			rescue HistoryNext
-				if future.empty?
-					$stderr.puts "there is no next history"
-					next
-				end
-				next_state = future.pop
-				history.push res.clone
-				res = next_state
-				$stderr.puts "CurrentID: #{res["FileID"]}"
-				next
+		begin
+			next_point = plot_and_interact(res["imageList"])
+			next_point = point_to_lambda(next_point[0], next_point[1])
+		rescue SaveAs => e
+			save_data(saving_data, e.to_s)
+			retry
+		rescue HistoryPrev
+			if history.empty?
+				$stderr.puts "there is no previous history"
+				retry
 			end
+			next_state = history.pop
+			future.push res.clone
+			res = next_state
+			$stderr.puts "CurrentID: #{res["FileID"]}"
+			retry
+		rescue HistoryNext
+			if future.empty?
+				$stderr.puts "there is no next history"
+				retry
+			end
+			next_state = future.pop
+			history.push res.clone
+			res = next_state
+			$stderr.puts "CurrentID: #{res["FileID"]}"
+			retry
 		end
 
 		history << res.clone
