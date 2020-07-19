@@ -227,10 +227,15 @@ impl AI for CympfhAI {
             && ship_enemy.x4[0] > 0
         {
             // 近距離で (等速直線運動 OR 停止) ならビーム
-            let y = add(
-                &add(&ship_enemy.position, &ship_enemy.velocity),
-                &Section::from(&ship_enemy.position).gravity(),
-            );
+            let y = if commands_enemy.is_empty() {
+                add(
+                    &add(&ship_enemy.position, &ship_enemy.velocity),
+                    &Section::from(&ship_enemy.position).gravity(),
+                )
+            } else {
+                // 停止してる
+                ship_enemy.position
+            };
             let power = ship_self.x6;
             return vec![Command::Shoot {
                 ship_id: ship_self.id,
