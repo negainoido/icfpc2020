@@ -194,6 +194,14 @@ impl AI for CympfhAI {
                 ship_id: ship_self.id,
                 target: y,
             }];
+        } else if ship_self.role == Role::Defender && close(&ship_self, &ship_enemy, 2) {
+            // 自爆回避
+            let g = Section::from(&ship_self.position).gravity();
+            let boost = (-g.0, -g.1);
+            return vec![Command::Accelerate {
+                ship_id: ship_self.id,
+                vector: boost,
+            }];
         } else if self.rand.gen::<i128>() % 4 == 0 {
             let boost = (
                 self.rand.gen::<i128>() % 3 - 1,
