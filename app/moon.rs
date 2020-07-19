@@ -64,7 +64,15 @@ impl AI for Moon {
 }
 
 impl Moon {
+    fn is_diag(x: &Coord) -> bool {
+        let (x0, x1) = x;
+        x0 == x1 || x0 + x1 == 0
+    }
+
     pub fn get_boost(pos: &Coord, velocity: &Coord) -> Coord {
+        if Moon::is_diag(&pos) && Moon::is_diag(&velocity) {
+            return (0, -pos.1);
+        }
         let wall = Moon::ground_wall(pos);
         let (gdx, gdy) = Moon::base_gravity(&wall);
         let complete = Moon::complete_func(&wall);
