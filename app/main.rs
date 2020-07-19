@@ -21,7 +21,9 @@ fn send(server_url: &str, request: &str) -> Result<(), Box<dyn std::error::Error
         println!("error {}", resp.status());
     }
 
-    println!("response: {:?}", List::demodulate(&resp.into_string()?));
+    let resp = resp.into_string()?;
+    println!("binary response: {}", resp);
+    println!("response: {}", List::demodulate(&resp).unwrap());
 
     Ok(())
 }
