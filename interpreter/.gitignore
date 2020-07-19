@@ -3,5 +3,6 @@ dist-newstyle/
 image*.txt
 result.txt
 result.json
+laststderr.txt
 log/
 log

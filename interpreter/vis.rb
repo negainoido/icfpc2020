@@ -3,6 +3,7 @@ require 'pp'
 require 'fileutils'
 require_relative 'json_to_ppm'
 require 'stringio'
+require 'open3'
 
 
 class HistoryPrev < StandardError
@@ -99,13 +100,25 @@ def read_image_from_string(lines)
 end
 =end
 
-def exec_autotaker(point, data = "nil")
-	submit_data = JSON.generate({ "galaxyState" => data, "galaxyArg" => point})
-	json_text = IO.popen("curl https://interpreter-w4qijdmu3q-an.a.run.app -H 'Content-Type: application/json' -d @-".split(" "), "r+") do |autotaker|
-		autotaker.puts submit_data
-		autotaker.close_write
 
-		autotaker.read()
+def exec_autotaker(point, data = "nil")
+	if $options[:local]
+		$stderr.puts "### running autotaker in local ###"
+		galaxy = File.open("galaxy.txt").read()
+		galaxy.gsub!(/^(:2000 = )(.*)$/, "\\1#{point}")
+		galaxy.gsub!(/^(:2001 = )(.*)$/, "\\1#{data}")
+		submit_data = galaxy
+		cmd = "cabal new-exec interpreter"
+	else
+		$stderr.puts "### running autotaker in remote ###"
+		submit_data = JSON.generate({ "galaxyState" => data, "galaxyArg" => point})
+		cmd = "curl https://interpreter-w4qijdmu3q-an.a.run.app -H 'Content-Type: application/json' -d @-"
+	end
+	json_text = Open3.popen3(cmd) do |stdin, stdout, stderr, wait_thr|
+		stdin.puts submit_data
+		stdin.close
+		File.open("laststderr.txt", "w") {|f| f.write stderr.read}
+		stdout.read()
 	end
 	return json_text
 end
@@ -306,17 +319,25 @@ state = {
 	"data" => "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 }
 
-if ARGV.length > 0
-	file = ARGV[0]
+require 'optparse'
+opt = OptionParser.new
+
+$options = {:local => false}
+opt.on('-l', '--local', 'use api') {|v| $options[:local] = true}
+opt.on('-f', '--file FILENAME', 'load from FILENAME') {|v| $options[:file] = v}
+
+opt.parse!(ARGV)
+
+if $options[:file]
+	file = $options[:file]
 	if !File.exists?(file)
 		$stderr.puts "No such a file: #{file}"
 		exit 1
 	end
 	$stderr.puts "Loading file: #{file}"
 	state = load_data(file)
-	#point = json["point"]
-	#data = json["data"]
 end
+
 
 
 @plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
@@ -328,10 +349,9 @@ history = []
 future = []
 
 while true
-	$stderr.puts "### running autotaker ###"
 	json_text = exec_autotaker(state["point"], state["data"])
 	# $stderr.puts json_text
-	$stderr.puts "done"
+	# $stderr.puts "done"
 
 	begin
 		res = JSON.parse(json_text)
