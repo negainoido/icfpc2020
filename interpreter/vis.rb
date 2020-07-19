@@ -190,13 +190,19 @@ def plot_and_interact(images)
 				case l
 				when /\Ahelp/i
 					$stderr.puts "help (Command list)"
-					$stderr.puts "Command: put `X, Y' to clipboard\."
+					$stderr.puts "Command: click X Y"
 					$stderr.puts "Command: random walk"
 					$stderr.puts "Command: fix X Y"
 					$stderr.puts "Command: stop"
 					$stderr.puts "Command: back (or b, prev, p)"
 					$stderr.puts "Command: next (or n)"
 					$stderr.puts "Command: save as FILENAME"
+				when /\Aclick\s+(-?\d+)\s+(-?\d+)/
+					x = $1.to_i
+					y = $2.to_i
+					$stderr.puts "Clicked: #{x} #{y}"
+					@plot.puts plot_string_from(images, {:click => [x, y]})
+					return [x, y]
 				when /\Astop/i
 					@point_choicer = nil
 				when /\Arandom walk/i
@@ -204,7 +210,7 @@ def plot_and_interact(images)
 						random_point = images.select{|x| !x.empty?}.sample.sample
 						random_point
 					}
-				when /\Afix\s*(.*)\s*(.*)/i
+				when /\Afix\s*(-?\d+)\s*(-?\d+)/i
 					x = $1.to_i
 					y = $2.to_i
 					@point_choicer = lambda {|images|
