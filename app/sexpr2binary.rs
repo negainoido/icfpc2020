@@ -1,23 +1,8 @@
-fn modulate_number(n: i64) -> String {
-    if n == 0 {
-        return "010".to_string();
-    }
-    let mut ret: String = String::from(if n < 0 { "10" } else { "01" });
-    let n = n.abs();
-    let mut binary: String = format!("{:b}", n);
-    while binary.len() % 4 != 0 {
-        binary = "0".to_string() + &binary;
-    }
-    for _ in 0..binary.len() / 4 {
-        ret += "1";
-    }
-    ret += "0";
-    ret + &binary
-}
+use icfpc2020::modulate::modulate_number;
 
 fn modulate(sexp: &sexp::Sexp) -> String {
     match sexp {
-        sexp::Sexp::Atom(sexp::Atom::I(i)) => modulate_number(*i),
+        sexp::Sexp::Atom(sexp::Atom::I(i)) => modulate_number(*i as i128),
         sexp::Sexp::Atom(sexp::Atom::S(s)) if s == "nil" => "00".to_string(),
         sexp::Sexp::List(xs) if xs.len() == 0 => "00".to_string(),
         sexp::Sexp::List(xs) if xs[0] == sexp::Sexp::Atom(sexp::Atom::S("cons".to_string())) => {

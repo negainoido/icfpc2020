@@ -44,7 +44,7 @@ fn do_demodulate(a: &str) -> (&str, Sexp) {
     }
 }
 
-fn modulate_number(value: i128) -> String {
+pub fn modulate_number(value: i128) -> String {
     let mut res = String::new();
     if value >= 0 {
         res.push_str("01");
