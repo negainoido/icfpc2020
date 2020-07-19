@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-} 
 {-# LANGUAGE DeriveGeneric #-} 
 {-# LANGUAGE RecordWildCards #-} 
-module Negainoido(main, mainApi) where
+module Negainoido(main, mainApi, compilerMain) where
 
 import qualified Data.Text as T
+import qualified Data.Map as M
 import Control.Monad.Identity
 import GHC.Generics
 import Control.Monad.Except
@@ -21,6 +22,7 @@ import System.Environment
 
 import Negainoido.Syntax
 import Negainoido.Eval
+import Negainoido.Compile
 import Negainoido.Parser
 
 import Paths_interpreter
@@ -91,6 +93,20 @@ mainApp ctx req respond = do
             let headers = [("Content-Type", "application/json")]
             respond $ responseLBS status200 headers (encode result)
 
+compilerMain :: IO ()
+compilerMain = do
+    content <- T.getContents
+    r <- runExceptT $ do
+        let (gdef: defs) = reverse $ T.lines content 
+        defs1 <- mapExceptT (pure . runIdentity) $ mapM parseDef defs
+        let aenv = M.fromList [ (hd, arity) | Def hd _ arity <- defs1]
+        let defs2 = reverse $ map (compileDef aenv) defs1
+        forM_ defs2 $ \(Def hd body arity) -> liftIO $ do
+            putStr $ show hd ++ " " ++ show arity ++ " = "
+            T.putStrLn $ toCodeExpr body
+    case r of
+        Left err -> hPutStrLn stderr $ "Error: " ++ err
+        Right () -> pure ()
 
 main :: IO ()
 main = do

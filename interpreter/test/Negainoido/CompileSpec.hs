@@ -35,3 +35,8 @@ spec = do
                 env = M.fromList [ (NT 1132, 0)]
                 expected = (def ":1143 = ap ap ap :1132 !0 0 add") { defArity = 1}
             compileDef env input `shouldBe` expected
+        it "compile s" $ do
+            let input = def ":1 = s"
+                env = M.fromList []
+                expected = (def ":1 = ap ap !2 !0 ap !1 !0") { defArity = 3}
+            compileDef env input `shouldBe` expected

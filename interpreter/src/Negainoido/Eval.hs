@@ -9,8 +9,9 @@ import Data.IORef
 import Control.Monad.Except
 --import Debug.Trace
 import Negainoido.Syntax
+import Negainoido.Compile
 
-type Env = M.Map NT Thunk
+type Env = M.Map NT Def 
 
 evalForce :: Value -> ExceptT String IO SData
 evalForce (VNumber v) = pure $ DNumber v
@@ -22,9 +23,8 @@ mkEnv :: [Def] -> ExceptT String IO Env
 mkEnv defs = 
     mfix $ \env -> 
         M.fromList <$> (
-            forM defs $ \(Def hd body _) -> do
-                thunk <- mkThunk body (eval env body)
-                pure (hd, thunk))
+            forM defs $ \def@(Def hd _body _arity) -> do
+                pure (hd, def))
 
 evalMain :: [Def] -> Expr -> ExceptT String IO SData
 evalMain defs expr = do
@@ -132,17 +132,38 @@ eval env (App (HSymbol hd) args) =
                     pure $ if n1 == n2
                         then symToExpr T
                         else symToExpr F
+        (NonTerm n, es) -- T [e_{n-1}, ..., e_0]
+                        -- def = \!{n-1} ... !0. body
+                        -- !
+            | Just (Def _ body arity) <- M.lookup n env,
+              length es >= arity -> do 
+                  let (vs, remains) = splitAt arity (reverse es)
+                  vs' <- forM vs $ \e_i -> mkThunk e_i (eval env e_i)
+                  let body' = subst vs' body
+                  eval env (foldl app body' remains)
+            | Nothing <- M.lookup n env -> 
+                throwError $  "Undefined Nonterminal: " ++ show n
+                {-
         (NonTerm n, es) -> do -- es [ e_n, ... , e2, e1, e0]
             t <- case M.lookup n env of
                 Nothing -> throwError $  "Undefined Nonterminal: " ++ show n
-                Just v -> pure v
+                Just (t, v) -> pure v
             eval env (EThunk t es)
+            -}
         (Num n, []) -> pure $ VNumber n
         _ -> 
             VPApp hd <$> forM args (\e -> mkThunk e (eval env e)) 
 
 mkThunk :: Expr -> ExceptT String IO Value -> ExceptT String IO Thunk
 mkThunk e action = liftIO $ Thunk e <$> newIORef (Left action)
+
+subst :: [Thunk] -> Expr -> Expr
+subst venv (App hd args) = App hd' (map (subst venv) args)
+    where 
+        hd' = case hd of
+            HSymbol (Var (V x)) -> HThunk (venv !! x)
+            _ -> hd
+
 
 evalThunk :: Thunk -> ExceptT String IO Value
 evalThunk (Thunk _ ref) = do

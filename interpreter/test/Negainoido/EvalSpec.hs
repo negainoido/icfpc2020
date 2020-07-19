@@ -20,3 +20,9 @@ spec = do
                     DCons DNil $ 
                         DCons (DCons (DCons (DCons (DNumber 0) (DNumber 0)) DNil) DNil) DNil
             runExceptT (evalMain [def] main) `shouldReturn` expected
+        it "can eval variable" $ do
+            let Right def = runExcept $ parseDef ":1 3 = ap ap mul !1 ap ap add !0 !2"
+                Right main = runExcept $ parseMain "ap ap ap :1 1 2 3"
+                expected = Right (DNumber 8)
+            runExceptT (evalMain [def] main) `shouldReturn` expected
+            

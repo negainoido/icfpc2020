@@ -9,9 +9,12 @@ import Control.Monad.Except
 import Negainoido.Syntax
 
 parseDef :: Text  -> Except String Def
-parseDef txt = Def <$> (parseHead hd) <*> (parseBody body) <*> pure 0
-    where
-    hd: _eq: body = T.words txt
+parseDef txt = do
+    (hd, body, arity) <- case T.words txt of
+        hd: "=": body -> pure (hd, body, 0)
+        hd: arity: "=" : body -> pure (hd, body, read (T.unpack arity))
+        _ -> throwError $ "failed to parse definiton: " ++ T.unpack txt
+    Def <$> (parseHead hd) <*> (parseBody body) <*> pure arity
     
 parseHead :: Text -> Except String NT
 parseHead txt =

@@ -29,3 +29,11 @@ spec = do
             runExcept (parseSymbol ":123") `shouldBe` Right (NonTerm (NT 123))
         it "can parse number" $ do
             runExcept (parseSymbol "123") `shouldBe` Right (Num 123)
+    describe "Negainoido.Parser.parseDef" $ do
+        it "can parse def with arity" $ do
+            let input = ":1 3 = ap ap !2 !1 !0"
+                expected = Def (NT 1) (App (HSymbol (Var (V 2))) [
+                    symToExpr (Var (V 0)),
+                    symToExpr (Var (V 1))
+                  ]) 3
+            runExcept (parseDef input) `shouldBe` Right expected
