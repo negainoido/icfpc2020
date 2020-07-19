@@ -131,7 +131,7 @@ fn add(a: &Coord, b: &Coord) -> Coord {
     (a.0 + b.0, a.1 + b.1)
 }
 
-const DETONATE_DIST: i128 = 10;
+const DETONATE_DIST: i128 = 4;
 const BEAM_DIST: i128 = 64;
 
 fn dist_max(x: &Coord, y: &Coord) -> i128 {
@@ -211,9 +211,7 @@ impl AI for CympfhAI {
                     &Section::from(&b.position).gravity(),
                 );
                 let d = dist_max(&x, &y);
-                eprintln!("!!! self={:?} => {:?}", &a.position, &x);
-                eprintln!("!!! enemy={:?} => {:?}", &b.position, &y);
-                eprintln!("!!! d = {}", d);
+                eprintln!("\x1b[34m!!! DETONATE min_dist = {} !!!\x1b[0m", d);
             }
             return vec![Command::Detonate {
                 ship_id: ship_self.id,
