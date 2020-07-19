@@ -131,7 +131,7 @@ fn add(a: &Coord, b: &Coord) -> Coord {
     (a.0 + b.0, a.1 + b.1)
 }
 
-const DETONATE_DIST: i128 = 4;
+const DETONATE_DIST: i128 = 3;
 const BEAM_DIST: i128 = 64;
 
 fn dist_max(x: &Coord, y: &Coord) -> i128 {
