@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-} 
 {-# LANGUAGE DeriveGeneric #-} 
 {-# LANGUAGE RecordWildCards #-} 
-module Negainoido(main) where
+module Negainoido(main, mainApi) where
 
 import qualified Data.Text as T
 import Control.Monad.Identity
@@ -9,13 +9,88 @@ import GHC.Generics
 import Control.Monad.Except
 --import Debug.Trace
 import qualified Data.Text.IO as T
-import Data.Aeson(ToJSON(..), encode)
+import Data.Text(Text)
+import Data.Maybe
+import Data.Aeson(ToJSON(..), FromJSON(..), encode, decode')
+import Network.HTTP.Types
 import qualified Data.ByteString.Lazy.Char8 as B
 import System.IO
+import Network.Wai
+import qualified Network.Wai.Handler.Warp as Warp
+import System.Environment
 
 import Negainoido.Syntax
 import Negainoido.Eval
 import Negainoido.Parser
+
+import Paths_interpreter
+
+mainApi :: IO ()
+mainApi = do
+    galaxyPath <- getDataFileName "galaxy.txt"
+    galaxyContent <- T.readFile galaxyPath
+    port <- fromMaybe 8080. fmap read <$> lookupEnv "PORT"
+    token <- fromMaybe "" <$> lookupEnv "TOKEN"
+
+    let r = runExcept $ do
+            let (gdef: defs) = reverse (T.lines galaxyContent) 
+            defExprList <- mapM parseDef defs
+            mainExpr <- parseMain gdef
+            pure Context{ 
+                galaxyDefs = defExprList, 
+                galaxyMain = mainExpr,
+                secretToken = token }
+    case r of
+        Left err -> putStrLn $ "error:" ++ err
+        Right ctx -> Warp.run port (mainApp ctx)
+
+data Galaxy = Galaxy { 
+    galaxyState :: Text,
+    galaxyArg   :: Text
+} deriving(Eq, Show, Generic)
+
+data Context = Context {
+    galaxyDefs :: [Def],
+    galaxyMain :: Expr,
+    secretToken :: String
+}
+
+data ErrorResult = ErrorResult {
+    errorMessage :: String
+} deriving(Generic)
+
+instance ToJSON (ErrorResult)
+instance FromJSON Galaxy
+
+mainApp :: Context -> Application
+mainApp ctx req respond = do
+    reqBody <- strictRequestBody req
+
+    r <- runExceptT $ do
+        galaxy <- case decode' reqBody of
+            Nothing -> throwError "invalid request body"
+            Just v -> pure v
+        stateExpr <- 
+            mapExceptT (pure . runIdentity) 
+             $ parseMain (galaxyState galaxy)
+        argExpr <-
+            mapExceptT (pure . runIdentity)
+             $ parseMain (galaxyArg galaxy)
+        let defs = d1 : d2 : galaxyDefs ctx
+            d1 = Def (NT 2000) argExpr
+            d2 = Def (NT 2001) stateExpr
+        rdata <- evalMain defs (galaxyMain ctx)
+        result <- dataToResult rdata
+        pure result
+    case r of
+        Left err -> do
+            let headers = [("Content-Type", "application/json")]
+                result = ErrorResult err
+            respond $ responseLBS status200 headers (encode result)
+        Right result -> do
+            let headers = [("Content-Type", "application/json")]
+            respond $ responseLBS status200 headers (encode result)
+
 
 main :: IO ()
 main = do
