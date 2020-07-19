@@ -10,7 +10,7 @@
 
 #Added by cargo
 
-/target
+*/target
 
 *.iml
 .idea
