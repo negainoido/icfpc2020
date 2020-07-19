@@ -24,10 +24,10 @@ enum Role {
     Defender = 1,
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 struct GameInfo {
     x0: String,
-    role: Option<Role>,
+    role: Role,
     x2: String,
     x3: String,
     x4: String,
@@ -45,7 +45,7 @@ impl TryFrom<List> for GameInfo {
         if l.is_nil() {
             Ok(GameInfo {
                 x0: format!("{}", x0),
-                role: FromPrimitive::from_i64(role.as_int().unwrap() as i64),
+                role: FromPrimitive::from_i64(role.as_int().unwrap() as i64).unwrap(),
                 x2: format!("{}", x2),
                 x3: format!("{}", x3),
                 x4: format!("{}", x4),
@@ -198,7 +198,7 @@ mod test {
         let game_resp = GameResponse::try_from(l).unwrap();
         assert_eq!(game_resp.stage, GameStage::NotStarted);
         let game_info = game_resp.info;
-        assert_eq!(game_info.role.unwrap(), Role::Attacker);
+        assert_eq!(game_info.role, Role::Attacker);
     }
 
     #[test]
@@ -215,7 +215,7 @@ mod test {
         assert_eq!(game_resp.stage, GameStage::Started);
         dbg!(&game_resp);
         let game_info = game_resp.info;
-        assert_eq!(game_info.role.unwrap(), Role::Defender);
+        assert_eq!(game_info.role, Role::Defender);
         let game_state = game_resp.state;
         assert_eq!(game_state.tick, 0);
 
