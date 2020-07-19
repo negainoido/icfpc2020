@@ -147,7 +147,7 @@ def plot_and_interact(images)
 	@plot.puts "set mouse verbose"
 
 	ignore_inputs(@plot)
-	ignore_inputs($stdin)
+	# ignore_inputs($stdin)
 
 	while true
 		break if @random_walk
@@ -173,7 +173,7 @@ def plot_and_interact(images)
 				@plot.puts plot_string_from(images, {:click => [x, y]})
 				return [x, y]
 			when /random walk/i
-				@random_walk = true
+				@random_walk = !@random_walk
 			end
 		end
 	end
