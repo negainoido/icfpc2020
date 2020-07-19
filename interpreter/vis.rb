@@ -252,7 +252,7 @@ end
 
 # return filename
 def save_data(json, filename = nil)
-	json["logVersion"] = 1.0
+	json["logVersion"] = 2
 	fileid = json["FileID"]
 	filename = "./log/#{fileid}.json" if !filename
 	FileUtils.mkdir_p('./log/')
@@ -315,7 +315,8 @@ if $options[:file]
 	state = JSON.load(File.open(file).read)
 end
 
-
+state["clickHistory"] = []
+state["initialState"] = state.clone
 
 @plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
 @point_choicer = nil
@@ -339,6 +340,8 @@ while true
 
 	res["point"] = state["point"]
 	res["data"] = state["data"]
+	res["clickHistory"] = state["clickHistory"]
+	res["initialState"] = state["initialState"]
 	if last_filename
 		res["previousFileID"] = last_filename
 	end
@@ -386,6 +389,8 @@ while true
 
 		history << res.clone
 		future = []
+
+		res["clickHistory"] = res["clickHistory"] + [next_point]
 	else
 		# interact with galaxy
 		$stderr.puts "Interacting with Galaxy..."
