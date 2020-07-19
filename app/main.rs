@@ -9,7 +9,7 @@ use std::env;
 use ureq;
 
 use icfpc2020::modulate::{cons, List};
-use protocol::{Command, GameResponse, GameStage};
+use protocol::{Command, GameResponse};
 
 use crate::ai::AI;
 
@@ -80,6 +80,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let resp = send(server_url, &request)?;
 
     let game_response: GameResponse = GameResponse::try_from(resp).unwrap();
+    if game_response.is_finished() {
+        println!("Game is immediately finished!!");
+        return Ok(());
+    }
+
     let mut info = game_response.info;
     let mut state = game_response.state;
     println!("info: {:?}", info);
@@ -103,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let game_response: GameResponse = GameResponse::try_from(resp.unwrap()).unwrap();
         println!("game_response: {:?}", game_response);
-        if game_response.stage == GameStage::Finished {
+        if game_response.is_finished() {
             println!("Game is successfully finished!!");
             break;
         }

@@ -216,6 +216,12 @@ impl TryFrom<List> for GameResponse {
     }
 }
 
+impl GameResponse {
+    pub fn is_finished(&self) -> bool {
+        self.stage == GameStage::Finished
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
