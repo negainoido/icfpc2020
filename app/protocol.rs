@@ -56,7 +56,7 @@ impl TryFrom<List> for GameInfo {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 struct Ship {
     role: Role,
     id: ShipId,
@@ -219,6 +219,27 @@ mod test {
         let game_state = game_resp.state;
         assert_eq!(game_state.tick, 0);
 
-        assert!(false);
+        let defender = &game_state.ship_and_commands[0].0;
+        assert_eq!(
+            &Ship {
+                role: Role::Defender,
+                id: 0,
+                position: (-23, -48),
+                velocity: (0, 0),
+            },
+            defender
+        );
+
+        let attacker = &game_state.ship_and_commands[1].0;
+
+        assert_eq!(
+            &Ship {
+                role: Role::Attacker,
+                id: 1,
+                position: (23, 48),
+                velocity: (0, 0),
+            },
+            attacker,
+        );
     }
 }
