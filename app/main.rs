@@ -12,6 +12,8 @@ async fn send(
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = Client::new();
 
+    println!("request: {}", request);
+
     let req = Request::builder()
         .method(Method::POST)
         .uri(&format!(
@@ -58,9 +60,9 @@ fn make_join_request(player_key: &str) -> String {
 }
 
 fn make_start_request(player_key: &str) -> String {
-    let state = format!("(cons 0 (cons 0 (cons 0 (cons 0 nil))))");
+    let state = format!("(cons 1 (cons 1 (cons 1 (cons 1 nil))))");
     modulate_sexp(&format!(
-        "(cons 2 (cons {} (cons {} nil)))",
+        "(cons 3 (cons {} (cons {} nil)))",
         &player_key, state
     ))
     .unwrap()
