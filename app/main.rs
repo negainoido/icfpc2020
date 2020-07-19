@@ -76,7 +76,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.len() == 2 {
         let request = make_create_request();
         let resp = send(server_url, &request)?;
-        println!("{}", resp);
+        let resp = resp.cdr().unwrap();
+        let resp = resp.car().unwrap();
+        let (car, cdr) = resp.decompose().unwrap();
+        let car = car.cdr().unwrap().car().unwrap();
+        let cdr = cdr.car().unwrap();
+        let cdr = cdr.cdr().unwrap().car().unwrap();
+        // let resp = resp.car().unwrap();
+        println!("{} {}", car, cdr);
+
         return Ok(());
     }
 
