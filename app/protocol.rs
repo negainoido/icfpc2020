@@ -24,11 +24,11 @@ pub enum Role {
 
 #[derive(Debug)]
 pub struct GameInfo {
-    pub x0: String,
+    pub x0: i128,
     pub role: Role,
-    pub x2: String,
-    pub x3: String,
-    pub x4: String,
+    pub x2: Vec<i128>,
+    pub x3: Vec<i128>,
+    pub x4: Vec<i128>,
 }
 
 impl TryFrom<List> for GameInfo {
@@ -40,13 +40,14 @@ impl TryFrom<List> for GameInfo {
         let (x2, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (x3, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (x4, l) = l.decompose().expect(&format!("not pair: {}", l));
+
         if l.is_nil() {
             Ok(GameInfo {
-                x0: format!("{}", x0),
+                x0: x0.as_int().unwrap(),
                 role: FromPrimitive::from_i64(role.as_int().unwrap() as i64).unwrap(),
-                x2: format!("{}", x2),
-                x3: format!("{}", x3),
-                x4: format!("{}", x4),
+                x2: x2.as_vec().unwrap(),
+                x3: x3.as_vec().unwrap(),
+                x4: x4.as_vec().unwrap(),
             })
         } else {
             Err(format!("GameInfo l is not nil: {}", l))
@@ -75,7 +76,6 @@ impl TryFrom<List> for Ship {
         let (_x6, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (_x7, l) = l.decompose().expect(&format!("not pair: {}", l));
         if l.is_nil() {
-            dbg!(&position);
             Ok(Ship {
                 role: FromPrimitive::from_i64(role.as_int().unwrap() as i64).unwrap(),
                 id: shipid.as_int().unwrap(),
@@ -136,7 +136,7 @@ impl From<Command> for List {
 #[derive(Default, Debug)]
 pub struct GameState {
     pub tick: i128,
-    pub x1: String,
+    pub x1: Vec<i128>,
     pub ship_and_commands: Vec<(Ship, Vec<Command>)>,
 }
 
@@ -170,7 +170,7 @@ impl TryFrom<List> for GameState {
         if l.is_nil() {
             Ok(GameState {
                 tick: tick.as_int().unwrap(),
-                x1: format!("{}", x1),
+                x1: x1.as_vec().unwrap(),
                 ship_and_commands: ship_commands,
             })
         } else {
@@ -200,9 +200,6 @@ impl TryFrom<List> for GameResponse {
         let (stage, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (info, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (state, l) = l.decompose().expect(&format!("not pair: {}", l));
-        dbg!(&stage);
-        dbg!(&info);
-        dbg!(&state);
 
         if l.is_nil() {
             Ok(GameResponse {
@@ -238,9 +235,12 @@ mod test {
         let l = List::demodulate(&join_resp).unwrap();
 
         let game_resp = GameResponse::try_from(l).unwrap();
+        dbg!(&game_resp.stage);
+        dbg!(&game_resp.info);
         assert_eq!(game_resp.stage, GameStage::NotStarted);
         let game_info = game_resp.info;
         assert_eq!(game_info.role, Role::Attacker);
+        assert_eq!(game_info.x4.len(), 4);
     }
 
     #[test]
