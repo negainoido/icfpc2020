@@ -1,3 +1,4 @@
+#![allow(unused_macros)]
 use std::fmt;
 
 use crate::eval::Evaluator;
@@ -8,6 +9,12 @@ pub enum List {
     Cons(Box<List>, Box<List>),
     Integer(i128),
     Nil,
+}
+
+macro_rules! list {
+    () => (List::Nil);
+    ($x:expr) => (List::Cons(Box::new(List::Integer($x)), Box::new(List::Nil)));
+    ($x:expr, $($rest:expr),*) => (List::Cons(Box::new(List::Integer($x)), Box::new(list!($($rest),*))));
 }
 
 impl List {
@@ -310,5 +317,21 @@ mod tests {
         );
 
         assert_eq!(expr, expected);
+    }
+
+    #[test]
+    fn list_macro_test() {
+        assert_eq!(list!(), List::Nil);
+        assert_eq!(
+            list!(1),
+            List::Cons(Box::new(List::Integer(1)), Box::new(List::Nil))
+        );
+        assert_eq!(
+            list!(1, 2),
+            List::Cons(
+                Box::new(List::Integer(1)),
+                Box::new(List::Cons(Box::new(List::Integer(2)), Box::new(List::Nil)))
+            )
+        );
     }
 }
