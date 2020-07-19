@@ -32,6 +32,7 @@ fn modulate(sexp: &sexp::Sexp) -> String {
 }
 
 pub fn modulate_sexp(sexp: &str) -> Result<String, Box<sexp::Error>> {
+    println!("modulate_sexp: {}", sexp);
     let parsed = sexp::parse(&sexp)?;
     Ok(modulate(&parsed))
 }
