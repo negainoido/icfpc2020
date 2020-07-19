@@ -16,7 +16,7 @@ use crate::ai::AI;
 /*****************************
  * Change this type to your AI
  */
-type MyAI = nop_ai::NopAI;
+type MyAI = moon::Moon;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
