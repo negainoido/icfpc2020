@@ -74,6 +74,7 @@ impl TryFrom<List> for Ship {
         let (_x6, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (_x7, l) = l.decompose().expect(&format!("not pair: {}", l));
         if l.is_nil() {
+            dbg!(&position);
             Ok(Ship {
                 role: FromPrimitive::from_i64(role.as_int().unwrap() as i64).unwrap(),
                 id: shipid.as_int().unwrap(),

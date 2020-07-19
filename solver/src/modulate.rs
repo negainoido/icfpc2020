@@ -40,13 +40,8 @@ impl List {
     }
 
     pub fn as_coord(self: &List) -> Option<(i128, i128)> {
-        let (x, xs) = self.decompose()?;
-        let (y, xs) = xs.decompose()?;
-        if xs.is_nil() {
-            Some((x.as_int()?, y.as_int()?))
-        } else {
-            None
-        }
+        let (x, y) = self.decompose()?;
+        Some((x.as_int()?, y.as_int()?))
     }
 
     pub fn is_nil(self: &List) -> bool {
