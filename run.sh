@@ -1,3 +1,3 @@
 #!/bin/sh
 
-/solution/target/release/app "$@" || echo "run error code: $?"
+/solution/target/debug/app "$@" || echo "run error code: $?"

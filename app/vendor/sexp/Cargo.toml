@@ -1,0 +1,16 @@
+[package]
+name = "sexp"
+version = "1.1.4"
+authors = ["Clark Gaebel <cg.wowus.cg@gmail.com>"]
+
+documentation = "https://cgaebel.github.io/sexp"
+homepage      = "https://github.com/cgaebel/sexp"
+repository    = "https://github.com/cgaebel/sexp"
+
+readme = "README.md"
+
+keywords = [ "sexp", "parsing", "s-expression", "file-format" ]
+
+description = "A small, simple, self-contained, s-expression parser and pretty-printer."
+
+license = "MIT"
