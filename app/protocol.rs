@@ -61,10 +61,10 @@ pub struct Ship {
     pub id: ShipId,
     pub position: Coord,
     pub velocity: Coord,
-    pub x4: String,
-    pub x5: String,
-    pub x6: String,
-    pub x7: String,
+    pub x4: Vec<i128>,
+    pub x5: i128,
+    pub x6: i128,
+    pub x7: i128,
 }
 
 impl TryFrom<List> for Ship {
@@ -85,10 +85,10 @@ impl TryFrom<List> for Ship {
                 id: shipid.as_int().unwrap(),
                 position: position.as_coord().unwrap(),
                 velocity: velocity.as_coord().unwrap(),
-                x4: format!("{}", x4),
-                x5: format!("{}", x5),
-                x6: format!("{}", x6),
-                x7: format!("{}", x7),
+                x4: x4.as_vec().unwrap(),
+                x5: x5.as_int().unwrap(),
+                x6: x6.as_int().unwrap(),
+                x7: x7.as_int().unwrap(),
             })
         } else {
             Err(format!("Ship l is not nil: {}", l))
@@ -266,10 +266,10 @@ mod test {
                 id: 0,
                 position: (-23, -48),
                 velocity: (0, 0),
-                x4: "(1 (1 (1 (1 nil))))".to_owned(),
-                x5: "0".to_owned(),
-                x6: "64".to_owned(),
-                x7: "1".to_owned(),
+                x4: vec![1, 1, 1, 1],
+                x5: 0,
+                x6: 64,
+                x7: 1,
             },
             defender
         );
@@ -282,10 +282,10 @@ mod test {
                 id: 1,
                 position: (23, 48),
                 velocity: (0, 0),
-                x4: "(1 (1 (1 (1 nil))))".to_owned(),
-                x5: "0".to_owned(),
-                x6: "64".to_owned(),
-                x7: "1".to_owned(),
+                x4: vec![1, 1, 1, 1],
+                x5: 0,
+                x6: 64,
+                x7: 1,
             },
             attacker,
         );
