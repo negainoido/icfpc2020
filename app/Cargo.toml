@@ -8,9 +8,9 @@ edition = "2018"
 name = "app"
 path = "main.rs"
 
-
-
 [dependencies]
 sexp = "1.1.4"
 ureq = "1.3.0"
 icfpc2020 = { path = "../solver" }
+num-traits = "0.2.12"
+num-derive = "0.3"

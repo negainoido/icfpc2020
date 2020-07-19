@@ -70,6 +70,8 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "icfpc2020",
+ "num-derive",
+ "num-traits",
  "sexp",
  "ureq",
 ]
@@ -652,6 +654,17 @@ checksum = "b6b19411a9719e753aff12e5187b74d60d3dc449ec3f4dc21e3989c3f554bc95"
 dependencies = [
  "autocfg 1.0.0",
  "num-traits",
+]
+
+[[package]]
+name = "num-derive"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c8b15b261814f992e33760b1fca9fe8b693d8a65299f20c9901688636cfb746"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

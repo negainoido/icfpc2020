@@ -3,11 +3,55 @@ use std::fmt;
 use crate::eval::Evaluator;
 use crate::typing::{ExprNode, TypedExpr, TypedSymbol};
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum List {
     Cons(Box<List>, Box<List>),
     Integer(i128),
     Nil,
+}
+
+impl List {
+    pub fn decompose(self: &List) -> Option<(Box<List>, Box<List>)> {
+        match self {
+            List::Cons(x, xs) => Some((x.clone(), xs.clone())),
+            _ => None,
+        }
+    }
+
+    pub fn car(self: &List) -> Option<Box<List>> {
+        match self {
+            List::Cons(x, _) => Some(x.clone()),
+            _ => None,
+        }
+    }
+
+    pub fn cdr(self: &List) -> Option<Box<List>> {
+        match self {
+            List::Cons(_, xs) => Some(xs.clone()),
+            _ => None,
+        }
+    }
+
+    pub fn as_int(self: &List) -> Option<i128> {
+        match self {
+            List::Integer(i) => Some(i.clone()),
+            _ => None,
+        }
+    }
+
+    pub fn as_coord(self: &List) -> Option<(i128, i128)> {
+        let (x, xs) = self.decompose()?;
+        let (y, xs) = xs.decompose()?;
+        if xs.is_nil() {
+            Some((x.as_int()?, y.as_int()?))
+        } else {
+            None
+        }
+    }
+
+    pub fn is_nil(self: &List) -> bool {
+        *self == List::Nil
+    }
 }
 
 impl fmt::Display for List {
