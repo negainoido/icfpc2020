@@ -43,9 +43,9 @@ fn make_start_request(player_key: &i128) -> String {
     sexp.modulate()
 }
 
-fn make_game_request(player_key: &i128) -> String {
+fn make_command_request(player_key: &i128) -> String {
     use List::*;
-    let sexp = cons(Integer(3), cons(Integer(*player_key), cons(Nil, Nil)));
+    let sexp = cons(Integer(4), cons(Integer(*player_key), cons(Nil, Nil)));
     println!("game request: {}", sexp);
     sexp.modulate()
 }
@@ -68,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Game start
     loop {
-        let request = make_game_request(player_key);
+        let request = make_command_request(player_key);
         if let Err(_) = send(server_url, &request) {
             break;
         }
