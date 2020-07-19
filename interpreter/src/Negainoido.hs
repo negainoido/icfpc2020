@@ -9,12 +9,10 @@ import GHC.Generics
 import Control.Monad.Except
 --import Debug.Trace
 import qualified Data.Text.IO as T
-import Data.Aeson(ToJSON(..), encode)
-import qualified Data.ByteString.Lazy.Char8 as B
+import Data.Aeson(ToJSON(..), encodeFile)
 import Negainoido.Syntax
 import Negainoido.Eval
 import Negainoido.Parser
-
 
 
 
@@ -30,11 +28,9 @@ main = do
         liftIO $ writeFile "result.txt" (show rdata)
         res@Result{..} <- dataToResult rdata
         liftIO $ putStrLn "result json is written at result.json"
-        --liftIO $ encodeFile "result.json" res
+        liftIO $ encodeFile "result.json" res
         liftIO $ putStrLn $ "Result: " ++ show returnValue
-        liftIO $ B.putStrLn $ "ResultJson: " <> encode res
         liftIO $ T.putStrLn $ "DataAsCode: " <> toCode stateData
-        {-
         case imageList of 
             Just imageList' -> 
                 forM_ (zip [(1 :: Int)..] imageList')  $ \(i, image) -> do
@@ -44,12 +40,9 @@ main = do
                 liftIO $ writeFile filename plot
             Nothing -> pure ()
         when (returnValue /= 0) $ liftIO $ T.putStrLn $ "ImageListAsCode: " <> toCode imageListAsData
-        -}
     case r of
         Left err -> putStrLn $ "Error: " ++ err
         Right () -> pure ()
-
-
     
 
 data Result = Result {
