@@ -55,12 +55,16 @@ impl TryFrom<List> for GameInfo {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ship {
     pub role: Role,
     pub id: ShipId,
     pub position: Coord,
     pub velocity: Coord,
+    pub x4: String,
+    pub x5: String,
+    pub x6: String,
+    pub x7: String,
 }
 
 impl TryFrom<List> for Ship {
@@ -71,16 +75,20 @@ impl TryFrom<List> for Ship {
         let (shipid, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (position, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (velocity, l) = l.decompose().expect(&format!("not pair: {}", l));
-        let (_x4, l) = l.decompose().expect(&format!("not pair: {}", l));
-        let (_x5, l) = l.decompose().expect(&format!("not pair: {}", l));
-        let (_x6, l) = l.decompose().expect(&format!("not pair: {}", l));
-        let (_x7, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (x4, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (x5, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (x6, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (x7, l) = l.decompose().expect(&format!("not pair: {}", l));
         if l.is_nil() {
             Ok(Ship {
                 role: FromPrimitive::from_i64(role.as_int().unwrap() as i64).unwrap(),
                 id: shipid.as_int().unwrap(),
                 position: position.as_coord().unwrap(),
                 velocity: velocity.as_coord().unwrap(),
+                x4: format!("{}", x4),
+                x5: format!("{}", x5),
+                x6: format!("{}", x6),
+                x7: format!("{}", x7),
             })
         } else {
             Err(format!("Ship l is not nil: {}", l))
@@ -258,6 +266,10 @@ mod test {
                 id: 0,
                 position: (-23, -48),
                 velocity: (0, 0),
+                x4: "(1 (1 (1 (1 nil))))".to_owned(),
+                x5: "0".to_owned(),
+                x6: "64".to_owned(),
+                x7: "1".to_owned(),
             },
             defender
         );
@@ -270,6 +282,10 @@ mod test {
                 id: 1,
                 position: (23, 48),
                 velocity: (0, 0),
+                x4: "(1 (1 (1 (1 nil))))".to_owned(),
+                x5: "0".to_owned(),
+                x6: "64".to_owned(),
+                x7: "1".to_owned(),
             },
             attacker,
         );
