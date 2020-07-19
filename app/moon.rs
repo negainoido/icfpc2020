@@ -1,7 +1,9 @@
 use crate::ai::AI;
 use crate::protocol::*;
 
-pub struct Moon {}
+pub struct Moon {
+    round: i128,
+}
 
 const LEN: i128 = 16;
 
@@ -15,7 +17,7 @@ enum WallType {
 
 impl AI for Moon {
     fn new() -> Self {
-        Moon {}
+        Moon { round: 0 }
     }
 
     fn main(&mut self, info: &GameInfo, state: &GameState) -> Vec<Command> {
@@ -24,6 +26,12 @@ impl AI for Moon {
             .ship_and_commands
             .iter()
             .filter(|(s, _)| s.role == *my_role)
+            .map(|(s, _)| s)
+            .collect();
+        let mut enemy_ships: Vec<&Ship> = state
+            .ship_and_commands
+            .iter()
+            .filter(|(s, _)| s.role != *my_role)
             .map(|(s, _)| s)
             .collect();
         let mut commands = Vec::<Command>::new();
@@ -36,8 +44,21 @@ impl AI for Moon {
                     ship_id: ship.id.clone(),
                     vector: boost,
                 });
+            } else {
+                if enemy_ships.is_empty() {
+                    continue;
+                }
+                let target_ship: &Ship = enemy_ships.pop().unwrap();
+                let next_target_pos =
+                    Moon::get_next_pos(&target_ship.position, &target_ship.velocity);
+                commands.push(Command::Shoot {
+                    ship_id: target_ship.id.clone(),
+                    target: next_target_pos,
+                })
             }
         }
+
+        self.round += 1;
         commands
     }
 }
@@ -67,6 +88,12 @@ impl Moon {
             cur_velocity.0 += gdx;
             cur_velocity.1 += gdy;
         }
+    }
+
+    fn get_next_pos(pos: &Coord, velocity: &Coord) -> Coord {
+        let wall = Moon::ground_wall(pos);
+        let (gdx, gdy) = Moon::base_gravity(&wall);
+        (pos.0 + velocity.0 + gdx, pos.1 + velocity.1 + gdy)
     }
 
     fn helper_boost(wall: &WallType) -> Coord {
