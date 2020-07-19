@@ -9,7 +9,7 @@ use std::env;
 use ureq;
 
 use icfpc2020::modulate::{cons, List};
-use protocol::{Command, GameResponse, GameStage};
+use protocol::{Command, GameResponse};
 
 use crate::ai::AI;
 
@@ -63,10 +63,23 @@ fn make_command_request(player_key: &i128, commands: Vec<Command>) -> String {
     sexp.modulate()
 }
 
+fn make_create_request() -> String {
+    let create = List::from(vec![1, 0]);
+    println!("game request: {}", create);
+    create.modulate()
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     let server_url = &args[1];
+    if args.len() == 2 {
+        let request = make_create_request();
+        let resp = send(server_url, &request)?;
+        println!("{}", resp);
+        return Ok(());
+    }
+
     let player_key = &args[2].parse::<i128>().expect("failed parsing");
 
     println!("ServerUrl: {}; PlayerKey: {}", server_url, player_key);
@@ -80,6 +93,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let resp = send(server_url, &request)?;
 
     let game_response: GameResponse = GameResponse::try_from(resp).unwrap();
+    if game_response.is_finished() {
+        println!("Game is immediately finished!!");
+        return Ok(());
+    }
+
     let mut info = game_response.info;
     let mut state = game_response.state;
     println!("info: {:?}", info);
@@ -103,7 +121,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let game_response: GameResponse = GameResponse::try_from(resp.unwrap()).unwrap();
         println!("game_response: {:?}", game_response);
-        if game_response.stage == GameStage::Finished {
+        if game_response.is_finished() {
             println!("Game is successfully finished!!");
             break;
         }
