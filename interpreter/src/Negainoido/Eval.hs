@@ -7,7 +7,7 @@ import qualified Data.Map as M
 import Control.Monad.Fix
 import Data.IORef
 import Control.Monad.Except
---import Debug.Trace
+import Debug.Trace
 import Negainoido.Syntax
 import Negainoido.Compile
 
@@ -139,7 +139,7 @@ eval env (App (HSymbol hd) args) =
               length es >= arity -> do 
                   let (vs, remains) = splitAt arity (reverse es)
                   vs' <- forM vs $ \e_i -> mkThunk e_i (eval env e_i)
-                  let body' = subst vs' body
+                  let body' = subst (reverse vs') body
                   eval env (foldl app body' remains)
             | Nothing <- M.lookup n env -> 
                 throwError $  "Undefined Nonterminal: " ++ show n

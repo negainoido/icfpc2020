@@ -25,4 +25,9 @@ spec = do
                 Right main = runExcept $ parseMain "ap ap ap :1 1 2 3"
                 expected = Right (DNumber 8)
             runExceptT (evalMain [def] main) `shouldReturn` expected
+        it "can eval variable" $ do
+            let Right def = runExcept $ parseDef ":1 2 = ap ap cons !1 !0"
+                Right main = runExcept $ parseMain "ap ap :1 1 2"
+                expected = Right (DCons (DNumber 1) (DNumber 2))
+            runExceptT (evalMain [def] main) `shouldReturn` expected
             

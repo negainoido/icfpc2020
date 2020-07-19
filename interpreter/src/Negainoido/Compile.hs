@@ -44,7 +44,7 @@ analyseHeadArity _ (HThunk t) =
 compileDef :: ArityEnv -> Def -> Def
 compileDef env def@(Def hd body arity) 
     | plusArity == 0 = def
-    | otherwise = Def hd body' (arity + plusArity)
+    | otherwise = compileDef env (Def hd body' (arity + plusArity))
     where
     plusArity = analyseArity env body 
     body0 = liftIndex plusArity body
@@ -71,10 +71,7 @@ simplify e | size e > simplifySizeLimit = e
 simplify expr@(App hd args) =
     case hd of
         HSymbol B 
-          | Just e <- triOp f args' -> 
-              if e /= expr then 
-                  simplifyMore e
-              else e
+          | Just e <- triOp f args' -> simplifyMore e
             where f e0 e1 e2 = app e0 (app e1 e2)
         HSymbol C
           | Just e <- triOp f args' -> simplifyMore e
