@@ -18,4 +18,4 @@ COPY --from=build /root/.cabal/store/ghc-8.8.3/ /root/.cabal/store/ghc-8.8.3/
 COPY --from=build /root/.cabal/bin /root/.cabal/bin
 COPY --from=build /usr/lib/x86_64-linux-gnu/libgmp.so.10 /usr/lib/x86_64-linux-gnu/libgmp.so.10
 
-ENTRYPOINT ["/root/.cabal/bin/interpreter"]
+ENTRYPOINT ["/root/.cabal/bin/interpreter-api"]
