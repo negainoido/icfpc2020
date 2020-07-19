@@ -81,9 +81,9 @@ impl FromU64 for u32 {
         x as u32
     }
 }
-impl FromU64 for i32 {
+impl FromU64 for i128 {
     fn coerce(x: u64) -> Self {
-        x as i32
+        x as i128
     }
 }
 impl FromU64 for usize {
@@ -185,6 +185,15 @@ impl AI for CympfhAI {
             return vec![Command::Shoot {
                 ship_id: ship_self.id,
                 target: y,
+            }];
+        } else if self.rand.gen::<i128>() % 4 == 0 {
+            let boost = (
+                self.rand.gen::<i128>() % 3 - 1,
+                self.rand.gen::<i128>() % 3 - 1,
+            );
+            return vec![Command::Accelerate {
+                ship_id: ship_self.id,
+                vector: boost,
             }];
         } else {
             return vec![];
