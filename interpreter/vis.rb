@@ -239,6 +239,7 @@ end
 
 # return filename
 def save_data(json, fileid)
+	json["logVersion"] = 1.0
 	filename = "./log/#{fileid}.json"
 	FileUtils.mkdir_p('./log/')
 	File.open(filename, "w") do |f|
