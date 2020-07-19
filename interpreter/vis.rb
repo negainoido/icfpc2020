@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require 'json'
 require 'pp'
 require 'fileutils'
@@ -246,7 +247,7 @@ def save_data(json, fileid)
 	end
 
 	images = json["imageList"]
-	if images 
+	if images
 		save_images_as_png(images, "./log/#{fileid}.png")
 
 		File.open("./log/#{fileid}.ppm", "w") do |f|
@@ -424,5 +425,3 @@ while true
 
 	state = res
 end
-
-
