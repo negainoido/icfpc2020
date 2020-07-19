@@ -1,6 +1,6 @@
 mod ai;
+mod cympfh;
 mod moon;
-mod nop_ai;
 mod protocol;
 
 use std::convert::TryFrom;
@@ -12,11 +12,12 @@ use icfpc2020::modulate::{cons, List};
 use protocol::{Command, GameResponse};
 
 use crate::ai::AI;
+use crate::cympfh::CympfhAI;
 
 /*****************************
  * Change this type to your AI
  */
-type MyAI = moon::Moon;
+type MyAI = CympfhAI;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
