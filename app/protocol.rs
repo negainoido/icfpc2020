@@ -134,7 +134,7 @@ impl From<Command> for List {
                 Integer(2),
                 cons(
                     Integer(ship_id),
-                    cons(cons(Integer(x), Integer(y)), cons(Integer(16), Nil)),
+                    cons(cons(Integer(x), Integer(y)), cons(Integer(power), Nil)),
                 ),
             ),
         }
