@@ -19,7 +19,7 @@ impl FloatingAI {
 
         return Command::Accelerate {
             ship_id: ship.id,
-            vector: (-gx, -gy),
+            vector: (gx, gy),
         };
     }
 }
@@ -65,7 +65,7 @@ mod tests {
             command,
             Command::Accelerate {
                 ship_id: 0,
-                vector: (1, 0)
+                vector: (-1, 0)
             }
         )
     }
@@ -85,7 +85,7 @@ mod tests {
             command,
             Command::Accelerate {
                 ship_id: 1,
-                vector: (-1, -1)
+                vector: (1, 1)
             }
         );
     }

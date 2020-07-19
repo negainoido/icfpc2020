@@ -9,9 +9,9 @@ use protocol::{Command, GameResponse};
 use crate::ai::AI;
 
 mod ai;
+mod floating_ai;
 mod moon;
 mod nop_ai;
-mod floating_ai;
 mod protocol;
 
 /*****************************
