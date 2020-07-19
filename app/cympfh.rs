@@ -224,9 +224,10 @@ impl AI for CympfhAI {
                 vector: boost,
             }];
         } else if close_manhattan(&ship_self, &ship_enemy, BEAM_DIST)
-            && commands_enemy.is_empty()
+            && (commands_enemy.is_empty() || ship_enemy.velocity == (0, 0))
             && ship_enemy.x4[0] > 0
         {
+            // 近距離で (等速直線運動 OR 停止) ならビーム
             let y = add(
                 &add(&ship_enemy.position, &ship_enemy.velocity),
                 &Section::from(&ship_enemy.position).gravity(),
@@ -246,6 +247,7 @@ impl AI for CympfhAI {
                 vector: boost,
             }];
         } else if self.rand.gen::<i128>() % 4 == 0 {
+            // random noise
             let v = ship_self.velocity;
             let boost = (v.0, v.1);
             return vec![Command::Accelerate {
