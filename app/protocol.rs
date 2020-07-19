@@ -93,7 +93,7 @@ enum Command {
 struct GameState {
     tick: i128,
     x1: Option<()>,
-    ship_and_command: Vec<(Ship, Vec<Command>)>,
+    ship_and_commands: Vec<(Ship, Vec<Command>)>,
 }
 
 impl TryFrom<List> for GameState {
@@ -105,10 +105,28 @@ impl TryFrom<List> for GameState {
         }
         let (tick, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (_x1, l) = l.decompose().expect(&format!("not pair: {}", l));
-        let (_ship_and_command, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (ship_and_commands, l) = l.decompose().expect(&format!("not pair: {}", l));
+
+        let mut cur_ship_and_commands = ship_and_commands;
+
+        let mut ship_commands = vec![];
+        loop {
+            let (cur, cdr) = cur_ship_and_commands.decompose().unwrap();
+
+            let (ship, _command) = cur.decompose().unwrap();
+            // TODO: parse _command;
+            ship_commands.push((Ship::try_from(*ship).unwrap(), vec![]));
+
+            if cdr.is_nil() {
+                break;
+            }
+            cur_ship_and_commands = cdr;
+        }
+
         if l.is_nil() {
             Ok(GameState {
                 tick: tick.as_int().unwrap(),
+                ship_and_commands: ship_commands,
                 ..Default::default()
             })
         } else {
