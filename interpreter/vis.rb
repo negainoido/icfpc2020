@@ -1,6 +1,7 @@
 require 'json'
 require 'pp'
 require 'fileutils'
+require 'stringio'
 
 def point_to_lambda(x, y)
 	"ap ap cons #{x} #{y}"
