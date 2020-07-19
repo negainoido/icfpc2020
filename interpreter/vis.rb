@@ -112,7 +112,7 @@ def plot_string_from(images, options = {})
 	io.puts "unset object 1"
 	if options[:click]
 		pt = options[:click]
-		io.puts "set object 1 circle at first #{pt[0]},#{pt[1]} radius char 0.5 fillstyle empty border lc rgb '#ff0000' lw 2"
+		io.puts "set object 1 circle at first #{pt[0]},#{pt[1]} radius char 2 fillstyle empty border lc rgb '#ff0000' lw 2"
 	end
 
 	images.length.times do |i|
@@ -140,6 +140,8 @@ def ignore_inputs(io)
 end
 
 def plot_and_interact(images)
+	images = images.select{|image| !image.empty?}
+
 	@plot.puts plot_string_from(images)
 
 	@plot.puts "set mouse verbose"
