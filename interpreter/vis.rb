@@ -13,6 +13,10 @@ class SaveAs < StandardError; end
 def point_to_lambda(x, y)
 	"ap ap cons #{x} #{y}"
 end
+def lambda_to_point(s)
+	raise "failed to lambda to point" if s !~ /ap ap cons (-?\d+) (-?\d+)/
+	[$1.to_i, $2.to_i]
+end
 # modulate("nil") == "00"
 # modulate("ap ap cons nil nil") == "110000"
 # modulate("ap ap cons 0 nil") == "1101000"
@@ -228,13 +232,17 @@ def plot_and_interact(images)
 			end
 		end if rs
 
-		break if @point_choicer
-	end
+		if @point_choicer
+			point = @point_choicer.call(images)
+			if point
+				$stderr.puts "point_choicer: choose #{point}"
+				@plot.puts plot_string_from(images, {:click => point})
+				return point
+			end
 
-	point = @point_choicer.call(images)
-	$stderr.puts "point_choicer: choose #{point}"
-	@plot.puts plot_string_from(images, {:click => point})
-	return point
+			@point_choicer = nil # end of point choicer
+		end
+	end
 end
 
 def save_images_as_png(images, as)
@@ -252,7 +260,7 @@ end
 
 # return filename
 def save_data(json, filename = nil)
-	json["logVersion"] = 1.0
+	json["logVersion"] = 2
 	fileid = json["FileID"]
 	filename = "./log/#{fileid}.json" if !filename
 	FileUtils.mkdir_p('./log/')
@@ -302,8 +310,15 @@ opt = OptionParser.new
 $options = {:local => false}
 opt.on('-l', '--local', 'use api') {|v| $options[:local] = true}
 opt.on('-f', '--file FILENAME', 'load from FILENAME') {|v| $options[:file] = v}
+opt.on('-c', '--clickhistory FILENAME', 'load click history (.json) and play') {|v| $options[:clickHistory] = v}
 
 opt.parse!(ARGV)
+
+
+@plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
+@point_choicer = nil
+
+
 
 if $options[:file]
 	file = $options[:file]
@@ -315,10 +330,24 @@ if $options[:file]
 	state = JSON.load(File.open(file).read)
 end
 
+clickHistory = []
+if $options[:clickHistory]
+	$stderr.puts "Warning: ignoring file option" if $options[:file]
+	file = $options[:clickHistory]
+	state = JSON.load(File.open(file).read)
+	clickHistory = state["clickHistory"]
+	@point_choicer = lambda {|images|
+		if clickHistory.empty?
+			nil
+		else
+			lambda_to_point(clickHistory.shift)
+		end
+	}
+	state = state["initialState"]
+end
 
-
-@plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
-@point_choicer = nil
+state["clickHistory"] = []
+state["initialState"] = state.clone
 
 last_filename = nil
 
@@ -339,6 +368,8 @@ while true
 
 	res["point"] = state["point"]
 	res["data"] = state["data"]
+	res["clickHistory"] = state["clickHistory"]
+	res["initialState"] = state["initialState"]
 	if last_filename
 		res["previousFileID"] = last_filename
 	end
@@ -386,6 +417,8 @@ while true
 
 		history << res.clone
 		future = []
+
+		res["clickHistory"] = res["clickHistory"] + [next_point]
 	else
 		# interact with galaxy
 		$stderr.puts "Interacting with Galaxy..."
