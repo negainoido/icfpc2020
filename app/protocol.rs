@@ -53,6 +53,7 @@ impl TryFrom<List> for GameInfo {
     }
 }
 
+#[derive(Debug)]
 struct Ship {
     role: Role,
     id: ShipId,
@@ -81,13 +82,14 @@ impl TryFrom<List> for Ship {
     }
 }
 
+#[derive(Debug)]
 enum Command {
     Accelerate(ShipId, Coord),
     Detonate(ShipId),
     Shoot(ShipId, Coord),
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct GameState {
     tick: i128,
     x1: Option<()>,
@@ -115,6 +117,7 @@ impl TryFrom<List> for GameState {
     }
 }
 
+#[derive(Debug)]
 struct GameResponse {
     stage: GameStage,
     info: GameInfo,
@@ -184,7 +187,10 @@ mod test {
 
         let game_resp = GameResponse::try_from(l).unwrap();
         assert_eq!(game_resp.stage, GameStage::Started);
+        dbg!(&game_resp);
         let game_info = game_resp.info;
         assert_eq!(game_info.role.unwrap(), Role::Defender);
+        let game_state = game_resp.state;
+        assert_eq!(game_state.tick, 0);
     }
 }
