@@ -117,3 +117,22 @@ struct GameResponse {
     info: GameInfo,
     state: GameState,
 }
+
+impl TryFrom<List> for GameResponse {
+    type Error = String;
+
+    fn try_from(l: List) -> Result<Self, Self::Error> {
+        let (stage, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        let (info, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        let (state, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        if l.is_nil() {
+            Ok(GameResponse {
+                stage: FromPrimitive::from_i64(stage.as_int().unwrap() as i64).unwrap(),
+                info: GameInfo::try_from(*info)?,
+                state: GameState::try_from(*state)?,
+            })
+        } else {
+            Err(format!("l is not nil: {}", l))
+        }
+    }
+}
