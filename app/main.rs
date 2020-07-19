@@ -58,7 +58,7 @@ fn make_command_request(player_key: &i128, commands: Vec<Command>) -> String {
     for com in commands {
         coms = cons(List::from(com), coms);
     }
-    let sexp = cons(Integer(4), cons(Integer(*player_key), coms));
+    let sexp = cons(Integer(4), cons(Integer(*player_key), cons(coms, Nil)));
     println!("game request: {}", sexp);
     sexp.modulate()
 }
