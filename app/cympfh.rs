@@ -176,7 +176,7 @@ impl AI for CympfhAI {
             .unwrap();
 
         let boost = Moon::get_boost(&ship_self.position, &ship_self.velocity);
-        if ship_self.role == Role::Attacker && close(&ship_self, &ship_enemy, 2) {
+        if ship_self.role == Role::Attacker && close(&ship_self, &ship_enemy, 1) {
             return vec![Command::Detonate {
                 ship_id: ship_self.id,
             }];
