@@ -2,6 +2,7 @@ require 'json'
 require 'pp'
 require 'fileutils'
 require_relative 'json_to_ppm'
+require 'stringio'
 
 def point_to_lambda(x, y)
 	"ap ap cons #{x} #{y}"
@@ -116,6 +117,8 @@ def plot_string_from(images, options = {})
 		io.puts "set object 1 circle at first #{pt[0]},#{pt[1]} radius char 2 fillstyle empty border lc rgb '#ff0000' lw 2"
 	end
 
+	io.puts "set yrange [:] reverse"
+
 	images.length.times do |i|
 		io.puts "$image#{i} << EOD"
 		images[i].each do |x, y|
@@ -124,7 +127,7 @@ def plot_string_from(images, options = {})
 		io.puts "EOD"
 	end
 
-	data = images.length.times.map {|i| "$image#{i}"}.join(",")
+	data = images.length.times.map {|i| "$image#{i} pt 5 ps 0.7"}.join(",")
 	io.puts "plot #{data}"
 
 	io.rewind
@@ -225,6 +228,11 @@ def save_data(point, data, json)
 	File.open("./log/#{fileprefix}.ppm", "w") do |f|
 		f.write ppm_from_images(images)
 	end
+end
+
+def load_data(file)
+	json = JSON.load(File.open(file).read)
+	json
 end
 
 def load_data(file)
