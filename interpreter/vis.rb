@@ -149,10 +149,10 @@ def plot_and_interact(images)
 	ignore_inputs(@plot)
 	# ignore_inputs($stdin)
 
+	did = 0
 	while true
-		break if @random_walk
-
-		rs = IO.select([@plot, $stdin])
+		rs = IO.select([@plot, $stdin], [], [], did)
+		did = nil
 		rs[0].each do |io|
 			l = io.gets
 
@@ -166,24 +166,37 @@ def plot_and_interact(images)
 				$stderr.puts "help (Command list)"
 				$stderr.puts "Command: put `X, Y' to clipboard\."
 				$stderr.puts "Command: random walk"
+				$stderr.puts "Command: fix X Y"
+				$stderr.puts "Command: stop"
 			when /put `\s*(-?[-0-9\.]*),\s*(-?[0-9\.]*)' to clipboard\./i
 				x = $1.to_f.round
 				y = $2.to_f.round
 				$stderr.puts "Clicked: #{x} #{y}"
 				@plot.puts plot_string_from(images, {:click => [x, y]})
 				return [x, y]
+			when /stop/i
+				@point_choicer = nil
 			when /random walk/i
-				@random_walk = !@random_walk
+				@point_choicer = lambda {|images|
+					random_point = images.select{|x| !x.empty?}.sample.sample
+					random_point
+				}
+			when /fix\s*(.*)\s*(.*)/i
+				x = $1.to_i
+				y = $2.to_i
+				@point_choicer = lambda {|images|
+					[x, y]
+				}
 			end
-		end
+		end if rs
+
+		break if @point_choicer
 	end
 
-	if @random_walk
-		random_point = images.select{|x| !x.empty?}.sample.sample
-		$stderr.puts "random walk: choose #{random_point}"
-		@plot.puts plot_string_from(images, {:click => random_point})
-		return random_point
-	end
+	point = @point_choicer.call(images)
+	$stderr.puts "point_choicer: choose #{point}"
+	@plot.puts plot_string_from(images, {:click => point})
+	return point
 end
 
 def save_images_as_png(images, as)
@@ -244,7 +257,7 @@ end
 
 
 @plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
-@random_walk = false
+@point_choicer = nil
 
 while true
 	lines = exec_autotaker(next_point, data)
