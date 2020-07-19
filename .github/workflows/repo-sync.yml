@@ -7,7 +7,7 @@ jobs:
     - name: repo-sync
       uses: repo-sync/github-sync@v2
       with:
-        source_repo: "git@github.com:negainoido/icfpc2020.git"
+        source_repo: "negainoido/icfpc2020"
         source_branch: "master"
         destination_branch: "submission"
         github_token: ${{ secrets.GITHUB_TOKEN }}
