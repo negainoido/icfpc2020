@@ -88,7 +88,7 @@ impl TryFrom<List> for Ship {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Command {
     Accelerate {
         ship_id: ShipId,
@@ -225,6 +225,7 @@ impl GameResponse {
 #[cfg(test)]
 mod test {
     use super::*;
+
     // use icfpc2020::modulate::*;
 
     #[test]

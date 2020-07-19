@@ -1,8 +1,3 @@
-mod ai;
-mod moon;
-mod nop_ai;
-mod protocol;
-
 use std::convert::TryFrom;
 use std::env;
 
@@ -13,10 +8,16 @@ use protocol::{Command, GameResponse};
 
 use crate::ai::AI;
 
+mod ai;
+mod moon;
+mod nop_ai;
+mod floating_ai;
+mod protocol;
+
 /*****************************
  * Change this type to your AI
  */
-type MyAI = nop_ai::NopAI;
+type MyAI = floating_ai::FloatingAI;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
@@ -126,7 +127,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut state = game_response.state;
 
-    let mut ai = MyAI::new();
+    let mut ai = nop_ai::NopAI::new();
     let mut turn = 0;
     // Game start
     loop {
