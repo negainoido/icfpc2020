@@ -48,7 +48,7 @@ impl TryFrom<List> for GameInfo {
                 ..Default::default()
             })
         } else {
-            Err(format!("l is not nil: {}", l))
+            Err(format!("GameInfo l is not nil: {}", l))
         }
     }
 }
@@ -76,7 +76,7 @@ impl TryFrom<List> for Ship {
                 velocity: velocity.as_coord().unwrap(),
             })
         } else {
-            Err(format!("l is not nil: {}", l))
+            Err(format!("Ship l is not nil: {}", l))
         }
     }
 }
@@ -107,7 +107,7 @@ impl TryFrom<List> for GameState {
                 ..Default::default()
             })
         } else {
-            Err(format!("l is not nil: {}", l))
+            Err(format!("GameState l is not nil: {}", l))
         }
     }
 }
@@ -125,6 +125,10 @@ impl TryFrom<List> for GameResponse {
         let (stage, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
         let (info, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
         let (state, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        dbg!(&stage);
+        dbg!(&info);
+        dbg!(&state);
+
         if l.is_nil() {
             Ok(GameResponse {
                 stage: FromPrimitive::from_i64(stage.as_int().unwrap() as i64).unwrap(),
@@ -132,7 +136,25 @@ impl TryFrom<List> for GameResponse {
                 state: GameState::try_from(*state)?,
             })
         } else {
-            Err(format!("l is not nil: {}", l))
+            Err(format!("GameResponse l is not nil: {}", l))
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use icfpc2020::modulate::*;
+
+    #[test]
+    fn join() {
+        let join_resp = "110110000111010111101111000010000000011010111101111000100000000011011000011101110010000000011110111000010000110111010000000001111011000011101100001110110000111011000010000110000";
+        /*
+
+        (1 (0 ((256 (0 ((512 (1 (64 nil))) ((16 (128 nil)) ((1 (1 (1 (1 nil)))) nil))))) (nil nil))))
+         */
+        let l = List::demodulate(&join_resp).unwrap();
+
+        GameResponse::try_from(l).unwrap();
     }
 }
