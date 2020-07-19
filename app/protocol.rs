@@ -92,9 +92,47 @@ impl TryFrom<List> for Ship {
 
 #[derive(Debug)]
 enum Command {
-    Accelerate(ShipId, Coord),
-    Detonate(ShipId),
-    Shoot(ShipId, Coord),
+    Accelerate {
+        ship_id: ShipId,
+        vector: Coord,
+    },
+    Detonate {
+        ship_id: ShipId,
+    },
+    Shoot {
+        ship_id: ShipId,
+        target: Coord,
+        x3: List,
+    },
+}
+
+impl From<Command> for List {
+    fn from(com: Command) -> List {
+        use icfpc2020::modulate::cons;
+        use Command::*;
+        use List::*;
+        match com {
+            Accelerate {
+                ship_id,
+                vector: (x, y),
+            } => cons(
+                Integer(0),
+                cons(Integer(ship_id), cons(cons(Integer(x), Integer(y)), Nil)),
+            ),
+            Detonate { ship_id } => cons(Integer(1), cons(Integer(ship_id), Nil)),
+            Shoot {
+                ship_id,
+                target: (x, y),
+                x3,
+            } => cons(
+                Integer(2),
+                cons(
+                    Integer(ship_id),
+                    cons(cons(Integer(x), Integer(y)), cons(x3, Nil)),
+                ),
+            ),
+        }
+    }
 }
 
 #[derive(Default, Debug)]
