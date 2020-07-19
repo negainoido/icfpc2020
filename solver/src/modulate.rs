@@ -2,20 +2,20 @@ use crate::eval::Evaluator;
 use crate::typing::{ExprNode, TypedExpr, TypedSymbol};
 
 #[derive(Debug, Eq, PartialEq)]
-pub enum Sexp {
-    Cons(Box<Sexp>, Box<Sexp>),
+pub enum List {
+    Cons(Box<List>, Box<List>),
     Integer(i128),
     Nil,
 }
 
-fn do_demodulate(a: &str) -> (&str, Sexp) {
+fn do_demodulate(a: &str) -> (&str, List) {
     let prefix = &a[..2];
     if prefix == "11" {
         let (a, car) = do_demodulate(&a[2..]);
         let (a, cdr) = do_demodulate(a);
-        (a, Sexp::Cons(Box::new(car), Box::new(cdr)))
+        (a, List::Cons(Box::new(car), Box::new(cdr)))
     } else if prefix == "00" {
-        (&a[2..], Sexp::Nil)
+        (&a[2..], List::Nil)
     } else {
         let sign = if prefix == "01" { 1 } else { -1 };
         let a = &a[2..];
@@ -29,7 +29,7 @@ fn do_demodulate(a: &str) -> (&str, Sexp) {
         let a = &a[len + 1..];
         len *= 4;
         if len == 0 {
-            return (a, Sexp::Integer(0));
+            return (a, List::Integer(0));
         }
         let res = i128::from_str_radix(&a[0..len], 2);
         let num = match res {
@@ -40,7 +40,7 @@ fn do_demodulate(a: &str) -> (&str, Sexp) {
             }
         };
         let a = &a[len..];
-        (a, Sexp::Integer(sign * num))
+        (a, List::Integer(sign * num))
     }
 }
 
@@ -102,11 +102,11 @@ pub fn modulate(expr: ExprNode) -> String {
     result
 }
 
-fn convert_to_expr<'a>(list: &Sexp, sim: &'a Evaluator<'a>) -> ExprNode<'a> {
+fn convert_to_expr<'a>(list: &List, sim: &'a Evaluator<'a>) -> ExprNode<'a> {
     match list {
-        Sexp::Nil => sim.get_val(TypedSymbol::Nil),
-        Sexp::Integer(i) => sim.get_val(TypedSymbol::Number(*i)),
-        Sexp::Cons(l, r) => {
+        List::Nil => sim.get_val(TypedSymbol::Nil),
+        List::Integer(i) => sim.get_val(TypedSymbol::Number(*i)),
+        List::Cons(l, r) => {
             let l = convert_to_expr(&l, sim);
             let r = convert_to_expr(&r, sim);
             sim.get_cons(l, r)
