@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::eval::Evaluator;
 use crate::typing::{ExprNode, TypedExpr, TypedSymbol};
 
@@ -6,6 +8,18 @@ pub enum List {
     Cons(Box<List>, Box<List>),
     Integer(i128),
     Nil,
+}
+
+impl fmt::Display for List {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use List::*;
+
+        match self {
+            Nil => write!(f, "nil"),
+            Integer(x) => write!(f, "{}", x),
+            Cons(x, xs) => write!(f, "({} {})", x, xs),
+        }
+    }
 }
 
 pub fn cons(car: List, cdr: List) -> List {
@@ -162,6 +176,12 @@ mod tests {
     use crate::eval::static_expr::*;
     use crate::eval::Evaluator;
     use std::collections::HashMap;
+
+    #[test]
+    fn display_list() {
+        let list: List = List::from(vec![1, 2, 1]);
+        assert_eq!(format!("{}", list), "(1 (2 (1 nil)))");
+    }
 
     #[test]
     fn demodulate_simple() {
