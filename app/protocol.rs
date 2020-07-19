@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use std::convert::TryFrom;
 
 use num_derive::FromPrimitive;
@@ -22,12 +24,33 @@ enum Role {
     Defender = 1,
 }
 
+#[derive(Default)]
 struct GameInfo {
-    x0: (),
-    role: Role,
-    x2: (),
-    x3: (),
-    x4: (),
+    x0: Option<()>,
+    role: Option<Role>,
+    x2: Option<()>,
+    x3: Option<()>,
+    x4: Option<()>,
+}
+
+impl TryFrom<List> for GameInfo {
+    type Error = String;
+
+    fn try_from(l: List) -> Result<Self, Self::Error> {
+        let (_x0, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        let (role, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        let (_x2, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        let (_x3, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        let (_x4, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        if l.is_nil() {
+            Ok(GameInfo {
+                role: FromPrimitive::from_i64(role.as_int().unwrap() as i64),
+                ..Default::default()
+            })
+        } else {
+            Err(format!("l is not nil: {}", l))
+        }
+    }
 }
 
 struct Ship {
@@ -64,10 +87,29 @@ enum Command {
     Shoot(ShipId, Coord),
 }
 
+#[derive(Default)]
 struct GameState {
     tick: i128,
-    x1: (),
+    x1: Option<()>,
     ship_and_command: Vec<(Ship, Vec<Command>)>,
+}
+
+impl TryFrom<List> for GameState {
+    type Error = String;
+
+    fn try_from(l: List) -> Result<Self, Self::Error> {
+        let (tick, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        let (_x1, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        let (_ship_and_command, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        if l.is_nil() {
+            Ok(GameState {
+                tick: tick.as_int().unwrap(),
+                ..Default::default()
+            })
+        } else {
+            Err(format!("l is not nil: {}", l))
+        }
+    }
 }
 
 struct GameResponse {
