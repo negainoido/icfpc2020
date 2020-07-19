@@ -48,6 +48,17 @@ impl Section {
     }
 }
 
+fn add(a: &Coord, b: &Coord) -> Coord {
+    (a.0 + b.0, a.1 + b.1)
+}
+
+fn close(a: &Ship, b: &Ship) -> bool {
+    let x = add(&a.position, &a.velocity);
+    let y = add(&b.position, &b.velocity);
+    let d = (x.0 - y.0).abs() + (x.1 - y.1).abs();
+    d <= 2
+}
+
 impl AI for CympfhAI {
     fn new() -> Self {
         Self {}
@@ -70,7 +81,11 @@ impl AI for CympfhAI {
             .unwrap();
 
         let boost = Moon::get_boost(&ship_self.position, &ship_self.velocity);
-        if boost != (0, 0) {
+        if ship_self.role == Role::Attacker && close(&ship_self, &ship_enemy) {
+            return vec![Command::Detonate {
+                ship_id: ship_self.id,
+            }];
+        } else if boost != (0, 0) {
             return vec![Command::Accelerate {
                 ship_id: ship_self.id,
                 vector: boost,
