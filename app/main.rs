@@ -1,3 +1,5 @@
+mod ai;
+mod nop_ai;
 mod protocol;
 
 use std::convert::TryFrom;
@@ -6,7 +8,9 @@ use std::env;
 use ureq;
 
 use icfpc2020::modulate::{cons, List};
-use protocol::{GameResponse, GameStage};
+use protocol::{Command, GameResponse, GameStage};
+
+use crate::ai::AI;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
@@ -47,9 +51,13 @@ fn make_start_request(player_key: &i128) -> String {
     sexp.modulate()
 }
 
-fn make_command_request(player_key: &i128) -> String {
+fn make_command_request(player_key: &i128, commands: Vec<Command>) -> String {
     use List::*;
-    let sexp = cons(Integer(4), cons(Integer(*player_key), cons(Nil, Nil)));
+    let mut coms = Nil;
+    for com in commands {
+        coms = cons(List::from(com), coms);
+    }
+    let sexp = cons(Integer(4), cons(Integer(*player_key), cons(coms, Nil)));
     println!("game request: {}", sexp);
     sexp.modulate()
 }
@@ -68,21 +76,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Start
     let request = make_start_request(player_key);
-    send(server_url, &request)?;
+    let resp = send(server_url, &request)?;
 
+    let game_response: GameResponse = GameResponse::try_from(resp).unwrap();
+    let mut info = game_response.info;
+    let mut state = game_response.state;
+    println!("info: {:?}", info);
+
+    let mut ai = nop_ai::NopAI::new();
+    let mut turn = 0;
     // Game start
     loop {
-        let request = make_command_request(player_key);
+        println!("Turn {}", turn);
+        turn += 1;
+
+        println!("state: {:?}", state);
+        let commands = ai.main(&info, &state);
+        println!("command: {:?}", commands);
+        let request = make_command_request(player_key, commands);
         let resp = send(server_url, &request);
-        if let Err(e) = send(server_url, &request) {
+        if let Err(e) = resp {
             println!("error: {}", e);
             break;
         }
+
         let game_response: GameResponse = GameResponse::try_from(resp.unwrap()).unwrap();
         println!("game_response: {:?}", game_response);
         if game_response.stage == GameStage::Finished {
+            println!("Game is successfully finished!!");
             break;
         }
+        info = game_response.info;
+        state = game_response.state;
     }
 
     Ok(())
