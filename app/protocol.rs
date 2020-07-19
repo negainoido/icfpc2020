@@ -37,15 +37,18 @@ impl TryFrom<List> for GameInfo {
     type Error = String;
 
     fn try_from(l: List) -> Result<Self, Self::Error> {
-        let (_x0, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (x0, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (role, l) = l.decompose().expect(&format!("not pair: {}", l));
-        let (_x2, l) = l.decompose().expect(&format!("not pair: {}", l));
-        let (_x3, l) = l.decompose().expect(&format!("not pair: {}", l));
-        let (_x4, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (x2, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (x3, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (x4, l) = l.decompose().expect(&format!("not pair: {}", l));
         if l.is_nil() {
             Ok(GameInfo {
+                x0: format!("{}", x0),
                 role: FromPrimitive::from_i64(role.as_int().unwrap() as i64),
-                ..Default::default()
+                x2: format!("{}", x2),
+                x3: format!("{}", x3),
+                x4: format!("{}", x4),
             })
         } else {
             Err(format!("GameInfo l is not nil: {}", l))
@@ -109,7 +112,7 @@ impl TryFrom<List> for GameState {
             return Ok(Default::default());
         }
         let (tick, l) = l.decompose().expect(&format!("not pair: {}", l));
-        let (_x1, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (x1, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (ship_and_commands, l) = l.decompose().expect(&format!("not pair: {}", l));
 
         let mut cur_ship_and_commands = ship_and_commands;
@@ -131,8 +134,8 @@ impl TryFrom<List> for GameState {
         if l.is_nil() {
             Ok(GameState {
                 tick: tick.as_int().unwrap(),
+                x1: format!("{}", x1),
                 ship_and_commands: ship_commands,
-                ..Default::default()
             })
         } else {
             Err(format!("GameState l is not nil: {}", l))
