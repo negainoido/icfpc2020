@@ -5,10 +5,7 @@ use ureq;
 mod sexpr2binary;
 use sexpr2binary::*;
 
-async fn send(
-    server_url: &str,
-    request: &str,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+fn send(server_url: &str, request: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("request: {}", request);
 
     let url = format!(
@@ -16,7 +13,7 @@ async fn send(
         server_url
     );
 
-    let resp = ureq::post(url).sned_string(&request);
+    let resp = ureq::post(&url).send_string(&request);
 
     if resp.ok() {
         println!("success: {}", resp.into_string()?);
@@ -46,8 +43,7 @@ fn make_game_request(player_key: &str) -> String {
     modulate_sexp(&format!("(cons 4 (cons {} (cons nil nil)))", &player_key)).unwrap()
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let args: Vec<String> = env::args().collect();
 
     let server_url = &args[1];
@@ -57,11 +53,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // Join
     let request = make_join_request(player_key);
-    send(server_url, &request);
+    send(server_url, &request)?;
 
     // Start
     let request = make_start_request(player_key);
-    send(server_url, &request);
+    send(server_url, &request)?;
 
     // Game start
     loop {
