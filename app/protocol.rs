@@ -185,6 +185,6 @@ mod test {
         let game_resp = GameResponse::try_from(l).unwrap();
         assert_eq!(game_resp.stage, GameStage::Started);
         let game_info = game_resp.info;
-        assert_eq!(game_info.role.unwrap(), Role::Attacker);
+        assert_eq!(game_info.role.unwrap(), Role::Defender);
     }
 }
