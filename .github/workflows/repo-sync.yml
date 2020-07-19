@@ -10,4 +10,4 @@ jobs:
         source_repo: "git@github.com:negainoido/icfpc2020.git"
         source_branch: "master"
         destination_branch: "submission"
-        ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        github-token: "${{ secrets.GITHUB_TOKEN }}"
