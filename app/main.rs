@@ -1,12 +1,14 @@
 mod protocol;
 
+use std::convert::TryFrom;
 use std::env;
 
 use ureq;
 
 use icfpc2020::modulate::{cons, List};
+use protocol::GameResponse;
 
-fn send(server_url: &str, request: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn send(server_url: &str, request: &str) -> Result<GameResponse, Box<dyn std::error::Error>> {
     println!("request: {}", request);
 
     let url = format!(
@@ -25,9 +27,11 @@ fn send(server_url: &str, request: &str) -> Result<(), Box<dyn std::error::Error
 
     let resp = resp.into_string()?;
     println!("binary response: {}", resp);
-    println!("response: {}", List::demodulate(&resp).unwrap());
-
-    Ok(())
+    let list = List::demodulate(&resp).unwrap();
+    println!("response: {}", list);
+    let game_response = GameResponse::try_from(list).unwrap();
+    println!("game_response: {:?}", game_response);
+    Ok(game_response)
 }
 
 fn make_join_request(player_key: &i128) -> String {

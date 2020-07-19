@@ -144,7 +144,7 @@ impl TryFrom<List> for GameState {
 }
 
 #[derive(Debug)]
-struct GameResponse {
+pub struct GameResponse {
     stage: GameStage,
     info: GameInfo,
     state: GameState,
