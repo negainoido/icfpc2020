@@ -123,27 +123,56 @@ def plot_string_from(images)
 	io.read
 end
 
+def ignore_inputs(io)
+	begin
+		while true
+			io.read_nonblock(100)
+		end
+	rescue IO::EAGAINWaitReadable
+	end
+end
+
 def plot_and_interact(images)
 	@plot.puts plot_string_from(images)
 
 
 	@plot.puts "set mouse verbose"
 
-	begin
-		while true
-			@plot.read_nonblock(100)
+	ignore_inputs(@plot)
+	ignore_inputs($stdin)
+
+	while true
+		break if @random_walk
+
+		rs = IO.select([@plot, $stdin])
+		rs[0].each do |io|
+			l = io.gets
+
+			if io == @plot
+				$stderr.puts "gnuplot: #{l}"
+			else
+				$stderr.puts "stdin: #{l}"
+			end
+			case l
+			when /help/i
+				$stderr.puts "help (Command list)"
+				$stderr.puts "Command: put `X, Y' to clipboard\."
+				$stderr.puts "Command: random walk"
+			when /put `\s*(-?[-0-9\.]*),\s*(-?[0-9\.]*)' to clipboard\./i
+				x = $1.to_f.round
+				y = $2.to_f.round
+				$stderr.puts "Clicked: #{x} #{y}"
+				return [x, y]
+			when /random walk/i
+				@random_walk = true
+			end
 		end
-	rescue IO::EAGAINWaitReadable
 	end
 
-	while l = @plot.gets
-		$stderr.puts "gnuplot: #{l}"
-		if l =~ /put `\s*(-?[-0-9\.]*),\s*(-?[0-9\.]*)' to clipboard\./
-			x = $1.to_f.round
-			y = $2.to_f.round
-			$stderr.puts "Clicked: #{x} #{y}"
-			return [x, y]
-		end
+	if @random_walk
+		random_point = images.sample.sample
+		$stderr.puts "random walk: choose #{random_point}"
+		return random_point
 	end
 end
 
@@ -205,6 +234,7 @@ end
 
 
 @plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
+@random_walk = false
 
 while true
 	lines = exec_autotaker(next_point, data)
