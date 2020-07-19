@@ -10,12 +10,14 @@ import Control.Monad.Except
 --import Debug.Trace
 import qualified Data.Text.IO as T
 import Data.Text(Text)
+import Data.Maybe
 import Data.Aeson(ToJSON(..), FromJSON(..), encode, decode')
 import Network.HTTP.Types
 import qualified Data.ByteString.Lazy.Char8 as B
 import System.IO
 import Network.Wai
 import qualified Network.Wai.Handler.Warp as Warp
+import System.Environment
 
 import Negainoido.Syntax
 import Negainoido.Eval
@@ -27,11 +29,17 @@ mainApi :: IO ()
 mainApi = do
     galaxyPath <- getDataFileName "galaxy.txt"
     galaxyContent <- T.readFile galaxyPath
+    port <- fromMaybe 8080. fmap read <$> lookupEnv "PORT"
+    token <- fromMaybe "" <$> lookupEnv "TOKEN"
+
     let r = runExcept $ do
             let (gdef: defs) = reverse (T.lines galaxyContent) 
             defExprList <- mapM parseDef defs
             mainExpr <- parseMain gdef
-            pure Context{ galaxyDefs = defExprList, galaxyMain = mainExpr }
+            pure Context{ 
+                galaxyDefs = defExprList, 
+                galaxyMain = mainExpr,
+                secretToken = token }
     case r of
         Left err -> putStrLn $ "error:" ++ err
         Right ctx -> Warp.run 8080 (mainApp ctx)
@@ -43,7 +51,8 @@ data Galaxy = Galaxy {
 
 data Context = Context {
     galaxyDefs :: [Def],
-    galaxyMain :: Expr
+    galaxyMain :: Expr,
+    secretToken :: String
 }
 
 data ErrorResult = ErrorResult {
