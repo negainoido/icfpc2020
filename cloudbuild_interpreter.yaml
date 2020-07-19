@@ -12,6 +12,10 @@ steps:
       -t gcr.io/$PROJECT_ID/interpreter .
   waitFor: ['-']
 
+timeout: 1200s
+options:
+  machineType: 'N1_HIGHCPU_8'
+
 images:
 - 'gcr.io/$PROJECT_ID/interpreter'
 - 'gcr.io/$PROJECT_ID/interpreter:$COMMIT_SHA'
