@@ -100,18 +100,14 @@ end
 =end
 
 def exec_autotaker(point, data = "nil")
-	galaxy = File.open("galaxy.txt").read()
-	galaxy.gsub!(/^(:2000 = )(.*)$/, "\\1#{point}")
-	galaxy.gsub!(/^(:2001 = )(.*)$/, "\\1#{data}")
-	puts "point: #{point}"
-	puts "data: #{data}"
-
-	lines = IO.popen(["cabal", "new-exec", "interpreter"], "r+") do |autotaker|
-		autotaker.puts galaxy
+	submit_data = JSON.generate({ "galaxyState" => data, "galaxyArg" => point})
+	json_text = IO.popen("curl https://interpreter-w4qijdmu3q-an.a.run.app -H 'Content-Type: application/json' -d @-".split(" "), "r+") do |autotaker|
+		autotaker.puts submit_data
 		autotaker.close_write
 
 		autotaker.read()
 	end
+	return json_text
 end
 
 def plot_string_from(images, options = {})
