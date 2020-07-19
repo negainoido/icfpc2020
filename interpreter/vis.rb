@@ -1,6 +1,7 @@
 require 'json'
 require 'pp'
 require 'fileutils'
+require_relative 'json_to_ppm'
 
 def point_to_lambda(x, y)
 	"ap ap cons #{x} #{y}"
@@ -213,7 +214,6 @@ def save_data(point, data, json)
 	json["data"] = data
 	fileprefix = ("%10.9f" % Time.now.to_f).gsub(/\./, "_")
 
-
 	FileUtils.mkdir_p('./log/')
 	File.open("./log/#{fileprefix}.json", "w") do |f|
 		JSON.dump(json, f)
@@ -221,6 +221,10 @@ def save_data(point, data, json)
 
 	images = json["imageList"]
 	save_images_as_png(images, "./log/#{fileprefix}.png") if images
+
+	File.open("./log/#{fileprefix}.ppm", "w") do |f|
+		f.write ppm_from_images(images)
+	end
 end
 
 def load_data(file)
