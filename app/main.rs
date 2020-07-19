@@ -1,4 +1,5 @@
 mod ai;
+mod moon;
 mod nop_ai;
 mod protocol;
 
