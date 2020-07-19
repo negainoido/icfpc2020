@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use std::convert::TryFrom;
 
 use num_derive::FromPrimitive;
@@ -57,11 +55,11 @@ impl TryFrom<List> for GameInfo {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-struct Ship {
-    role: Role,
-    id: ShipId,
-    position: Coord,
-    velocity: Coord,
+pub struct Ship {
+    pub role: Role,
+    pub id: ShipId,
+    pub position: Coord,
+    pub velocity: Coord,
 }
 
 impl TryFrom<List> for Ship {
@@ -137,9 +135,9 @@ impl From<Command> for List {
 
 #[derive(Default, Debug)]
 pub struct GameState {
-    tick: i128,
-    x1: String,
-    ship_and_commands: Vec<(Ship, Vec<Command>)>,
+    pub tick: i128,
+    pub x1: String,
+    pub ship_and_commands: Vec<(Ship, Vec<Command>)>,
 }
 
 impl TryFrom<List> for GameState {
