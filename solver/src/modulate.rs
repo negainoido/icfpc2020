@@ -44,29 +44,21 @@ fn do_demodulate(a: &str) -> (&str, List) {
     }
 }
 
-pub fn modulate_number(value: i128) -> String {
-    let mut res = String::new();
-    if value >= 0 {
-        res.push_str("01");
-    } else {
-        res.push_str("10");
+pub fn modulate_number(n: i128) -> String {
+    if n == 0 {
+        return "010".to_string();
     }
-    let value = value.abs();
-    let mut width = 0;
-    while value >= 1 << width {
-        width += 4;
-        res.push('1');
+    let mut ret: String = String::from(if n < 0 { "10" } else { "01" });
+    let n = n.abs();
+    let mut binary: String = format!("{:b}", n);
+    while binary.len() % 4 != 0 {
+        binary = "0".to_string() + &binary;
     }
-    res.push('0');
-    for i in (0..width).rev() {
-        if value & (1 << i) > 0 {
-            res.push('1');
-        } else {
-            res.push('0');
-        }
+    for _ in 0..binary.len() / 4 {
+        ret += "1";
     }
-
-    res
+    ret += "0";
+    ret + &binary
 }
 
 fn do_modulate<'a>(expr: ExprNode<'a>, str: &mut String) {
