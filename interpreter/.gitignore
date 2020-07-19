@@ -4,3 +4,4 @@ image*.txt
 result.txt
 result.json
 log/
+log
