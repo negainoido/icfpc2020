@@ -106,8 +106,15 @@ def exec_autotaker(point, data = "nil")
 	end
 end
 
-def plot_string_from(images)
+def plot_string_from(images, options = {})
 	io = StringIO.new
+
+	io.puts "unset object 1"
+	if options[:click]
+		pt = options[:click]
+		io.puts "set object 1 circle at first #{pt[0]},#{pt[1]} radius char 2 fillstyle empty border lc rgb '#ff0000' lw 2"
+	end
+
 	images.length.times do |i|
 		io.puts "$image#{i} << EOD"
 		images[i].each do |x, y|
@@ -123,28 +130,73 @@ def plot_string_from(images)
 	io.read
 end
 
-def plot_and_interact(images)
-	@plot.puts plot_string_from(images)
-
-
-	@plot.puts "set mouse verbose"
-
+def ignore_inputs(io)
 	begin
 		while true
-			@plot.read_nonblock(100)
+			io.read_nonblock(100)
 		end
 	rescue IO::EAGAINWaitReadable
 	end
+end
 
-	while l = @plot.gets
-		$stderr.puts "gnuplot: #{l}"
-		if l =~ /put `\s*(-?[-0-9\.]*),\s*(-?[0-9\.]*)' to clipboard\./
-			x = $1.to_f.round
-			y = $2.to_f.round
-			$stderr.puts "Clicked: #{x} #{y}"
-			return [x, y]
-		end
+def plot_and_interact(images)
+	images = images.select{|image| !image.empty?}
+
+	@plot.puts plot_string_from(images)
+
+	@plot.puts "set mouse verbose"
+
+	ignore_inputs(@plot)
+	# ignore_inputs($stdin)
+
+	did = 0
+	while true
+		rs = IO.select([@plot, $stdin], [], [], did)
+		did = nil
+		rs[0].each do |io|
+			l = io.gets
+
+			if io == @plot
+				$stderr.puts "gnuplot: #{l}"
+			else
+				$stderr.puts "stdin: #{l}"
+			end
+			case l
+			when /help/i
+				$stderr.puts "help (Command list)"
+				$stderr.puts "Command: put `X, Y' to clipboard\."
+				$stderr.puts "Command: random walk"
+				$stderr.puts "Command: fix X Y"
+				$stderr.puts "Command: stop"
+			when /put `\s*(-?[-0-9\.]*),\s*(-?[0-9\.]*)' to clipboard\./i
+				x = $1.to_f.round
+				y = $2.to_f.round
+				$stderr.puts "Clicked: #{x} #{y}"
+				@plot.puts plot_string_from(images, {:click => [x, y]})
+				return [x, y]
+			when /stop/i
+				@point_choicer = nil
+			when /random walk/i
+				@point_choicer = lambda {|images|
+					random_point = images.select{|x| !x.empty?}.sample.sample
+					random_point
+				}
+			when /fix\s*(.*)\s*(.*)/i
+				x = $1.to_i
+				y = $2.to_i
+				@point_choicer = lambda {|images|
+					[x, y]
+				}
+			end
+		end if rs
+
+		break if @point_choicer
 	end
+
+	point = @point_choicer.call(images)
+	$stderr.puts "point_choicer: choose #{point}"
+	@plot.puts plot_string_from(images, {:click => point})
+	return point
 end
 
 def save_images_as_png(images, as)
@@ -171,6 +223,11 @@ def save_data(point, data, json)
 	save_images_as_png(images, "./log/#{fileprefix}.png") if images
 end
 
+def load_data(file)
+	json = JSON.load(File.open(file).read)
+	json
+end
+
 #next_point = point_to_lambda(0, 0)
 #data = "nil"
 #
@@ -185,7 +242,22 @@ data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap a
 #next_point = point_to_lambda(-3, 1)
 #data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 
+
+if ARGV.length > 0
+	file = ARGV[0]
+	if !File.exists?(file)
+		$stderr.puts "No such a file: #{file}"
+		exit 1
+	end
+	$stderr.puts "Loading file: #{file}"
+	json = load_data(file)
+	next_point = json["point"]
+	data = json["data"]
+end
+
+
 @plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
+@point_choicer = nil
 
 while true
 	lines = exec_autotaker(next_point, data)
