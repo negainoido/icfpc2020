@@ -13,14 +13,15 @@ fn send(server_url: &str, request: &str) -> Result<(), Box<dyn std::error::Error
     );
 
     let resp = ureq::post(&url).send_string(&request);
-
     if resp.ok() {
-        println!("success: {}", resp.into_string()?);
+        println!("success");
     } else {
         // This can include errors like failure to parse URL or connect timeout.
         // They are treated as synthetic HTTP-level error statuses.
-        println!("error {}: {}", resp.status(), resp.into_string()?);
+        println!("error {}", resp.status());
     }
+
+    println!("response: {:?}", List::demodulate(&resp.into_string()?));
 
     Ok(())
 }
