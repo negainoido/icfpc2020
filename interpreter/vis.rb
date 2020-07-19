@@ -223,10 +223,12 @@ def save_data(point, data, json)
 	end
 
 	images = json["imageList"]
-	save_images_as_png(images, "./log/#{fileprefix}.png") if images
+	if images 
+		save_images_as_png(images, "./log/#{fileprefix}.png")
 
-	File.open("./log/#{fileprefix}.ppm", "w") do |f|
-		f.write ppm_from_images(images)
+		File.open("./log/#{fileprefix}.ppm", "w") do |f|
+			f.write ppm_from_images(images)
+		end
 	end
 end
 
