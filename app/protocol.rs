@@ -11,20 +11,20 @@ type ShipId = i128;
 
 type Coord = (i128, i128);
 
-#[derive(FromPrimitive)]
+#[derive(FromPrimitive, Debug, PartialEq, Eq)]
 enum GameStage {
     NotStarted = 0,
     Started = 1,
     Finished = 2,
 }
 
-#[derive(FromPrimitive)]
+#[derive(FromPrimitive, Debug, PartialEq, Eq)]
 enum Role {
     Attacker = 0,
     Defender = 1,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct GameInfo {
     x0: Option<()>,
     role: Option<Role>,
@@ -37,11 +37,11 @@ impl TryFrom<List> for GameInfo {
     type Error = String;
 
     fn try_from(l: List) -> Result<Self, Self::Error> {
-        let (_x0, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
-        let (role, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
-        let (_x2, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
-        let (_x3, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
-        let (_x4, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        let (_x0, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (role, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (_x2, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (_x3, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (_x4, l) = l.decompose().expect(&format!("not pair: {}", l));
         if l.is_nil() {
             Ok(GameInfo {
                 role: FromPrimitive::from_i64(role.as_int().unwrap() as i64),
@@ -64,10 +64,10 @@ impl TryFrom<List> for Ship {
     type Error = String;
 
     fn try_from(l: List) -> Result<Self, Self::Error> {
-        let (role, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
-        let (shipid, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
-        let (position, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
-        let (velocity, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        let (role, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (shipid, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (position, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (velocity, l) = l.decompose().expect(&format!("not pair: {}", l));
         if l.is_nil() {
             Ok(Ship {
                 role: FromPrimitive::from_i64(role.as_int().unwrap() as i64).unwrap(),
@@ -98,9 +98,12 @@ impl TryFrom<List> for GameState {
     type Error = String;
 
     fn try_from(l: List) -> Result<Self, Self::Error> {
-        let (tick, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
-        let (_x1, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
-        let (_ship_and_command, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        if l.is_nil() {
+            return Ok(Default::default());
+        }
+        let (tick, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (_x1, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (_ship_and_command, l) = l.decompose().expect(&format!("not pair: {}", l));
         if l.is_nil() {
             Ok(GameState {
                 tick: tick.as_int().unwrap(),
@@ -122,9 +125,16 @@ impl TryFrom<List> for GameResponse {
     type Error = String;
 
     fn try_from(l: List) -> Result<Self, Self::Error> {
-        let (stage, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
-        let (info, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
-        let (state, l) = l.decompose().ok_or(format!("not pair: {}", l))?;
+        let (status, l) = l.decompose().expect(&format!("not pair: {}", l));
+
+        if let Some(1) = status.as_int() {
+        } else {
+            return Err(format!("GameResponse status is not 1: {}", status));
+        }
+
+        let (stage, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (info, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (state, l) = l.decompose().expect(&format!("not pair: {}", l));
         dbg!(&stage);
         dbg!(&info);
         dbg!(&state);
@@ -144,7 +154,7 @@ impl TryFrom<List> for GameResponse {
 #[cfg(test)]
 mod test {
     use super::*;
-    use icfpc2020::modulate::*;
+    // use icfpc2020::modulate::*;
 
     #[test]
     fn join() {
@@ -155,6 +165,9 @@ mod test {
          */
         let l = List::demodulate(&join_resp).unwrap();
 
-        GameResponse::try_from(l).unwrap();
+        let game_resp = GameResponse::try_from(l).unwrap();
+        assert_eq!(game_resp.stage, GameStage::NotStarted);
+        let game_info = game_resp.info;
+        assert_eq!(game_info.role.unwrap(), Role::Attacker);
     }
 }
