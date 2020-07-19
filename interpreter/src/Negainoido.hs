@@ -11,12 +11,11 @@ import Control.Monad.Except
 import qualified Data.Text.IO as T
 import Data.Aeson(ToJSON(..), encode)
 import qualified Data.ByteString.Lazy.Char8 as B
+import System.IO
+
 import Negainoido.Syntax
 import Negainoido.Eval
 import Negainoido.Parser
-
-
-
 
 main :: IO ()
 main = do
@@ -26,14 +25,14 @@ main = do
         defs1 <- mapExceptT (pure . runIdentity) $ mapM parseDef defs
         mainExpr <- mapExceptT (pure . runIdentity) $ parseMain gdef
         rdata <- evalMain defs1 mainExpr
-        liftIO $ putStrLn "raw output is written at result.txt"
+        liftIO $ T.hPutStrLn stderr "raw output is written at result.txt"
         liftIO $ writeFile "result.txt" (show rdata)
         res@Result{..} <- dataToResult rdata
-        liftIO $ putStrLn "result json is written at result.json"
+        --liftIO $ putStrLn "result json is written at result.json"
         --liftIO $ encodeFile "result.json" res
-        liftIO $ putStrLn $ "Result: " ++ show returnValue
-        liftIO $ B.putStrLn $ "ResultJson: " <> encode res
-        liftIO $ T.putStrLn $ "DataAsCode: " <> toCode stateData
+        liftIO $ hPutStrLn stderr $ "Result: " ++ show returnValue
+        liftIO $ T.hPutStrLn stderr $ "DataAsCode: " <> toCode stateData
+        liftIO $ B.putStrLn $ encode res
         {-
         case imageList of 
             Just imageList' -> 
@@ -46,11 +45,8 @@ main = do
         when (returnValue /= 0) $ liftIO $ T.putStrLn $ "ImageListAsCode: " <> toCode imageListAsData
         -}
     case r of
-        Left err -> putStrLn $ "Error: " ++ err
+        Left err -> hPutStrLn stderr $ "Error: " ++ err
         Right () -> pure ()
-
-
-    
 
 data Result = Result {
     returnValue :: Integer,
