@@ -1,3 +1,5 @@
+mod protocol;
+
 use std::env;
 
 use ureq;
