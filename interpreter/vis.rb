@@ -337,14 +337,23 @@ while true
 	# $stderr.puts json_text
 	$stderr.puts "done"
 
-	res = JSON.parse(json_text)
+	begin
+		res = JSON.parse(json_text)
+	rescue JSON::ParserError => e
+		$stderr.puts "Parse Error: #{e}"
+		exit 1
+	end
+
+	res["point"] = state["point"]
+	res["data"] = state["data"]
 	if last_filename
 		res["previousFileID"] = last_filename
 	end
 
 	next_filename = filename_of_now()
+	res["FileID"] = next_filename
 	#save_data(next_point, data, res, next_filename, last_filename)
-	save_data(state, next_filename)
+	save_data(res, next_filename)
 	last_filename = next_filename
 
 	result = res["returnValue"]
@@ -365,6 +374,7 @@ while true
 				next_state = history.pop
 				future.push res.clone
 				res = next_state
+				$stderr.puts "CurrentID: #{res["FileID"]}"
 				next
 			rescue HistoryNext
 				if future.empty?
@@ -374,6 +384,7 @@ while true
 				next_state = future.pop
 				history.push res.clone
 				res = next_state
+				$stderr.puts "CurrentID: #{res["FileID"]}"
 				next
 			end
 		end
@@ -386,13 +397,13 @@ while true
 		# interact with galaxy
 		$stderr.puts "Interacting with Galaxy..."
 		send_data = res["imageListAsData"] # "ap ap cons 0 nil"
-		$stderr.puts "send_data: #{send_data}"
+		# $stderr.puts "send_data: #{send_data}"
 		send_data = modulate(send_data)
-		$stderr.puts "modulated: #{send_data}"
+		# $stderr.puts "modulated: #{send_data}"
 		response = `curl -X POST "https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c" -H "accept: */*" -H "Content-Type: text/plain" -d "#{send_data}"`
-		$stderr.puts "Response From Galaxy: #{response}"
+		# $stderr.puts "Response From Galaxy: #{response}"
 		next_point = demodulate(response)
-		$stderr.puts "Next Point: #{next_point}"
+		# $stderr.puts "Next Point: #{next_point}"
 	end
 	res["data"] = data
 	res["point"] = next_point
