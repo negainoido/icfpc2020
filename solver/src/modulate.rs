@@ -8,33 +8,17 @@ pub enum List {
     Nil,
 }
 
-fn do_demodulate(a: &str) -> (&str, List) {
-    let (prefix, a) = (&a[..2], &a[2..]);
+pub fn cons(car: List, cdr: List) -> List {
+    List::Cons(Box::new(car), Box::new(cdr))
+}
 
-    if prefix == "11" {
-        let (a, car) = do_demodulate(a);
-        let (a, cdr) = do_demodulate(a);
-        (a, List::Cons(Box::new(car), Box::new(cdr)))
-    } else if prefix == "00" {
-        (a, List::Nil)
-    } else {
-        let sign = if prefix == "01" { 1 } else { -1 };
-        let len = a.find('0').unwrap();
-        if len == 0 {
-            return (a, List::Integer(0));
+impl From<Vec<i128>> for List {
+    fn from(v: Vec<i128>) -> Self {
+        let mut ret = Self::Nil;
+        for x in v.iter().rev() {
+            ret = cons(Self::Integer(*x), ret);
         }
-        let a = &a[len + 1..];
-        let len = len * 4;
-        let res = i128::from_str_radix(&a[0..len], 2);
-        let num = match res {
-            Ok(b) => b,
-            Err(e) => {
-                eprintln!("error while demodulating: {}", &a);
-                panic!(e)
-            }
-        };
-
-        (&a[len..], List::Integer(sign * num))
+        ret
     }
 }
 
@@ -55,37 +39,107 @@ pub fn modulate_number(n: i128) -> String {
     ret + &binary
 }
 
-fn do_modulate<'a>(expr: ExprNode<'a>, str: &mut String) {
-    match expr {
-        TypedExpr::Apply(l, r) => {
-            do_modulate(l, str);
-            do_modulate(r, str);
+impl List {
+    fn do_modulate(expr: &Self, s: &mut String) {
+        use List::*;
+        match expr {
+            Cons(car, cdr) => {
+                s.push_str("11");
+                Self::do_modulate(&car, s);
+                Self::do_modulate(&cdr, s);
+            }
+            Integer(v) => {
+                s.push_str(&modulate_number(*v));
+            }
+            Nil => {
+                s.push_str("00");
+            }
         }
-        TypedExpr::Val(symbol) => match symbol {
-            TypedSymbol::Cons(exprs) => {
-                str.push_str("11");
-                for e in exprs {
-                    do_modulate(*e, str);
+    }
+
+    pub fn modulate(&self) -> String {
+        let mut result = String::new();
+        Self::do_modulate(self, &mut result);
+        result
+    }
+
+    fn do_demodulate(a: &str) -> (&str, List) {
+        let prefix = &a[..2];
+        if prefix == "11" {
+            let (a, car) = Self::do_demodulate(&a[2..]);
+            let (a, cdr) = Self::do_demodulate(a);
+            (a, List::Cons(Box::new(car), Box::new(cdr)))
+        } else if prefix == "00" {
+            (&a[2..], List::Nil)
+        } else {
+            let sign = if prefix == "01" { 1 } else { -1 };
+            let a = &a[2..];
+            let mut len = 0;
+            for c in a.chars() {
+                if c == '0' {
+                    break;
                 }
+                len += 1;
             }
-            TypedSymbol::Number(v) => {
-                str.push_str(&modulate_number(*v));
+            let a = &a[len + 1..];
+            len *= 4;
+            if len == 0 {
+                return (a, List::Integer(0));
             }
-            TypedSymbol::Nil => {
-                str.push_str("00");
+            let res = i128::from_str_radix(&a[0..len], 2);
+            let num = match res {
+                Ok(b) => b,
+                Err(e) => {
+                    eprintln!("error while demodulating: {}", &a);
+                    panic!(e)
+                }
+            };
+            let a = &a[len..];
+            (a, List::Integer(sign * num))
+        }
+    }
+
+    pub fn demodulate(s: &str) -> Option<Self> {
+        if s == "11" {
+            return Some(Self::Nil);
+        }
+        if let ("", l) = Self::do_demodulate(s) {
+            Some(l)
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a> From<ExprNode<'a>> for List {
+    fn from(expr: ExprNode<'a>) -> Self {
+        match expr {
+            TypedExpr::Apply(TypedExpr::Apply(TypedExpr::Val(TypedSymbol::Cons(l)), car), cdr)
+                if l.len() == 0 =>
+            {
+                let car: List = Self::from(*car);
+                let cdr: List = Self::from(*cdr);
+                List::Cons(Box::new(car), Box::new(cdr))
             }
-            _ => {
-                unimplemented!();
-            }
-        },
+            TypedExpr::Val(symbol) => match symbol {
+                TypedSymbol::Number(v) => List::Integer(*v),
+                TypedSymbol::Nil => List::Nil,
+                TypedSymbol::Cons(l) => {
+                    assert_eq!(l.len(), 2);
+                    let car: List = Self::from(l[0]);
+                    let cdr: List = Self::from(l[1]);
+                    List::Cons(Box::new(car), Box::new(cdr))
+                }
+                _ => unimplemented!("{:?}", symbol),
+            },
+            _ => unimplemented!("{:?}", expr),
+        }
     }
 }
 
 pub fn modulate(expr: ExprNode) -> String {
-    let mut result = String::new();
-
-    do_modulate(expr, &mut result);
-    result
+    let l = List::from(expr);
+    l.modulate()
 }
 
 fn convert_to_expr<'a>(list: &List, sim: &'a Evaluator<'a>) -> ExprNode<'a> {
@@ -104,7 +158,7 @@ pub fn demodulate<'a>(a: &str, sim: &'a Evaluator<'a>) -> ExprNode<'a> {
     if a == "11" {
         return sim.get_val(TypedSymbol::Nil);
     }
-    let (_, l) = do_demodulate(a);
+    let l = List::demodulate(a).expect("failed demodulating");
     convert_to_expr(&l, sim)
 }
 
