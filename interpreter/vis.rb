@@ -103,12 +103,14 @@ end
 
 def exec_autotaker(point, data = "nil")
 	if $options[:local]
+		$stderr.puts "### running autotaker in local ###"
 		galaxy = File.open("galaxy.txt").read()
 		galaxy.gsub!(/^(:2000 = )(.*)$/, "\\1#{point}")
 		galaxy.gsub!(/^(:2001 = )(.*)$/, "\\1#{data}")
 		submit_data = galaxy
 		cmd = "cabal new-exec interpreter"
 	else
+		$stderr.puts "### running autotaker in remote ###"
 		submit_data = JSON.generate({ "galaxyState" => data, "galaxyArg" => point})
 		cmd = "curl https://interpreter-w4qijdmu3q-an.a.run.app -H 'Content-Type: application/json' -d @-"
 	end
@@ -347,10 +349,9 @@ history = []
 future = []
 
 while true
-	$stderr.puts "### running autotaker ###"
 	json_text = exec_autotaker(state["point"], state["data"])
 	# $stderr.puts json_text
-	$stderr.puts "done"
+	# $stderr.puts "done"
 
 	begin
 		res = JSON.parse(json_text)
