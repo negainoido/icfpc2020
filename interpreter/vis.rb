@@ -264,7 +264,7 @@ def operate(next_point, data, last_filename = nil)
 
 	if result == 0
 		# show images
-		next_point = plot_and_interact(res["imageList"])
+		next_point = plot_and_interact(res["imageList"]).reverse
 		next_point = point_to_lambda(next_point[0], next_point[1])
 	else
 		# interact with galaxy
