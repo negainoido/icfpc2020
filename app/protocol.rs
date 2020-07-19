@@ -24,7 +24,7 @@ pub enum Role {
 
 #[derive(Debug)]
 pub struct GameInfo {
-    pub x0: String,
+    pub x0: i128,
     pub role: Role,
     pub x2: String,
     pub x3: String,
@@ -42,7 +42,7 @@ impl TryFrom<List> for GameInfo {
         let (x4, l) = l.decompose().expect(&format!("not pair: {}", l));
         if l.is_nil() {
             Ok(GameInfo {
-                x0: format!("{}", x0),
+                x0: x0.as_int().unwrap(),
                 role: FromPrimitive::from_i64(role.as_int().unwrap() as i64).unwrap(),
                 x2: format!("{}", x2),
                 x3: format!("{}", x3),
