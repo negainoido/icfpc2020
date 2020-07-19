@@ -114,7 +114,7 @@ def plot_string_from(images, options = {})
 	io.puts "unset object 1"
 	if options[:click]
 		pt = options[:click]
-		io.puts "set object 1 circle at first #{pt[0]},#{pt[1]} radius char 2 fillstyle empty border lc rgb '#ff0000' lw 2"
+		io.puts "set object 1 circle at first #{pt[0]},#{pt[1]} radius char 0.7 front fillstyle pattern 1 border lc rgb '#ff0000' lw 2"
 	end
 
 	io.puts "set yrange [:] reverse"
@@ -279,7 +279,7 @@ while true
 	$stderr.puts lines
 	$stderr.puts "#################"
 
-	json = File.open("result.json").read()
+	json = lines
 	res = JSON.parse(json)
 
 	save_data(next_point, data, res)
