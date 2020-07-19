@@ -42,7 +42,7 @@ mainApi = do
                 secretToken = token }
     case r of
         Left err -> putStrLn $ "error:" ++ err
-        Right ctx -> Warp.run 8080 (mainApp ctx)
+        Right ctx -> Warp.run port (mainApp ctx)
 
 data Galaxy = Galaxy { 
     galaxyState :: Text,
