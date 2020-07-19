@@ -9,13 +9,17 @@ import Control.Monad.Except
 import Negainoido.Syntax
 
 parseDef :: Text  -> Except String Def
-parseDef txt = Def <$> (parseHead hd) <*> (parseBody body)
+parseDef txt = Def <$> (parseHead hd) <*> (parseBody body) <*> pure 0
     where
     hd: _eq: body = T.words txt
     
 parseHead :: Text -> Except String NT
 parseHead txt =
     pure $ NT (read (T.unpack (T.tail txt)))
+
+parseVar :: Text -> Except String V
+parseVar txt =
+    pure $ V (read (T.unpack (T.tail txt)))
 
 parseMain :: Text -> Except String Expr
 parseMain = parseBody . T.words
@@ -45,6 +49,7 @@ parseSymbol x =
         "t" -> pure T
         "f" -> pure F
         _ | T.head x == ':' -> NonTerm <$> (parseHead x)
+          | T.head x == '!' -> Var <$> (parseVar x)
           | Just n <- readMaybe (T.unpack x) -> pure $ Num n
         _ -> throwError $ "unknown symbol:" ++ show x
 
@@ -61,4 +66,4 @@ parse = go []
       go [SExpr e] [] = pure e
       go st tokens = throwError $ "Unexpected parse state: Stack = " ++ show st ++ " Token = " ++ show (take 3 tokens)
       toStackElem Ap = SAp
-      toStackElem c = SExpr (App c [])
+      toStackElem c = SExpr (symToExpr c)

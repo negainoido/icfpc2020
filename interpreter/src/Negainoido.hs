@@ -77,8 +77,8 @@ mainApp ctx req respond = do
             mapExceptT (pure . runIdentity)
              $ parseMain (galaxyArg galaxy)
         let defs = d1 : d2 : galaxyDefs ctx
-            d1 = Def (NT 2000) argExpr
-            d2 = Def (NT 2001) stateExpr
+            d1 = Def (NT 2000) argExpr 0
+            d2 = Def (NT 2001) stateExpr 0
         rdata <- evalMain defs (galaxyMain ctx)
         result <- dataToResult rdata
         pure result

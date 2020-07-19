@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-} 
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE PatternSynonyms #-}
 module Negainoido.Syntax where
 
 import Data.Text(Text)
@@ -14,24 +16,37 @@ data Symbol = Add | Ap | B | C
   | IsNil | Lt | Mul | Neg | Nil | S | T | F
   | NonTerm NT
   | Num Integer
+  | Var V
   deriving (Eq, Show)
 newtype NT = NT Int
     deriving (Eq, Ord, Show)
+newtype V = V Int
+    deriving (Eq, Ord, Show)
 
 data Def = Def {
-    defHead :: NT,
-    defBody :: Expr
+    defHead  :: !NT,
+    defBody  :: !Expr,
+    defArity :: !Int
 } deriving(Eq, Show)
 
-data Expr = App Symbol [Expr] -- arguments are in reverse order
-    | EThunk Thunk [Expr]
+data Expr = App !Head [Expr] -- arguments are in reverse order
+    deriving (Eq)
+
+pattern EThunk :: Thunk -> [Expr] -> Expr
+pattern EThunk t xs = App (HThunk t) xs
+
+data Head = 
+    HSymbol !Symbol
+    | HThunk !Thunk
     deriving (Eq)
 
 instance Show Expr where
     show (App x []) = show x
     show (App x es) = "(" ++ unwords (show x: map show (reverse es)) ++ ")"
-    show (EThunk t es) =
-        "(Thunk " ++ unwords (show t: map show (reverse es)) ++ ")"
+
+instance Show Head where
+    show (HSymbol x) = show x
+    show (HThunk t) = "(Thunk " ++ show t ++ ")"
 
 data Thunk = Thunk Expr (IORef (Either (ExceptT String IO Value) Value))
     deriving(Eq)
@@ -45,11 +60,11 @@ instance Show Thunk where
             Right v -> pure $ show v
 
 data Value = 
-      VNumber Integer
-    | VPApp Symbol [Thunk] -- arguments are in reverse order
+      VNumber !Integer
+    | VPApp !Symbol [Thunk] -- arguments are in reverse order
     deriving(Show, Eq)
 
-data SData = DNumber Integer | DCons SData SData | DNil
+data SData = DNumber !Integer | DCons !SData !SData | DNil
     deriving(Eq)
 
 instance Show SData where
@@ -70,9 +85,8 @@ toCode = B.run . go
     go (DNumber n) = B.decimal n
 
 symToExpr :: Symbol -> Expr
-symToExpr x = App x []
+symToExpr x = App (HSymbol x) []
 
 
 app :: Expr -> Expr -> Expr
 app (App c es) e2 = App c (e2:es)
-app (EThunk e es) e2 = EThunk e (e2:es) 

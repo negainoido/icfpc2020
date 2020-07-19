@@ -22,7 +22,7 @@ mkEnv :: [Def] -> ExceptT String IO Env
 mkEnv defs = 
     mfix $ \env -> 
         M.fromList <$> (
-            forM defs $ \(Def hd body) -> do
+            forM defs $ \(Def hd body _) -> do
                 thunk <- mkThunk body (eval env body)
                 pure (hd, thunk))
 
@@ -33,15 +33,15 @@ evalMain defs expr = do
 
 eval :: Env -> Expr -> ExceptT String IO Value
 --eval env e | traceShow ("eval", e) False = undefined
-eval env (EThunk t args) = do
+eval env (App (HThunk t) args) = do
     v <- evalThunk t
     case (v, args) of
         (VPApp hd args', _args) -> 
-            let toExpr x = EThunk x [] in
-            eval env (App hd (args ++ (map toExpr args')))
+            let toExpr x = App (HThunk x) [] in
+            eval env (App (HSymbol hd) (args ++ (map toExpr args')))
         (_, []) -> pure v
         (_, _) -> throwError $ "cannot apply: " ++ show (v, args)
-eval env (App hd args) = 
+eval env (App (HSymbol hd) args) = 
     let triOp f
             | e0:e1:e2:es <- reverse args = Just $ foldl app (f e0 e1 e2) es  
             | otherwise = Nothing

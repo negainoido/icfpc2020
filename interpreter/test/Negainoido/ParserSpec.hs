@@ -13,12 +13,12 @@ spec = do
     describe "Negainoido.Parser.parse" $ do
         it "can parse ap ap cons t i" $ do
             let input = [Ap, Ap, Cons, T, I]
-            let expected = App Cons $ map symToExpr [I, T] 
+            let expected = App (HSymbol Cons) $ map symToExpr [I, T] 
             runExcept (parse input) `shouldBe` Right expected
         it "can parse ap ap cons t ap ap cons t nil" $ do
             let input = [Ap, Ap, Cons, T, Ap, Ap, Cons, T, Nil]
-            let expected = App Cons [
-                    App Cons [symToExpr Nil, symToExpr T],
+            let expected = App (HSymbol Cons) [
+                    App (HSymbol Cons) [symToExpr Nil, symToExpr T],
                     symToExpr T
                     ] 
             runExcept (parse input) `shouldBe` Right expected

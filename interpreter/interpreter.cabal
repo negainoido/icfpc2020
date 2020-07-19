@@ -24,7 +24,8 @@ library
     Negainoido,
     Negainoido.Syntax,
     Negainoido.Parser,
-    Negainoido.Eval
+    Negainoido.Eval,
+    Negainoido.Compile
     
   other-modules:
     Paths_interpreter
@@ -88,6 +89,7 @@ test-suite interpreter-test
     NegainoidoSpec,
     Negainoido.ParserSpec,
     Negainoido.EvalSpec
+    Negainoido.CompileSpec
   build-depends:       
     base ^>=4.13.0.0,
     hspec ^>=2.7.1,
