@@ -4,6 +4,12 @@ require 'fileutils'
 require_relative 'json_to_ppm'
 require 'stringio'
 
+
+class HistoryPrev < StandardError
+end
+class HistoryNext < StandardError
+end
+
 def point_to_lambda(x, y)
 	"ap ap cons #{x} #{y}"
 end
@@ -172,6 +178,8 @@ def plot_and_interact(images)
 				$stderr.puts "Command: random walk"
 				$stderr.puts "Command: fix X Y"
 				$stderr.puts "Command: stop"
+				$stderr.puts "Command: back (or b)"
+				$stderr.puts "Command: next (or n)"
 			when /put `\s*(-?[-0-9\.]*),\s*(-?[0-9\.]*)' to clipboard\./i
 				x = $1.to_f.round
 				y = $2.to_f.round
@@ -191,6 +199,10 @@ def plot_and_interact(images)
 				@point_choicer = lambda {|images|
 					[x, y]
 				}
+			when /\Ab\Z|back/i
+				raise HistoryPrev
+			when /\An\Z|next/i
+				raise HistoryNext
 			end
 		end if rs
 
@@ -217,16 +229,8 @@ def filename_of_now()
 end
 
 # return filename
-def save_data(point, data, json, last_filename = nil)
-	json = json.clone
-	json["point"] = point
-	json["data"] = data
-	if last_filename
-		json["previousFile"] = last_filename
-	end
-	fileprefix = filename_of_now()
-	filename = "./log/#{fileprefix}.json"
-
+def save_data(json, fileid)
+	filename = "./log/#{fileid}.json"
 	FileUtils.mkdir_p('./log/')
 	File.open(filename, "w") do |f|
 		JSON.dump(json, f)
@@ -234,14 +238,14 @@ def save_data(point, data, json, last_filename = nil)
 
 	images = json["imageList"]
 	if images 
-		save_images_as_png(images, "./log/#{fileprefix}.png")
+		save_images_as_png(images, "./log/#{fileid}.png")
 
-		File.open("./log/#{fileprefix}.ppm", "w") do |f|
+		File.open("./log/#{fileid}.ppm", "w") do |f|
 			f.write ppm_from_images(images)
 		end
 	end
 
-	return filename
+	$stderr.puts "Log is written as #{filename}"
 end
 
 def load_data(file)
@@ -254,62 +258,17 @@ def load_data(file)
 	json
 end
 
-#next_point = point_to_lambda(0, 0)
-#data = "nil"
-#
-#next_point = point_to_lambda(1, 4)
-#data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
-
-next_point = point_to_lambda(-3, 1)
-
-data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
-#
-#
-#next_point = point_to_lambda(-3, 1)
-#data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
-
-
-if ARGV.length > 0
-	file = ARGV[0]
-	if !File.exists?(file)
-		$stderr.puts "No such a file: #{file}"
-		exit 1
-	end
-	$stderr.puts "Loading file: #{file}"
-	json = load_data(file)
-	next_point = json["point"]
-	data = json["data"]
-end
-
-
-@plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
-@point_choicer = nil
-
-last_filename = nil
-
-while true
-	lines = exec_autotaker(next_point, data)
-	$stderr.puts "### autotaker ###"
-	$stderr.puts lines
-	$stderr.puts "#################"
-
-	json = lines
-	res = JSON.parse(json)
-
-	last_filename = save_data(next_point, data, res, last_filename)
-
+def operate(next_point, data, last_filename = nil)
 	result = res["returnValue"]
 	data = res["stateData"]
 
-
-
 	if result == 0
 		# show images
-		next_point = plot_and_interact(res["imageList"])
+		next_point = plot_and_interact(res["imageList"]).reverse
 		next_point = point_to_lambda(next_point[0], next_point[1])
 	else
 		# interact with galaxy
-		puts "Interacting with Galaxy..."
+		$stderr.puts "Interacting with Galaxy..."
 		send_data = res["imageListAsData"] # "ap ap cons 0 nil"
 		$stderr.puts "send_data: #{send_data}"
 		send_data = modulate(send_data)
@@ -319,40 +278,126 @@ while true
 		next_point = demodulate(res)
 		$stderr.puts "Next Point: #{next_point}"
 	end
-end
 
-
-exit
-
-
-=begin
-def write_out(image, rgb, opaq)
-	image.each do |x, y|
-		@pixels[ [x, y] ] = rgb.map {|c| (c * opaq).to_i}
+	if previous_fileid
+		json["previousFileID"] = previous_fileid
 	end
+
+	return next_filename
 end
 
 
-xmin = images.flatten(1).map {|x, y| x}.min
-xmax = images.flatten(1).map {|x, y| x}.max
-ymin = images.flatten(1).map {|x, y| y}.min
-ymax = images.flatten(1).map {|x, y| y}.max
+#next_point = point_to_lambda(0, 0)
+#data = "nil"
+#
+#next_point = point_to_lambda(1, 4)
+#data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+#
+#point = point_to_lambda(-3, 1)
+#data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+#
+#
+#
+#next_point = point_to_lambda(-3, 1)
+#data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 
-@pixels = Hash.new([0, 0, 0])
+state = {
+	"point" => point_to_lambda(0, 0),
+	"data" => "nil"
+}
+state = {
+	"point" => point_to_lambda(-3, 1),
+	"data" => "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+}
 
-images.each do |image|
-	write_out(image, [255, 255, 255], 1.0 / images.length)
-end
-
-width = xmax - xmin + 1
-height = ymax - ymin + 1
-puts "P3"
-puts "#{width} #{height}"
-puts "255"
-for y in ymin..ymax
-	for x in xmin..xmax
-		c = @pixels[[x,y]]
-		puts c.join(" ")
+if ARGV.length > 0
+	file = ARGV[0]
+	if !File.exists?(file)
+		$stderr.puts "No such a file: #{file}"
+		exit 1
 	end
+	$stderr.puts "Loading file: #{file}"
+	state = load_data(file)
+	#point = json["point"]
+	#data = json["data"]
 end
-=end
+
+
+@plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
+@point_choicer = nil
+
+last_filename = nil
+
+history = []
+future = []
+
+while true
+	$stderr.puts "### running autotaker ###"
+	json_text = exec_autotaker(state["point"], state["data"])
+	# $stderr.puts json_text
+	$stderr.puts "done"
+
+	res = JSON.parse(json_text)
+	if last_filename
+		res["previousFileID"] = last_filename
+	end
+
+	next_filename = filename_of_now()
+	#save_data(next_point, data, res, next_filename, last_filename)
+	save_data(state, next_filename)
+	last_filename = next_filename
+
+	result = res["returnValue"]
+	data = res["stateData"]
+
+	if result == 0
+		# show images
+		while true
+			begin
+				next_point = plot_and_interact(res["imageList"])
+				next_point = point_to_lambda(next_point[0], next_point[1])
+				break
+			rescue HistoryPrev
+				if history.empty?
+					$stderr.puts "there is no previous history"
+					next
+				end
+				next_state = history.pop
+				future.push res.clone
+				res = next_state
+				next
+			rescue HistoryNext
+				if future.empty?
+					$stderr.puts "there is no next history"
+					next
+				end
+				next_state = future.pop
+				history.push res.clone
+				res = next_state
+				next
+			end
+		end
+
+		if state["returnValue"] == 0
+			history << res.clone
+			future = []
+		end
+	else
+		# interact with galaxy
+		$stderr.puts "Interacting with Galaxy..."
+		send_data = res["imageListAsData"] # "ap ap cons 0 nil"
+		$stderr.puts "send_data: #{send_data}"
+		send_data = modulate(send_data)
+		$stderr.puts "modulated: #{send_data}"
+		response = `curl -X POST "https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c" -H "accept: */*" -H "Content-Type: text/plain" -d "#{send_data}"`
+		$stderr.puts "Response From Galaxy: #{response}"
+		next_point = demodulate(response)
+		$stderr.puts "Next Point: #{next_point}"
+	end
+	res["data"] = data
+	res["point"] = next_point
+
+	state = res
+end
+
+
