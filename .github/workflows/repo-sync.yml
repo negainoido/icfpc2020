@@ -1,0 +1,13 @@
+on: push
+jobs:
+  repo-sync:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: repo-sync
+      uses: repo-sync/github-sync@v2
+      with:
+        source_repo: "git@github.com:negainoido/icfpc2020.git"
+        source_branch: "master"
+        destination_branch: "submission"
+        ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
