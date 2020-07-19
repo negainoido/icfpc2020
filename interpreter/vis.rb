@@ -116,6 +116,8 @@ def plot_string_from(images, options = {})
 		io.puts "set object 1 circle at first #{pt[0]},#{pt[1]} radius char 2 fillstyle empty border lc rgb '#ff0000' lw 2"
 	end
 
+	io.puts "set yrange [:] reverse"
+
 	images.length.times do |i|
 		io.puts "$image#{i} << EOD"
 		images[i].each do |x, y|
@@ -124,7 +126,7 @@ def plot_string_from(images, options = {})
 		io.puts "EOD"
 	end
 
-	data = images.length.times.map {|i| "$image#{i}"}.join(",")
+	data = images.length.times.map {|i| "$image#{i} pt 5 ps 0.7"}.join(",")
 	io.puts "plot #{data}"
 
 	io.rewind
