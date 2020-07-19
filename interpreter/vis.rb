@@ -171,6 +171,11 @@ def save_data(point, data, json)
 	save_images_as_png(images, "./log/#{fileprefix}.png") if images
 end
 
+def load_data(file)
+	json = JSON.load(File.open(file).read)
+	json
+end
+
 #next_point = point_to_lambda(0, 0)
 #data = "nil"
 #
@@ -184,6 +189,20 @@ data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap a
 #
 #next_point = point_to_lambda(-3, 1)
 #data = "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
+
+
+if ARGV.length > 0
+	file = ARGV[0]
+	if !File.exists?(file)
+		$stderr.puts "No such a file: #{file}"
+		exit 1
+	end
+	$stderr.puts "Loading file: #{file}"
+	json = load_data(file)
+	next_point = json["point"]
+	data = json["data"]
+end
+
 
 @plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
 
