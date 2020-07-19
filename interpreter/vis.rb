@@ -211,14 +211,24 @@ def save_images_as_png(images, as)
 	end
 end
 
-def save_data(point, data, json)
+# pid + now
+def filename_of_now()
+	"#{Process.pid}_" + ("%10.9f" % Time.now.to_f).gsub(/\./, "_")
+end
+
+# return filename
+def save_data(point, data, json, last_filename = nil)
 	json = json.clone
 	json["point"] = point
 	json["data"] = data
-	fileprefix = ("%10.9f" % Time.now.to_f).gsub(/\./, "_")
+	if last_filename
+		json["previousFile"] = last_filename
+	end
+	fileprefix = filename_of_now()
+	filename = "./log/#{fileprefix}.json"
 
 	FileUtils.mkdir_p('./log/')
-	File.open("./log/#{fileprefix}.json", "w") do |f|
+	File.open(filename, "w") do |f|
 		JSON.dump(json, f)
 	end
 
@@ -230,6 +240,8 @@ def save_data(point, data, json)
 			f.write ppm_from_images(images)
 		end
 	end
+
+	return filename
 end
 
 def load_data(file)
@@ -273,6 +285,8 @@ end
 @plot = IO.popen("gnuplot", "r+", :err => [:child, :out])
 @point_choicer = nil
 
+last_filename = nil
+
 while true
 	lines = exec_autotaker(next_point, data)
 	$stderr.puts "### autotaker ###"
@@ -282,7 +296,7 @@ while true
 	json = lines
 	res = JSON.parse(json)
 
-	save_data(next_point, data, res)
+	last_filename = save_data(next_point, data, res, last_filename)
 
 	result = res["returnValue"]
 	data = res["stateData"]
