@@ -22,18 +22,10 @@ impl AI for Moon {
 
     fn main(&mut self, info: &GameInfo, state: &GameState) -> Vec<Command> {
         let my_role = &info.role;
-        let my_ships: Vec<&Ship> = state
-            .ship_and_commands
-            .iter()
-            .filter(|(s, _)| s.role == *my_role)
-            .map(|(s, _)| s)
-            .collect();
-        let mut enemy_ships: Vec<&Ship> = state
-            .ship_and_commands
-            .iter()
-            .filter(|(s, _)| s.role != *my_role)
-            .map(|(s, _)| s)
-            .collect();
+
+        let my_ships: Vec<&Ship> = state.get_ships(my_role);
+        let mut enemy_ships: Vec<&Ship> = state.get_ships(&my_role.opponent());
+
         let mut commands = Vec::<Command>::new();
         for ship in my_ships {
             let boost = Moon::get_boost(&ship.position, &ship.velocity);

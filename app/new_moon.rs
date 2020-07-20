@@ -6,15 +6,6 @@ pub struct NewMoon {
     state_history: Vec<GameState>,
     command_history: Vec<Vec<Command>>,
 }
-fn ships_of_role(state: &GameState, role: Role) -> Vec<Ship> {
-    return state
-        .ship_and_commands
-        .iter()
-        .filter(|&(ship, _)| ship.role == role)
-        .map(|(ship, _)| ship)
-        .cloned()
-        .collect::<Vec<Ship>>();
-}
 
 fn gravity_of(pos: &Coord) -> Coord {
     let mut gx = 0;
@@ -135,7 +126,7 @@ impl NewMoon {
             .next()
             .unwrap();
 
-        let ships = ships_of_role(&self.state_history[0], role_self);
+        let ships = &self.state_history[0].get_ships(&role_self);
         let expected_ship = {
             let mut ship = ships[0].clone();
             ship.apply_commands(&self.command_history);
