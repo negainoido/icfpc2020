@@ -6,6 +6,7 @@ use crate::utility::*;
 
 pub struct CympfhAI {
     rand: XorShift,
+    round: i128,
 }
 
 impl CympfhAI {
@@ -129,20 +130,38 @@ fn close_max(a: &Ship, b: &Ship, dist_sup: i128) -> bool {
 fn shoot_target<'a>(
     my_ship: &Ship,
     enemy_ships: &Vec<&'a Ship>,
-    max_power: i128,
+    round: i128,
 ) -> Option<(&'a Ship, i128)> {
+    let max_power = my_ship.x6 - my_ship.x5;
     if max_power <= 0 {
+        return None;
+    }
+    if my_ship.x5 > 10 {
         return None;
     }
 
     let mut ei: i32 = -1;
-    let mut nearest_dist: i128 = std::i128::MAX;
+    const FIRST_STAGE: i128 = 50;
+    let mut best: i128 = if round <= FIRST_STAGE {
+        0
+    } else {
+        std::i128::MAX
+    };
+
     for i in 0..enemy_ships.len() {
         let e = &enemy_ships[i];
-        let e_d = dist(my_ship.position, e.position);
-        if nearest_dist > e_d {
-            nearest_dist = e_d;
-            ei = i as i32;
+        if round <= FIRST_STAGE {
+            let e_hp = &e.x4[0];
+            if best < *e_hp {
+                best = *e_hp;
+                ei = i as i32;
+            }
+        } else {
+            let e_d = dist(my_ship.position, e.position);
+            if best > e_d {
+                best = e_d;
+                ei = i as i32;
+            }
         }
     }
     if ei < 0 {
@@ -156,11 +175,13 @@ impl AI for CympfhAI {
     fn new() -> Self {
         Self {
             rand: XorShift::new(),
+            round: 0,
         }
     }
     fn main(&mut self, info: &GameInfo, state: &GameState) -> Vec<Command> {
         use Role::*;
 
+        self.round += 1;
         let role_self = info.role;
         let self_ships: Vec<&Ship> = state.get_ships(&role_self);
         let enemy_ships: Vec<&Ship> = state.get_ships(&role_self.opponent());
@@ -189,6 +210,7 @@ impl AI for CympfhAI {
             // 衛星軌道
             {
                 let boost = Moon::get_boost(&ship.position, &ship.velocity);
+                dbg!(boost);
                 if boost != (0, 0) {
                     cmds.push(Command::Accelerate {
                         ship_id: ship.id,
@@ -198,7 +220,7 @@ impl AI for CympfhAI {
                 }
             }
             // ビーム
-            match shoot_target(ship, &enemy_ships, ship.x6 - ship.x5) {
+            match shoot_target(ship, &enemy_ships, self.round) {
                 Some((enemy_ship, power)) => {
                     let target = CympfhAI::estimate_next_position(enemy_ship);
                     cmds.push(Command::Shoot {

@@ -68,6 +68,9 @@ impl Moon {
             cur_velocity.1 += gdy;
             cur_pos.0 += cur_velocity.0;
             cur_pos.1 += cur_velocity.1;
+            dbg!(cur_pos, cur_velocity);
+            dbg!(complete(cur_pos));
+            dbg!(is_crash(cur_pos));
             if complete(cur_pos) {
                 // No boost is needed
                 return (0, 0);
@@ -141,37 +144,47 @@ impl Moon {
             // A, D or B.
             if *y > *x {
                 // D
+                dbg!("D");
                 (-1, -1)
             } else if *y < -*x {
                 // B
+                dbg!("B");
                 (1, 1)
             } else {
                 if *y == *x {
                     // DA
+                    dbg!("DA");
                     return (-1, 0);
                 } else if *y == -*x {
                     // AB
+                    dbg!("AB");
                     return (0, 1);
                 }
+                dbg!("A");
                 (-1, 1)
             }
         } else {
             // B, C or D.
             if *y > -*x {
                 // D
+                dbg!("D");
                 (-1, -1)
             } else if *y < *x {
                 // B
+                dbg!("B");
                 (1, 1)
             } else {
                 if *y == -*x {
                     // CD
+                    dbg!("CD");
                     return (0, -1);
                 } else if *y == *x {
                     // BC
+                    dbg!("BC");
                     return (1, 0);
                 }
                 // C
+                dbg!("C");
                 (1, -1)
             }
         }
