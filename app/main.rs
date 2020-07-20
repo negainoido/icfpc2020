@@ -1,9 +1,9 @@
 mod ai;
 mod min_mutlti_ai;
 mod moon;
+mod new_moon;
 mod nop_ai;
 mod protocol;
-mod new_moon;
 
 use std::convert::TryFrom;
 use std::env;
@@ -14,12 +14,14 @@ use icfpc2020::modulate::{cons, List};
 use protocol::{Command, GameResponse};
 
 use crate::ai::AI;
+use crate::protocol::Role;
 use crate::protocol::ShipState;
 
 /*****************************
  * Change this type to your AI
  */
-type MyAI = min_mutlti_ai::MinMultiAi;
+type MyAttackerAI = min_mutlti_ai::MinMultiAi;
+type MyDefenderAI = min_mutlti_ai::MinMultiAi;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
@@ -118,7 +120,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("info: {:?}", info);
 
     // Start
-    let request = make_start_request(player_key, MyAI::initial_params(&info));
+    let request = make_start_request(player_key, MyAttackerAI::initial_params(&info));
     let resp = send(server_url, &request)?;
 
     let game_response: GameResponse = GameResponse::try_from(resp)?;
@@ -128,8 +130,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let mut state = game_response.state;
+    let mut ai = match &info.role {
+        Role::Attacker => MyAttackerAI::new(),
+        Role::Defender => MyDefenderAI::new(),
+    };
 
-    let mut ai = MyAI::new();
     let mut turn = 0;
     // Game start
     loop {
