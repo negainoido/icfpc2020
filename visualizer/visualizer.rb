@@ -165,8 +165,11 @@ end
 require 'optparse'
 opt = OptionParser.new
 
-$options = {}
+$options = {
+		:sleep => 0.2
+}
 opt.on('-f', '--file FILENAME', 'load from FILENAME') {|v| $options[:file] = v}
+opt.on('-s', '--sleep SECONDS', 'sleep time') {|v| $options[:sleep] = v.to_f}
 
 opt.parse!(ARGV)
 
@@ -183,6 +186,6 @@ while line = stdin.gets
 	when /\Astate:\s*(.*)/
 		state = JSON.parse($1)
 		@plot.puts Image.new(state).to_s
-		sleep 0.5
+		sleep $options[:sleep]
 	end
 end
