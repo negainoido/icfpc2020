@@ -200,7 +200,7 @@ impl AI for CympfhAI {
                 }
             }
             // ビーム
-            if ship.x6 - ship.x5 >= 10 {
+            if state.tick >= 5 && ship.x6 - ship.x5 >= 10 {
                 if let Some(target) = find_best_enemy(ship, &enemy_ships) {
                     let power = std::cmp::min(ship.x6 - ship.x5 + ship.x4[2], ship.x4[1]);
                     cmds.push(Command::Shoot {
