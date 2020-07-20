@@ -107,6 +107,29 @@ impl Ship {
         }
         return 256;
     }
+
+    fn close_to(&self, ship: &Ship) -> bool {
+        return (self.position.0 - ship.position.0).abs() <= 10
+            && (self.position.1 - ship.position.1).abs() <= 10;
+    }
+}
+
+fn evaluate_touching(ship: &Ship, target: &Ship) -> i128 {
+    let mut ship = ship.clone();
+    let mut target = ship.clone();
+
+    let mut cnt = 0;
+    for i in 0..100 {
+        if ship.close_to(&target) {
+            cnt += 1;
+        }
+        if !ship.is_safe() {
+            return -1000 + i;
+        }
+        ship.next();
+        target.next();
+    }
+    return cnt;
 }
 
 impl NewMoon {
@@ -148,45 +171,13 @@ impl NewMoon {
         // assert!(expected_ship.position == ship_self.position);
 
         if role_self == Role::Defender {
+            /*
             let (x, y) = gravity_of(&ship_self.position);
             return vec![Command::Accelerate {
                 ship_id: ship_self.id,
                 vector: (x, y),
             }];
-
-        /*
-        let remaining_turn = 256 - _state.tick;
-        if !ship_self.is_safe_after(remaining_turn) {
-            let mut best = -1;
-            let mut bestacc = Command::Accelerate {
-                ship_id: ship_self.id,
-                vector: (0, 0),
-            };
-            for x in -1..=1 {
-                for y in -1..=1 {
-                    if x == 0 && y == 0 {
-                        continue;
-                    }
-                    let mut ship = ship_self.clone();
-                    let acc = Command::Accelerate {
-                        ship_id: ship.id,
-                        vector: (x, y),
-                    };
-                    ship.apply(&acc);
-                    let num = ship.safe_until();
-                    if best < num {
-                        best = num;
-                        bestacc = acc;
-                    }
-                }
-            }
-            return vec![bestacc];
-        }
-        */
-        } else {
-            // attacker
-            let ship = ship_self;
-            let target = ship_enemy.clone();
+            */
 
             let remaining_turn = 256 - _state.tick;
             if !ship_self.is_safe_after(remaining_turn) {
@@ -215,7 +206,37 @@ impl NewMoon {
                 }
                 return vec![bestacc];
             }
+        } else {
+            // attacker
+            let ship = ship_self;
+            let target = ship_enemy.clone();
 
+            let remaining_turn = 256 - _state.tick;
+            {
+                let mut best = -10000;
+                let mut bestacc = Command::Accelerate {
+                    ship_id: ship_self.id,
+                    vector: (0, 0),
+                };
+                for x in -1..=1 {
+                    for y in -1..=1 {
+                        let mut ship = ship.clone();
+                        let acc = Command::Accelerate {
+                            ship_id: ship.id,
+                            vector: (x, y),
+                        };
+                        ship.apply(&acc);
+                        let val = evaluate_touching(&ship, &target);
+                        if best < val {
+                            best = val;
+                            bestacc = acc;
+                        }
+                    }
+                }
+                return vec![bestacc];
+            }
+
+            /*
             if ship.x5 == 0 {
                 // shoot!
 
@@ -228,6 +249,7 @@ impl NewMoon {
                 };
                 return vec![cmd];
             }
+            */
         }
 
         return vec![];
