@@ -391,7 +391,7 @@ while true
 			next_point = plot_and_interact(res["imageList"])
 			next_point = point_to_lambda(next_point[0], next_point[1])
 		rescue SaveAs => e
-			save_data(saving_data, e.to_s)
+			save_data(res, e.to_s)
 			retry
 		rescue HistoryPrev
 			if history.empty?
@@ -423,15 +423,18 @@ while true
 		# interact with galaxy
 		$stderr.puts "Interacting with Galaxy..."
 		send_data = res["imageListAsData"] # "ap ap cons 0 nil"
-		# $stderr.puts "send_data: #{send_data}"
+		send_data = "ap ap cons 1113939892088752268 nil" if $a
+		$a = true
+		$stderr.puts "send_data: #{send_data}"
 		send_data = modulate(send_data)
-		# $stderr.puts "modulated: #{send_data}"
+		$stderr.puts "modulated: #{send_data}"
 		response = `curl -X POST "https://icfpc2020-api.testkontur.ru/aliens/send?apiKey=9ffa61129e0c45378b01b0817117622c" -H "accept: */*" -H "Content-Type: text/plain" -d "#{send_data}"`
 		# $stderr.puts "Response From Galaxy: #{response}"
 		next_point = demodulate(response)
-		# $stderr.puts "Next Point: #{next_point}"
+		$stderr.puts "Next Point: #{next_point}"
 	end
 	res["point"] = next_point
+	$stderr.puts data
 
 	state = res
 end

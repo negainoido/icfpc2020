@@ -72,6 +72,8 @@ dependencies = [
  "icfpc2020",
  "num-derive",
  "num-traits",
+ "serde",
+ "serde_json",
  "sexp",
  "ureq",
 ]
