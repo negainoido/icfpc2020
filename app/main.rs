@@ -1,9 +1,9 @@
 mod ai;
 mod min_mutlti_ai;
 mod moon;
+mod new_moon;
 mod nop_ai;
 mod protocol;
-mod new_moon;
 
 use std::convert::TryFrom;
 use std::env;

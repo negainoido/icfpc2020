@@ -96,7 +96,7 @@ impl TryFrom<List> for Ship {
     }
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, Clone)]
 pub struct ShipState {
     pub fuel: i128,     // 残り燃料
     pub power: i128,    // レーザーの出力
