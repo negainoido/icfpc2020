@@ -97,6 +97,25 @@ impl TryFrom<List> for Ship {
 }
 
 #[derive(Debug, serde::Serialize)]
+pub struct ShipState {
+    pub fuel: i128,     // 残り燃料
+    pub power: i128,    // レーザーの出力
+    pub capacity: i128, // 機体がnopだったときに下がる温度
+    pub units: i128,    // 分裂可能な数(2以上でクローンが実行可能)
+}
+
+impl ShipState {
+    pub fn new(fuel: i128, power: i128, capacity: i128, units: i128) -> Self {
+        ShipState {
+            fuel,
+            power,
+            capacity,
+            units,
+        }
+    }
+}
+
+#[derive(Debug, serde::Serialize)]
 pub enum Command {
     Accelerate {
         ship_id: ShipId,
@@ -112,11 +131,22 @@ pub enum Command {
     },
     Clone {
         ship_id: ShipId,
-        fuel: i128,
-        x2: i128,
-        capacity: i128,
-        units: i128,
+        child: ShipState,
     },
+}
+
+impl From<ShipState> for List {
+    fn from(state: ShipState) -> List {
+        use icfpc2020::modulate::cons;
+        use List::*;
+        cons(
+            Integer(state.fuel),
+            cons(
+                Integer(state.power),
+                cons(Integer(state.capacity), cons(Integer(state.units), Nil)),
+            ),
+        )
+    }
 }
 
 impl From<Command> for List {
@@ -144,23 +174,9 @@ impl From<Command> for List {
                     cons(cons(Integer(x), Integer(y)), cons(Integer(power), Nil)),
                 ),
             ),
-            Clone {
-                ship_id,
-                fuel,
-                x2,
-                capacity,
-                units,
-            } => cons(
-                Integer(3),
-                cons(
-                    Integer(ship_id),
-                    cons(
-                            cons(Integer(fuel),cons(Integer(x2), cons(Integer(capacity), Integer(units))),
-                            ),
-                        Nil
-                    ),
-                ),
-            ),
+            Clone { ship_id, child } => {
+                cons(Integer(3), cons(Integer(ship_id), cons(child.into(), Nil)))
+            }
         }
     }
 }

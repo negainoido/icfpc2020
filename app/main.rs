@@ -13,6 +13,7 @@ use icfpc2020::modulate::{cons, List};
 use protocol::{Command, GameResponse};
 
 use crate::ai::AI;
+use crate::protocol::ShipState;
 
 /*****************************
  * Change this type to your AI
@@ -50,9 +51,9 @@ fn make_join_request(player_key: &i128) -> String {
     sexp.modulate()
 }
 
-fn make_start_request(player_key: &i128, (a, b, c, d): (u32, u32, u32, u32)) -> String {
+fn make_start_request(player_key: &i128, state: ShipState) -> String {
     use List::*;
-    let state = List::from(vec![a as i128, b as i128, c as i128, d as i128]);
+    let state = state.into();
     let sexp = cons(Integer(3), cons(Integer(*player_key), cons(state, Nil)));
     println!("start request: {}", sexp);
     sexp.modulate()
@@ -119,7 +120,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let request = make_start_request(player_key, MyAI::initial_params(&info));
     let resp = send(server_url, &request)?;
 
-    let game_response: GameResponse = GameResponse::try_from(resp).unwrap();
+    let game_response: GameResponse = GameResponse::try_from(resp)?;
     if game_response.is_finished() {
         println!("Game is immediately finished!!");
         return Ok(());
@@ -144,7 +145,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             break;
         }
 
-        let game_response: GameResponse = GameResponse::try_from(resp.unwrap()).unwrap();
+        let game_response: GameResponse = GameResponse::try_from(resp?)?;
         println!(
             "game_response: {}",
             serde_json::to_string(&game_response).unwrap()
