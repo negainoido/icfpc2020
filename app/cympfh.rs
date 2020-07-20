@@ -132,7 +132,6 @@ fn add(a: &Coord, b: &Coord) -> Coord {
 }
 
 const DETONATE_DIST: i128 = 3;
-const BEAM_DIST: i128 = 64;
 
 fn dist_max(x: &Coord, y: &Coord) -> i128 {
     std::cmp::max((x.0 - y.0).abs(), (x.1 - y.1).abs())
@@ -221,12 +220,11 @@ impl AI for CympfhAI {
                 ship_id: ship_self.id,
                 vector: boost,
             }];
-        } else if close_manhattan(&ship_self, &ship_enemy, BEAM_DIST)
-            && (commands_enemy.is_empty() || ship_enemy.velocity == (0, 0))
+        } else if (commands_enemy.is_empty() || ship_enemy.velocity == (0, 0))
             && ship_self.x5 == 0
             && ship_enemy.x4[0] > 0
         {
-            // 近距離で (等速直線運動 OR 停止) ならビーム
+            // (等速直線運動 OR 停止) ならビーム
             let y = if commands_enemy.is_empty() {
                 add(
                     &add(&ship_enemy.position, &ship_enemy.velocity),
