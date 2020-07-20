@@ -119,7 +119,7 @@ impl AI for MinMultiAi {
                     fuel: ship.x4[0] / 2,
                     x2: ship.x4[1],
                     capacity: ship.x4[2] / 2,
-                    units: ship.x4[3],
+                    units: 1,
                 })
             }
         }
