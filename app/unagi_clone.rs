@@ -502,31 +502,36 @@ impl DefenseAI {
 
     fn main(&mut self, _info: &GameInfo, _state: &GameState) -> Vec<Command> {
         assert_eq!(_info.role, Role::Defender);
-        let mother_ship = _state
+        let optinoal_mother_ship = _state
             .ship_and_commands
             .iter()
             .filter(|&(ship, _)| ship.role == Role::Defender)
             .map(|(ship, _)| ship)
             .filter(|ship| ship.x4[3] > 1)
-            .next()
-            .unwrap();
+            .next();
 
-        let maybe_loop_id = self.dfs(&mother_ship.position, &mother_ship.velocity);
-        dbg!(maybe_loop_id);
-        if DefenseAI::is_loop_id(maybe_loop_id) && !self.used_loops.contains(&maybe_loop_id) {
-            self.used_loops.insert(maybe_loop_id);
-            dbg!("CLONE SURUYO", &mother_ship.position);
-            vec![Command::Clone {
-                ship_id: mother_ship.id,
-                child: ShipState {
-                    fuel: 0,
-                    power: 0,
-                    capacity: 0,
-                    units: 1,
-                },
-            }]
-        } else {
-            self.search(&mother_ship)
+        match optinoal_mother_ship {
+            Some(mother_ship) => {
+                let maybe_loop_id = self.dfs(&mother_ship.position, &mother_ship.velocity);
+                dbg!(maybe_loop_id);
+                if DefenseAI::is_loop_id(maybe_loop_id) && !self.used_loops.contains(&maybe_loop_id)
+                {
+                    self.used_loops.insert(maybe_loop_id);
+                    dbg!("CLONE SURUYO", &mother_ship.position);
+                    vec![Command::Clone {
+                        ship_id: mother_ship.id,
+                        child: ShipState {
+                            fuel: 0,
+                            power: 0,
+                            capacity: 0,
+                            units: 1,
+                        },
+                    }]
+                } else {
+                    self.search(&mother_ship)
+                }
+            }
+            None => vec![],
         }
     }
 }
