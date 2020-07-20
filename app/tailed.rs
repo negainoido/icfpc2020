@@ -1,10 +1,12 @@
 #![allow(dead_code, unused_variables)]
 use crate::ai::*;
+use crate::cympfh::XorShift;
 use crate::protocol::*;
 
 pub struct TailedAI {
     state_history: Vec<GameState>,
     command_history: Vec<Vec<Command>>,
+    rand: XorShift,
 }
 fn ships_of_role(state: &GameState, role: Role) -> Vec<Ship> {
     return state
@@ -110,7 +112,7 @@ impl Ship {
 }
 
 impl TailedAI {
-    fn compute(&self, _info: &GameInfo, _state: &GameState) -> Vec<Command> {
+    fn compute(&mut self, _info: &GameInfo, _state: &GameState) -> Vec<Command> {
         let role_self = _info.role;
         let ship_self: &Ship = _state
             .ship_and_commands
@@ -175,6 +177,17 @@ impl TailedAI {
             return vec![bestacc];
         }
 
+        if self.rand.gen::<i128>() % 10 == 0 {
+            let acc = Command::Accelerate {
+                ship_id: ship_self.id,
+                vector: (
+                    self.rand.gen::<i128>() % 3 - 1,
+                    self.rand.gen::<i128>() % 3 - 1,
+                ),
+            };
+            return vec![acc];
+        }
+
         return vec![];
     }
 }
@@ -184,6 +197,7 @@ impl AI for TailedAI {
         Self {
             command_history: vec![],
             state_history: vec![],
+            rand: XorShift::new(),
         }
     }
 

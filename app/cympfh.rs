@@ -109,12 +109,12 @@ impl FromU64 for f32 {
     }
 }
 
-struct XorShift(u64);
+pub struct XorShift(u64);
 impl XorShift {
-    fn new() -> Self {
+    pub fn new() -> Self {
         XorShift(88172645463325252)
     }
-    fn next(&mut self) -> u64 {
+    pub fn next(&mut self) -> u64 {
         let mut x = self.0;
         x = x ^ (x << 13);
         x = x ^ (x >> 7);
@@ -122,7 +122,7 @@ impl XorShift {
         self.0 = x;
         x
     }
-    fn gen<T: FromU64>(&mut self) -> T {
+    pub fn gen<T: FromU64>(&mut self) -> T {
         FromU64::coerce(self.next())
     }
 }
