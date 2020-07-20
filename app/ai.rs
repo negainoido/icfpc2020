@@ -1,9 +1,14 @@
 use crate::protocol::*;
 
 pub trait AI {
-    fn new() -> Self;
+    fn new() -> Self
+    where
+        Self: Sized;
 
-    fn initial_params(info: &GameInfo) -> ShipState {
+    fn initial_params(info: &GameInfo) -> ShipState
+    where
+        Self: Sized,
+    {
         match info.role {
             Role::Attacker => ShipState::new(134, 64, 10, 1),
             Role::Defender => ShipState::new(70, 64, 10, 1),
