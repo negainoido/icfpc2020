@@ -271,7 +271,7 @@ impl AI for CympfhAI {
             }
             // Random Accel
             {
-                if ship.position.0.abs() + ship.position.1.abs() > 32 {
+                if dist_max(&(0, 0), &ship.position) > 32 {
                     if self.rand.gen::<i128>() % 20 == 0 {
                         let g = Section::from(&ship.position).gravity();
                         let boost = (-g.0, -g.1);
