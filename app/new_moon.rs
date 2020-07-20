@@ -38,9 +38,9 @@ impl Ship {
     }
 
     fn apply_commands(&mut self, commands: &Vec<Vec<Command>>) {
-        for cmds in commands.iter() {
+        for cmds in commands {
             // one turn
-            for cmd in cmds.iter() {
+            for cmd in cmds {
                 self.apply(cmd);
             }
             // gravity
