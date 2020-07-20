@@ -16,7 +16,7 @@ impl CympfhAI {
         } else {
             add(
                 &add(&ship.position, &ship.velocity),
-                &Section::from(&ship.position).gravity(),
+                &gravity_of(&ship.position),
             )
         };
         Ship {
@@ -28,62 +28,6 @@ impl CympfhAI {
             x5: ship.x5,
             x6: ship.x6,
             x7: ship.x7,
-        }
-    }
-}
-
-// .----> x0
-// |
-// |
-// v x1
-
-enum Section {
-    Up,
-    Right,
-    Left,
-    Down,
-    DiagRU,
-    DiagRD,
-    DiagLU,
-    DiagLD,
-    O,
-}
-
-impl Section {
-    fn from(x: &Coord) -> Section {
-        use Section::*;
-        let (x0, x1) = *x;
-        if x0 + x1 == 0 && x0 > 0 {
-            DiagRU
-        } else if x0 == x1 && x0 > 0 {
-            DiagRD
-        } else if x0 + x1 == 0 && x0 < 0 {
-            DiagLD
-        } else if x0 == x1 && x0 < 0 {
-            DiagLU
-        } else if x0 > x1.abs() {
-            Right
-        } else if x1 > x0.abs() {
-            Down
-        } else if -x0 > x1.abs() {
-            Left
-        } else if -x1 > x0.abs() {
-            Up
-        } else {
-            O
-        }
-    }
-    fn gravity(&self) -> Coord {
-        match self {
-            Section::Up => (0, 1),
-            Section::Right => (-1, 0),
-            Section::Left => (1, 0),
-            Section::Down => (0, -1),
-            Section::DiagRU => (-1, 1),
-            Section::DiagRD => (-1, -1),
-            Section::DiagLU => (1, 1),
-            Section::DiagLD => (1, -1),
-            Section::O => (0, 0),
         }
     }
 }
@@ -167,26 +111,14 @@ fn dist_manhattan(x: &Coord, y: &Coord) -> i128 {
 }
 
 fn close_manhattan(a: &Ship, b: &Ship, dist_sup: i128) -> bool {
-    let x = add(
-        &add(&a.position, &a.velocity),
-        &Section::from(&a.position).gravity(),
-    );
-    let y = add(
-        &add(&b.position, &b.velocity),
-        &Section::from(&b.position).gravity(),
-    );
+    let x = add(&add(&a.position, &a.velocity), &gravity_of(&a.position));
+    let y = add(&add(&b.position, &b.velocity), &gravity_of(&b.position));
     dist_manhattan(&x, &y) < dist_sup
 }
 
 fn close_max(a: &Ship, b: &Ship, dist_sup: i128) -> bool {
-    let x = add(
-        &add(&a.position, &a.velocity),
-        &Section::from(&a.position).gravity(),
-    );
-    let y = add(
-        &add(&b.position, &b.velocity),
-        &Section::from(&b.position).gravity(),
-    );
+    let x = add(&add(&a.position, &a.velocity), &gravity_of(&a.position));
+    let y = add(&add(&b.position, &b.velocity), &gravity_of(&b.position));
     dist_max(&x, &y) < dist_sup
 }
 
@@ -255,7 +187,7 @@ impl AI for CympfhAI {
                 for &enemy_ship in enemy_ships.iter() {
                     let target = CympfhAI::estimate_next_position(&enemy_ship);
                     if close_max(&target, &self_ship, DETONATE_DIST * 2) {
-                        let g = Section::from(&ship.position).gravity();
+                        let g = gravity_of(&ship.position);
                         let boost = (-g.0, -g.1);
                         cmds.push(Command::Accelerate {
                             ship_id: ship.id,
@@ -273,7 +205,7 @@ impl AI for CympfhAI {
             {
                 if dist_max(&(0, 0), &ship.position) > 32 {
                     if self.rand.gen::<i128>() % 20 == 0 {
-                        let g = Section::from(&ship.position).gravity();
+                        let g = gravity_of(&ship.position);
                         let boost = (-g.0, -g.1);
                         cmds.push(Command::Accelerate {
                             ship_id: ship.id,
