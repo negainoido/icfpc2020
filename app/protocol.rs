@@ -26,9 +26,9 @@ pub enum Role {
 pub struct GameInfo {
     pub x0: i128,
     pub role: Role,
-    pub x2: String,
-    pub x3: String,
-    pub x4: String,
+    pub x2: Vec<i128>,
+    pub x3: Vec<i128>,
+    pub x4: Vec<i128>,
 }
 
 impl TryFrom<List> for GameInfo {
@@ -40,13 +40,14 @@ impl TryFrom<List> for GameInfo {
         let (x2, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (x3, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (x4, l) = l.decompose().expect(&format!("not pair: {}", l));
+
         if l.is_nil() {
             Ok(GameInfo {
                 x0: x0.as_int().unwrap(),
                 role: FromPrimitive::from_i64(role.as_int().unwrap() as i64).unwrap(),
-                x2: format!("{}", x2),
-                x3: format!("{}", x3),
-                x4: format!("{}", x4),
+                x2: x2.as_vec().unwrap(),
+                x3: x3.as_vec().unwrap(),
+                x4: x4.as_vec().unwrap(),
             })
         } else {
             Err(format!("GameInfo l is not nil: {}", l))
@@ -54,12 +55,16 @@ impl TryFrom<List> for GameInfo {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ship {
     pub role: Role,
     pub id: ShipId,
     pub position: Coord,
     pub velocity: Coord,
+    pub x4: Vec<i128>,
+    pub x5: i128,
+    pub x6: i128,
+    pub x7: i128,
 }
 
 impl TryFrom<List> for Ship {
@@ -70,17 +75,20 @@ impl TryFrom<List> for Ship {
         let (shipid, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (position, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (velocity, l) = l.decompose().expect(&format!("not pair: {}", l));
-        let (_x4, l) = l.decompose().expect(&format!("not pair: {}", l));
-        let (_x5, l) = l.decompose().expect(&format!("not pair: {}", l));
-        let (_x6, l) = l.decompose().expect(&format!("not pair: {}", l));
-        let (_x7, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (x4, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (x5, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (x6, l) = l.decompose().expect(&format!("not pair: {}", l));
+        let (x7, l) = l.decompose().expect(&format!("not pair: {}", l));
         if l.is_nil() {
-            dbg!(&position);
             Ok(Ship {
                 role: FromPrimitive::from_i64(role.as_int().unwrap() as i64).unwrap(),
                 id: shipid.as_int().unwrap(),
                 position: position.as_coord().unwrap(),
                 velocity: velocity.as_coord().unwrap(),
+                x4: x4.as_vec().unwrap(),
+                x5: x5.as_int().unwrap(),
+                x6: x6.as_int().unwrap(),
+                x7: x7.as_int().unwrap(),
             })
         } else {
             Err(format!("Ship l is not nil: {}", l))
@@ -100,7 +108,7 @@ pub enum Command {
     Shoot {
         ship_id: ShipId,
         target: Coord,
-        x3: List,
+        power: i128,
     },
 }
 
@@ -121,12 +129,12 @@ impl From<Command> for List {
             Shoot {
                 ship_id,
                 target: (x, y),
-                x3,
+                power,
             } => cons(
                 Integer(2),
                 cons(
                     Integer(ship_id),
-                    cons(cons(Integer(x), Integer(y)), cons(x3, Nil)),
+                    cons(cons(Integer(x), Integer(y)), cons(Integer(power), Nil)),
                 ),
             ),
         }
@@ -136,8 +144,8 @@ impl From<Command> for List {
 #[derive(Default, Debug)]
 pub struct GameState {
     pub tick: i128,
-    pub x1: String,
-    pub ship_and_commands: Vec<(Ship, Vec<Command>)>,
+    pub x1: Vec<i128>,
+    pub ship_and_commands: Vec<(Ship, String)>,
 }
 
 impl TryFrom<List> for GameState {
@@ -157,9 +165,9 @@ impl TryFrom<List> for GameState {
         loop {
             let (cur, cdr) = cur_ship_and_commands.decompose().unwrap();
 
-            let (ship, _command) = cur.decompose().unwrap();
+            let (ship, command) = cur.decompose().unwrap();
             // TODO: parse _command;
-            ship_commands.push((Ship::try_from(*ship).unwrap(), vec![]));
+            ship_commands.push((Ship::try_from(*ship).unwrap(), format!("{}", command)));
 
             if cdr.is_nil() {
                 break;
@@ -170,7 +178,7 @@ impl TryFrom<List> for GameState {
         if l.is_nil() {
             Ok(GameState {
                 tick: tick.as_int().unwrap(),
-                x1: format!("{}", x1),
+                x1: x1.as_vec().unwrap(),
                 ship_and_commands: ship_commands,
             })
         } else {
@@ -200,9 +208,6 @@ impl TryFrom<List> for GameResponse {
         let (stage, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (info, l) = l.decompose().expect(&format!("not pair: {}", l));
         let (state, l) = l.decompose().expect(&format!("not pair: {}", l));
-        dbg!(&stage);
-        dbg!(&info);
-        dbg!(&state);
 
         if l.is_nil() {
             Ok(GameResponse {
@@ -238,9 +243,12 @@ mod test {
         let l = List::demodulate(&join_resp).unwrap();
 
         let game_resp = GameResponse::try_from(l).unwrap();
+        dbg!(&game_resp.stage);
+        dbg!(&game_resp.info);
         assert_eq!(game_resp.stage, GameStage::NotStarted);
         let game_info = game_resp.info;
         assert_eq!(game_info.role, Role::Attacker);
+        assert_eq!(game_info.x4.len(), 4);
     }
 
     #[test]
@@ -268,6 +276,10 @@ mod test {
                 id: 0,
                 position: (-23, -48),
                 velocity: (0, 0),
+                x4: vec![1, 1, 1, 1],
+                x5: 0,
+                x6: 64,
+                x7: 1,
             },
             defender
         );
@@ -280,6 +292,10 @@ mod test {
                 id: 1,
                 position: (23, 48),
                 velocity: (0, 0),
+                x4: vec![1, 1, 1, 1],
+                x5: 0,
+                x6: 64,
+                x7: 1,
             },
             attacker,
         );

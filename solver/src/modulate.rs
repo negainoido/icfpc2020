@@ -47,6 +47,24 @@ impl List {
     pub fn is_nil(self: &List) -> bool {
         *self == List::Nil
     }
+
+    pub fn as_vec(self: &List) -> Option<Vec<i128>> {
+        let mut ret = vec![];
+        let mut cur = self;
+        loop {
+            match cur {
+                List::Nil => {
+                    break;
+                }
+                List::Cons(x, xs) => {
+                    ret.push(x.as_int()?);
+                    cur = xs;
+                }
+                _ => return None,
+            }
+        }
+        Some(ret)
+    }
 }
 
 impl fmt::Display for List {
