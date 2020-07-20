@@ -117,7 +117,7 @@ impl AI for MinMultiAi {
         my_ships.sort_by(|s, t| s.id.cmp(&t.id));
 
         let mut commands = Vec::<Command>::new();
-        dbg!(my_ships.len());
+        // dbg!(my_ships.len());
 
         for ship in my_ships.iter() {
             let mut boost = Moon::get_boost(&ship.position, &ship.velocity);
@@ -136,7 +136,7 @@ impl AI for MinMultiAi {
                 }
             }
 
-            dbg!(&boost);
+            // dbg!(&boost);
             if boost != (0, 0) && ship.x4[0] > 0 {
                 commands.push(Command::Accelerate {
                     ship_id: ship.id.clone(),

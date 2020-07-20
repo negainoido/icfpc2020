@@ -1,6 +1,6 @@
 #![allow(dead_code, unused_variables)]
 use crate::ai::*;
-use crate::new_moon::NewMoon;
+use crate::moon::Moon;
 use crate::protocol::*;
 
 pub struct CympfhAI {
@@ -158,9 +158,15 @@ impl AI for CympfhAI {
                 continue;
             }
             // 衛星軌道
-            if let Some(boost) = NewMoon::get_boost(&ship, &state) {
-                cmds.push(boost);
-                continue;
+            {
+                let boost = Moon::get_boost(&ship.position, &ship.velocity);
+                if boost != (0, 0) {
+                    cmds.push(Command::Accelerate {
+                        ship_id: ship.id,
+                        vector: boost,
+                    });
+                    continue;
+                }
             }
             // ビーム
             if ship.x5 <= 10 {
