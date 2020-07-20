@@ -96,10 +96,20 @@ impl Ship {
         }
         return ship.is_safe();
     }
+
+    fn safe_until(&self) -> i128 {
+        let mut ship = self.clone();
+        for i in 0..256 {
+            if !ship.is_safe() {
+                return i;
+            }
+            ship.next();
+        }
+        return 256;
+    }
 }
 
 impl TailedAI {
-    fn search_safe(&self) {}
     fn compute(&self, _info: &GameInfo, _state: &GameState) -> Vec<Command> {
         let role_self = _info.role;
         let ship_self: &Ship = _state
@@ -139,6 +149,11 @@ impl TailedAI {
 
         let remaining_turn = 256 - _state.tick;
         if !ship_self.is_safe_after(remaining_turn) {
+            let mut best = -1;
+            let mut bestacc = Command::Accelerate {
+                ship_id: ship_self.id,
+                vector: (0, 0),
+            };
             for x in -1..=1 {
                 for y in -1..=1 {
                     if x == 0 && y == 0 {
@@ -150,11 +165,14 @@ impl TailedAI {
                         vector: (x, y),
                     };
                     ship.apply(&acc);
-                    if ship.is_safe_after(remaining_turn) {
-                        return vec![acc];
+                    let num = ship.safe_until();
+                    if best < num {
+                        best = num;
+                        bestacc = acc;
                     }
                 }
             }
+            return vec![bestacc];
         }
 
         return vec![];
