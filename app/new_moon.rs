@@ -7,25 +7,6 @@ pub struct NewMoon {
     command_history: Vec<Vec<Command>>,
 }
 
-fn gravity_of((x, y): &Coord) -> Coord {
-    let mut gx = 0;
-    let mut gy = 0;
-
-    if *x >= y.abs() {
-        gx -= 1;
-    }
-    if *y >= x.abs() {
-        gy -= 1;
-    }
-    if *x <= -y.abs() {
-        gx += 1;
-    }
-    if *y <= -x.abs() {
-        gy += 1;
-    }
-    return (gx, gy);
-}
-
 impl Ship {
     fn apply(&mut self, command: &Command) {
         match command {
