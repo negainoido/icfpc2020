@@ -1,9 +1,9 @@
 mod ai;
+mod cympfh;
 mod full_moon;
 mod min_mutlti_ai;
 mod moon;
 mod new_moon;
-mod nop_ai;
 mod protocol;
 
 use std::convert::TryFrom;
@@ -15,12 +15,13 @@ use icfpc2020::modulate::{cons, List};
 use protocol::{Command, GameResponse, Role};
 
 use crate::ai::AI;
+use crate::cympfh::CympfhAI;
 use crate::protocol::ShipState;
 
 /*****************************
  * Change this type to your AIs
  */
-type AttackerAI = min_mutlti_ai::MinMultiAi;
+type AttackerAI = CympfhAI;
 type DefenderAI = new_moon::NewMoon;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {

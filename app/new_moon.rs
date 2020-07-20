@@ -82,6 +82,37 @@ impl Ship {
 }
 
 impl NewMoon {
+    pub fn get_boost(ship: &Ship, _state: &GameState) -> Option<Command> {
+        let remaining_turn = 256 - _state.tick;
+        if !ship.is_safe_after(remaining_turn) {
+            let mut best = -1;
+            let mut bestacc = Command::Accelerate {
+                ship_id: ship.id,
+                vector: (0, 0),
+            };
+            for x in -1..=1 {
+                for y in -1..=1 {
+                    if x == 0 && y == 0 {
+                        continue;
+                    }
+                    let mut ship = ship.clone();
+                    let acc = Command::Accelerate {
+                        ship_id: ship.id,
+                        vector: (x, y),
+                    };
+                    ship.apply(&acc);
+                    let num = ship.safe_until();
+                    if best < num {
+                        best = num;
+                        bestacc = acc;
+                    }
+                }
+            }
+            return Some(bestacc);
+        }
+        None
+    }
+
     fn compute(&self, info: &GameInfo, state: &GameState) -> Vec<Command> {
         let role_self = info.role;
         let ship_self: &Ship = state.get_ships(&role_self)[0];
