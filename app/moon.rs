@@ -186,33 +186,6 @@ fn start_with_corner() {
     }
 }
 
-fn next(pos: &mut Coord, velocity: &mut Coord) {
-    let (gx, gy) = gravity_of(pos);
-    velocity.0 += gx;
-    velocity.1 += gy;
-    pos.0 += velocity.0;
-    pos.1 += velocity.1;
-}
-
-fn no_crash(start_pos: &Coord) -> bool {
-    const ROUND: usize = 512;
-    let mut cur_velocity = (0, 0);
-    let mut cur_pos = start_pos.clone();
-    for _i in 0..ROUND {
-        let boost = Moon::get_boost(&cur_pos, &cur_velocity);
-        // NOTE: boost is the the opposite direction.
-        cur_velocity.0 -= boost.0;
-        cur_velocity.1 -= boost.1;
-        next(&mut cur_pos, &mut cur_velocity);
-        dbg!(boost, cur_velocity, cur_pos);
-        if cur_pos.0.abs() <= 16 && cur_pos.1.abs() <= 16 {
-            return false;
-        }
-    }
-
-    true
-}
-
 #[test]
 fn test_get_boost() {
     for x in -48..=48 {
