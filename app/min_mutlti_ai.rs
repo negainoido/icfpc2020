@@ -17,9 +17,9 @@ const CLONE_FUEL_THRESHOLD: i128 = 32;
 const CLONE_CAPCITY_THRESHOLD: i128 = 4;
 
 fn get_distance(s: &Coord, t: &Coord) -> f64 {
-    let x = (s.0 - t.0)  as f64;
-    let y = (s.1 - t.1)  as f64;
-    (x*x + y*y).sqrt()
+    let x = (s.0 - t.0) as f64;
+    let y = (s.1 - t.1) as f64;
+    (x * x + y * y).sqrt()
 }
 
 const SHOT_THRESHOLD: f64 = 200.0;
@@ -52,6 +52,12 @@ impl AI for MinMultiAi {
         }
     }
 
+    fn initial_params(info: &GameInfo) -> ShipState {
+        match info.role {
+            Role::Attacker => ShipState::new(134, 64, 10, 1),
+            Role::Defender => ShipState::new(128, 0, 16, 2),
+        }
+    }
 
     fn main(&mut self, info: &GameInfo, state: &GameState) -> Vec<Command> {
         let my_role = &info.role;
@@ -90,37 +96,38 @@ impl AI for MinMultiAi {
             }
 
             dbg!(&boost);
-            if boost != (0, 0) {
+            if boost != (0, 0) && ship.x4[0] > 0 {
                 commands.push(Command::Accelerate {
                     ship_id: ship.id.clone(),
                     vector: boost,
                 });
             } else {
-                if enemy_ships.is_empty() {
-                    continue;
-                }
-                let target = find_target(ship, &enemy_ships);
-                if let Some(target_ship) = target {
-                    let next_target_pos =
-                        Moon::get_next_pos(&target_ship.position, &target_ship.velocity);
-                    commands.push(Command::Shoot {
-                        ship_id: ship.id.clone(),
-                        target: next_target_pos,
-                        power: 8,
-                    });
+                if !enemy_ships.is_empty() && ship.x4[1] > 0 {
+                    let target = find_target(ship, &enemy_ships);
+                    if let Some(target_ship) = target {
+                        let next_target_pos =
+                            Moon::get_next_pos(&target_ship.position, &target_ship.velocity);
+                        commands.push(Command::Shoot {
+                            ship_id: ship.id.clone(),
+                            target: next_target_pos,
+                            power: ship.x4[1],
+                        });
+                    }
                 }
             }
             if ship.x4[3] > 1
                 && ship.x4[0] / 2 >= CLONE_FUEL_THRESHOLD
                 && ship.x4[2] / 2 >= CLONE_CAPCITY_THRESHOLD
             {
-                commands.push(Command::Clone {
+                commands.push(dbg!(Command::Clone {
                     ship_id: ship.id.clone(),
-                    fuel: ship.x4[0] / 2,
-                    x2: ship.x4[1],
-                    capacity: ship.x4[2] / 2,
-                    units: 1,
-                })
+                    child: ShipState {
+                        fuel: 0,
+                        power: 0,
+                        capacity: 0,
+                        units: 1
+                    },
+                }))
             }
         }
 
