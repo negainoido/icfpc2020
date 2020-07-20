@@ -4,7 +4,7 @@ use std::fmt;
 use crate::eval::Evaluator;
 use crate::typing::{ExprNode, TypedExpr, TypedSymbol};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
 pub enum List {
     Cons(Box<List>, Box<List>),
     Integer(i128),

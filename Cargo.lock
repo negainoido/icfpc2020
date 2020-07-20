@@ -535,6 +535,7 @@ dependencies = [
  "proconio",
  "rand 0.7.3",
  "regex",
+ "serde",
  "sexp",
  "structopt",
  "tempfile",

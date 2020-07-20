@@ -1,5 +1,7 @@
 mod ai;
 mod cympfh;
+mod full_moon;
+mod min_mutlti_ai;
 mod moon;
 mod new_moon;
 mod protocol;
@@ -10,16 +12,17 @@ use std::env;
 use ureq;
 
 use icfpc2020::modulate::{cons, List};
-use protocol::{Command, GameResponse};
+use protocol::{Command, GameResponse, Role};
 
 use crate::ai::AI;
 use crate::cympfh::CympfhAI;
 use crate::protocol::ShipState;
 
 /*****************************
- * Change this type to your AI
+ * Change this type to your AIs
  */
-type MyAI = CympfhAI;
+type AttackerAI = CympfhAI;
+type DefenderAI = new_moon::NewMoon;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
@@ -117,8 +120,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut info = game_response.info;
     println!("info: {:?}", info);
 
+    let (mut ai, init_state): (Box<dyn AI>, ShipState) = match info.role {
+        Role::Attacker => (
+            Box::new(AttackerAI::new()),
+            AttackerAI::initial_params(&info),
+        ),
+        Role::Defender => (
+            Box::new(DefenderAI::new()),
+            DefenderAI::initial_params(&info),
+        ),
+    };
+
     // Start
-    let request = make_start_request(player_key, MyAI::initial_params(&info));
+    let request = make_start_request(player_key, init_state);
     let resp = send(server_url, &request)?;
 
     let game_response: GameResponse = GameResponse::try_from(resp)?;
@@ -129,7 +143,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut state = game_response.state;
 
-    let mut ai = MyAI::new();
     let mut turn = 0;
     // Game start
     loop {
