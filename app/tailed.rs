@@ -109,6 +109,13 @@ impl Ship {
         }
         return 256;
     }
+
+    fn accelerate(&self, vector: Coord) -> Command {
+        Command::Accelerate {
+            ship_id: self.id,
+            vector: vector,
+        }
+    }
 }
 
 impl TailedAI {
@@ -177,15 +184,17 @@ impl TailedAI {
             return vec![bestacc];
         }
 
-        if self.rand.gen::<i128>() % 10 == 0 {
-            let acc = Command::Accelerate {
-                ship_id: ship_self.id,
-                vector: (
-                    self.rand.gen::<i128>() % 3 - 1,
-                    self.rand.gen::<i128>() % 3 - 1,
-                ),
-            };
-            return vec![acc];
+        if role_self == Role::Defender {
+            let ship = ship_self;
+            let fuel = ship.x4[0];
+            let rate = (remaining_turn + 1) / fuel;
+            println!("rate random move: {}, {}, {}", rate, fuel, remaining_turn);
+            if self.rand.gen::<i128>() % rate == 0 {
+                let x = self.rand.gen::<i128>() % 3 - 1;
+                let y = self.rand.gen::<i128>() % 3 - 1;
+                println!("random move! {:?}", (x, y));
+                return vec![ship.accelerate((x, y))];
+            }
         }
 
         return vec![];
