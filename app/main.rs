@@ -18,12 +18,13 @@ use icfpc2020::modulate::{cons, List};
 use protocol::{Command, GameResponse, Role};
 
 use crate::ai::AI;
+use crate::cympfh::CympfhAI;
 use crate::protocol::ShipState;
 
 /*****************************
  * Change this type to your AIs
  */
-type AttackerAI = new_unagi::UnagiCloneAI;
+type AttackerAI = CympfhAI;
 type DefenderAI = new_unagi::UnagiCloneAI;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
