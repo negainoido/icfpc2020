@@ -117,7 +117,6 @@ impl AI for MinMultiAi {
         my_ships.sort_by(|s, t| s.id.cmp(&t.id));
 
         let mut commands = Vec::<Command>::new();
-        dbg!(my_ships.len());
 
         for ship in my_ships.iter() {
             let mut boost = Moon::get_boost(&ship.position, &ship.velocity);
@@ -136,7 +135,6 @@ impl AI for MinMultiAi {
                 }
             }
 
-            dbg!(&boost);
             if boost != (0, 0) && ship.x4[0] > 0 {
                 commands.push(Command::Accelerate {
                     ship_id: ship.id.clone(),
@@ -158,7 +156,7 @@ impl AI for MinMultiAi {
             }
             // クローン可能
             if ship.x4[3] > 1 {
-                commands.push(dbg!(Command::Clone {
+                commands.push(Command::Clone {
                     ship_id: ship.id.clone(),
                     child: ShipState {
                         fuel: ship.x4[0] / ship.x4[3],
@@ -166,7 +164,7 @@ impl AI for MinMultiAi {
                         capacity: ship.x4[2] / ship.x4[3],
                         units: 1
                     },
-                }));
+                });
             }
         }
 

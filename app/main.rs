@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+mod dual_attack;
 mod ai;
 mod cympfh;
 mod full_moon;
@@ -24,8 +26,8 @@ use crate::protocol::ShipState;
 /*****************************
  * Change this type to your AIs
  */
-type AttackerAI = CympfhAI;
-type DefenderAI = unagi_clone::UnagiCloneAI;
+type AttackerAI = dual_attack::CympfhAI;
+type DefenderAI = min_mutlti_ai::MinMultiAi;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
