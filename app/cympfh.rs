@@ -32,23 +32,6 @@ impl CympfhAI {
     }
 }
 
-// .----> x0
-// |
-// |
-// v x1
-
-enum Section {
-    Up,
-    Right,
-    Left,
-    Down,
-    DiagRU,
-    DiagRD,
-    DiagLU,
-    DiagLD,
-    O,
-}
-
 pub trait FromU64 {
     fn coerce(x: u64) -> Self;
 }
