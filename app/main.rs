@@ -4,6 +4,7 @@ mod full_moon;
 mod min_mutlti_ai;
 mod moon;
 mod new_moon;
+mod new_unagi;
 mod protocol;
 mod unagi_clone;
 mod utility;
