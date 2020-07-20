@@ -2,6 +2,7 @@
 use crate::ai::*;
 use crate::new_moon::NewMoon;
 use crate::protocol::*;
+use crate::utility::*;
 
 pub struct CympfhAI {
     rand: XorShift,

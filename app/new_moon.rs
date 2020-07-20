@@ -1,6 +1,7 @@
 #![allow(dead_code, unused_variables)]
 use crate::ai::*;
 use crate::protocol::*;
+use crate::utility::*;
 
 pub struct NewMoon {
     state_history: Vec<GameState>,
