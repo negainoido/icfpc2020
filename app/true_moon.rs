@@ -176,6 +176,9 @@ impl TrueMoon {
 
             for ax in -1..=1 {
                 for ay in -1..=1 {
+                    if ax == 0 && ay == 0 {
+                        continue;
+                    }
                     let acceleration = Coord::from((ax, ay));
                     let accelerated_velocity = Self::add_coord(&velocity, &acceleration);
                     let new_velocity = Self::new_velocity(&position, &accelerated_velocity);
