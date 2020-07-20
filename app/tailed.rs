@@ -36,34 +36,43 @@ fn gravity_of(pos: &Coord) -> Coord {
     return (gx, gy);
 }
 
-impl TailedAI {
-    fn simulate(&self, ship_shadow: &Ship, commands: &Vec<Vec<Command>>) -> Ship {
-        let mut ship: Ship = ship_shadow.clone();
-        println!("start ship: {:?}", ship);
+impl Ship {
+    fn apply(&mut self, command: &Command) {
+        match command {
+            Command::Accelerate { ship_id, vector } => {
+                if *ship_id != self.id {
+                    return;
+                }
+
+                self.velocity.0 -= vector.0;
+                self.velocity.1 -= vector.1;
+            }
+            _ => (),
+        };
+    }
+
+    fn next(&mut self) {
+        let (gx, gy) = gravity_of(&self.position);
+        self.velocity.0 += gx;
+        self.velocity.1 += gy;
+
+        self.position.0 += self.velocity.0;
+        self.position.1 += self.velocity.1;
+    }
+
+    fn apply_commands(&mut self, commands: &Vec<Vec<Command>>) {
         for cmds in commands.iter() {
             // one turn
             for cmd in cmds.iter() {
-                if let Command::Accelerate { ship_id, vector } = cmd {
-                    if *ship_id != ship.id {
-                        continue;
-                    }
-
-                    println!("accelerate: {:?}", vector);
-                    ship.velocity.0 -= vector.0;
-                    ship.velocity.1 -= vector.1;
-                }
+                self.apply(cmd);
             }
             // gravity
-            let (gx, gy) = gravity_of(&ship.position);
-            ship.velocity.0 += gx;
-            ship.velocity.1 += gy;
-
-            ship.position.0 += ship.velocity.0;
-            ship.position.1 += ship.velocity.1;
+            self.next();
         }
-        return ship;
     }
+}
 
+impl TailedAI {
     fn compute(&self, _info: &GameInfo, _state: &GameState) -> Vec<Command> {
         let role_self = _info.role;
         let ship_self: &Ship = _state
@@ -90,7 +99,11 @@ impl TailedAI {
             .unwrap();
 
         let ships = ships_of_role(&self.state_history[0], role_self);
-        let expected_ship = self.simulate(&ships[0], &self.command_history);
+        let expected_ship = {
+            let mut ship = ships[0].clone();
+            ship.apply_commands(&self.command_history);
+            ship
+        };
 
         println!("expected ship: {:?}", expected_ship);
         println!("true ship    : {:?}", ship_self);
