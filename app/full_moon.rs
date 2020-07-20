@@ -1,7 +1,7 @@
 use crate::ai::AI;
 use crate::moon::Moon;
 use crate::protocol::*;
-// use crate::new_moon::NewMoon;
+use crate::utility::*;
 
 type BaseMoon = Moon; // NewMoon
 
