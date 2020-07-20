@@ -181,6 +181,34 @@ impl AI for CympfhAI {
                     continue;
                 }
             }
+            // Swing-By
+            if role == Attacker {
+                let mut done = false;
+                for &enemy_ship in enemy_ships.iter() {
+                    let target = CympfhAI::estimate_next_position(&enemy_ship);
+                    let self_nop = CympfhAI::estimate_next_position(&ship);
+                    let mut self_acc = ship.clone();
+                    let g = gravity_of(&self_acc.position);
+                    self_acc.velocity.0 += g.0;
+                    self_acc.velocity.1 += g.1;
+                    self_acc = CympfhAI::estimate_next_position(&self_acc);
+                    let d1 = dist_manhattan(&target.position, &self_nop.position);
+                    let d2 = dist_manhattan(&target.position, &self_acc.position);
+                    if d2 < d1 {
+                        let g = gravity_of(&ship.position);
+                        let boost = (-g.0, -g.1);
+                        cmds.push(Command::Accelerate {
+                            ship_id: ship.id,
+                            vector: boost,
+                        });
+                        done = true;
+                    }
+                    break;
+                }
+                if done {
+                    continue;
+                }
+            }
             // 自爆回避
             if role == Defender {
                 let mut done = false;
