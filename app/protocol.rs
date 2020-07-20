@@ -155,8 +155,9 @@ impl From<Command> for List {
                 cons(
                     Integer(ship_id),
                     cons(
-                        Integer(fuel),
-                        cons(Integer(x2), cons(Integer(capacity), Integer(units))),
+                            cons(Integer(fuel),cons(Integer(x2), cons(Integer(capacity), Integer(units))),
+                            ),
+                        Nil
                     ),
                 ),
             ),
