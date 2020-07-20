@@ -11,7 +11,9 @@ class Image
 	def to_s()
 		io = StringIO.new
 
-		io.puts "set yrange [:] reverse"
+		io.puts 'set object 1 rect from -16,-16 to 16,16 fc rgb "white" behind'
+		io.puts "set xrange [-130:130]"
+		io.puts "set yrange [-130:130]"
 		io.puts "set size ratio -1"
 
 		@role2machines.each do |role, machines|

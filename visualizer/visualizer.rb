@@ -182,7 +182,7 @@ while line = stdin.gets
 	case line
 	when /\Astate:\s*(.*)/
 		state = JSON.parse($1)
-		pp state
-		puts Image.new(state).to_s
+		@plot.puts Image.new(state).to_s
+		sleep 0.5
 	end
 end
