@@ -9,20 +9,20 @@ pub type ShipId = i128;
 
 pub type Coord = (i128, i128);
 
-#[derive(FromPrimitive, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(FromPrimitive, Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 pub enum GameStage {
     NotStarted = 0,
     Started = 1,
     Finished = 2,
 }
 
-#[derive(FromPrimitive, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(FromPrimitive, Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 pub enum Role {
     Attacker = 0,
     Defender = 1,
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub struct GameInfo {
     pub x0: i128,
     pub role: Role,
@@ -55,7 +55,7 @@ impl TryFrom<List> for GameInfo {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct Ship {
     pub role: Role,
     pub id: ShipId,
@@ -96,7 +96,7 @@ impl TryFrom<List> for Ship {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub enum Command {
     Accelerate {
         ship_id: ShipId,
@@ -165,7 +165,7 @@ impl From<Command> for List {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, serde::Serialize)]
 pub struct GameState {
     pub tick: i128,
     pub x1: Vec<i128>,
@@ -211,7 +211,7 @@ impl TryFrom<List> for GameState {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub struct GameResponse {
     pub stage: GameStage,
     pub info: GameInfo,
