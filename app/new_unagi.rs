@@ -311,7 +311,7 @@ impl DefenseAI {
                 self.used_loops.insert(maybe_loop_id);
                 self.shipid2loopid.insert(mother_ship.id, maybe_loop_id);
 
-                if last_vec != (0, 0) {
+                if last_vec != (0, 0) && mother_ship.x4[0] > 0 {
                     return vec![Command::Accelerate {
                         ship_id: mother_ship.id,
                         vector: last_vec,
