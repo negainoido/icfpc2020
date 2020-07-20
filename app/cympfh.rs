@@ -122,6 +122,38 @@ fn close_max(a: &Ship, b: &Ship, dist_sup: i128) -> bool {
     dist_max(&x, &y) < dist_sup
 }
 
+fn get_distance(p: &Coord, q: &Coord) -> f64 {
+    let px = p.0 as f64;
+    let py = p.1 as f64;
+    let qx = q.0 as f64;
+    let qy = q.1 as f64;
+    let dx = qx - px;
+    let dy = qy - py;
+    (dx*dx + dy*dy).sqrt()
+}
+
+fn dist(x: f64, y: f64) -> f64 {
+    (x * x + y * y).sqrt()
+}
+
+fn find_best_enemy<'a>(ship: &Ship, enemies: &Vec<&'a Ship>) -> Option<&'a Ship> {
+    let result = enemies.iter().filter(|&e| {
+        let ex = e.velocity.0 as f64;
+        let ey = e.velocity.1 as f64;
+        let sx = -ship.velocity.0 as f64;
+        let sy = -ship.velocity.1 as f64;
+        let cos = (ex*sx + ey*sy) / (dist(ex,ey) * dist(sx, sy));
+
+
+        cos > 0.8 &&
+            get_distance(&CympfhAI::estimate_next_position(e).position, &CympfhAI::estimate_next_position(ship).position) < 150.0
+    }).max_by(|a,b| {
+        a.x5.cmp(&b.x5)
+    }).map(|e| *e);
+
+    result
+}
+
 impl AI for CympfhAI {
     fn new() -> Self {
         Self {
@@ -168,20 +200,14 @@ impl AI for CympfhAI {
                 }
             }
             // ビーム
-            if ship.x5 <= 10 {
-                let mut done = false;
-                for &enemy_ship in enemy_ships.iter() {
-                    let target = CympfhAI::estimate_next_position(&enemy_ship);
-                    let power = ship.x6 - ship.x5;
+            if ship.x6 - ship.x5 >= 10 {
+                if let Some(target) = find_best_enemy(ship, &enemy_ships) {
+                    let power = ship.x6 - ship.x5 + ship.x4[2];
                     cmds.push(Command::Shoot {
                         ship_id: ship.id,
                         target: target.position,
                         power,
                     });
-                    done = true;
-                    break;
-                }
-                if done {
                     continue;
                 }
             }
