@@ -180,6 +180,8 @@ end
 
 while line = stdin.gets
 	case line
+	when /\Acommand:\s*(.*)/
+		puts $1
 	when /\Astate:\s*(.*)/
 		state = JSON.parse($1)
 		@plot.puts Image.new(state).to_s

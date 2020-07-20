@@ -1,9 +1,9 @@
 mod ai;
+mod attacker;
 mod min_mutlti_ai;
 mod moon;
 mod nop_ai;
 mod protocol;
-mod new_moon;
 
 use std::convert::TryFrom;
 use std::env;
@@ -19,7 +19,7 @@ use crate::protocol::ShipState;
 /*****************************
  * Change this type to your AI
  */
-type MyAI = min_mutlti_ai::MinMultiAi;
+type MyAI = attacker::NewMoon;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
