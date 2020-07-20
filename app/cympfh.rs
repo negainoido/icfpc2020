@@ -102,6 +102,10 @@ fn add(a: &Coord, b: &Coord) -> Coord {
 
 const DETONATE_DIST: i128 = 3;
 
+fn dist(p1: Coord, p2: Coord) -> i128 {
+    (p1.0 - p2.0) * (p1.0 - p2.0) + (p1.1 - p2.1) * (p1.1 - p2.1)
+}
+
 fn dist_max(x: &Coord, y: &Coord) -> i128 {
     std::cmp::max((x.0 - y.0).abs(), (x.1 - y.1).abs())
 }
@@ -120,6 +124,32 @@ fn close_max(a: &Ship, b: &Ship, dist_sup: i128) -> bool {
     let x = add(&add(&a.position, &a.velocity), &gravity_of(&a.position));
     let y = add(&add(&b.position, &b.velocity), &gravity_of(&b.position));
     dist_max(&x, &y) < dist_sup
+}
+
+fn shoot_target<'a>(
+    my_ship: &Ship,
+    enemy_ships: &Vec<&'a Ship>,
+    max_power: i128,
+) -> Option<(&'a Ship, i128)> {
+    if max_power <= 0 {
+        return None;
+    }
+
+    let mut ei: i32 = -1;
+    let mut nearest_dist: i128 = std::i128::MAX;
+    for i in 0..enemy_ships.len() {
+        let e = &enemy_ships[i];
+        let e_d = dist(my_ship.position, e.position);
+        if nearest_dist > e_d {
+            nearest_dist = e_d;
+            ei = i as i32;
+        }
+    }
+    if ei < 0 {
+        return None;
+    }
+
+    Some((&enemy_ships[ei as usize], max_power))
 }
 
 impl AI for CympfhAI {
@@ -168,22 +198,17 @@ impl AI for CympfhAI {
                 }
             }
             // ビーム
-            if ship.x5 <= 10 {
-                let mut done = false;
-                for &enemy_ship in enemy_ships.iter() {
-                    let target = CympfhAI::estimate_next_position(&enemy_ship);
-                    let power = ship.x6 - ship.x5;
+            match shoot_target(ship, &enemy_ships, ship.x6 - ship.x5) {
+                Some((enemy_ship, power)) => {
+                    let target = CympfhAI::estimate_next_position(enemy_ship);
                     cmds.push(Command::Shoot {
                         ship_id: ship.id,
                         target: target.position,
                         power,
                     });
-                    done = true;
-                    break;
-                }
-                if done {
                     continue;
                 }
+                None => {}
             }
             // Swing-By
             if role == Attacker {
