@@ -145,7 +145,7 @@ impl NewMoon {
         println!("expected ship: {:?}", expected_ship);
         println!("true ship    : {:?}", ship_self);
 
-        assert!(expected_ship.position == ship_self.position);
+        // assert!(expected_ship.position == ship_self.position);
 
         if role_self == Role::Defender {
             let (x, y) = gravity_of(&ship_self.position);
@@ -186,7 +186,7 @@ impl NewMoon {
         } else {
             // attacker
             let ship = ship_self;
-            let mut target = ship_enemy.clone();
+            let target = ship_enemy.clone();
 
             let remaining_turn = 256 - _state.tick;
             if !ship_self.is_safe_after(remaining_turn) {
@@ -219,7 +219,7 @@ impl NewMoon {
             if ship.x5 == 0 {
                 // shoot!
 
-                target.next();
+                //target.next();
                 let power = ship.x4[1];
                 let cmd = Command::Shoot {
                     ship_id: ship.id.clone(),
