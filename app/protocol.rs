@@ -227,6 +227,16 @@ impl TryFrom<List> for GameState {
     }
 }
 
+impl GameState {
+    pub fn get_ships(self: &GameState, role: &Role) -> Vec<&Ship> {
+        self.ship_and_commands
+            .iter()
+            .map(|(s, _)| s)
+            .filter(|s| s.role == *role)
+            .collect()
+    }
+}
+
 #[derive(Debug, serde::Serialize)]
 pub struct GameResponse {
     pub stage: GameStage,
