@@ -22,7 +22,7 @@ fn get_distance(s: &Coord, t: &Coord) -> f64 {
     (x*x + y*y).sqrt()
 }
 
-const SHOT_THRESHOLD: f64 = 30.0;
+const SHOT_THRESHOLD: f64 = 200.0;
 
 fn find_target<'a>(ship: &Ship, enemies: &Vec<&'a Ship>) -> Option<&'a Ship> {
     let mut result: Option<&Ship> = None;
