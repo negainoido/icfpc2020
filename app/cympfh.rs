@@ -220,19 +220,16 @@ impl AI for CympfhAI {
                 ship_id: ship_self.id,
                 vector: boost,
             }];
-        } else if (commands_enemy.is_empty() || ship_enemy.velocity == (0, 0))
-            && ship_self.x5 == 0
-            && ship_enemy.x4[0] > 0
-        {
+        } else if ship_self.x5 == 0 && ship_enemy.x4[0] > 0 {
             // (等速直線運動 OR 停止) ならビーム
-            let y = if commands_enemy.is_empty() {
+            let y = if ship_enemy.velocity == (0, 0) {
+                // 停止してる
+                ship_enemy.position
+            } else {
                 add(
                     &add(&ship_enemy.position, &ship_enemy.velocity),
                     &Section::from(&ship_enemy.position).gravity(),
                 )
-            } else {
-                // 停止してる
-                ship_enemy.position
             };
             let power = ship_self.x6;
             return vec![Command::Shoot {
