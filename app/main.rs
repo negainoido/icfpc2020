@@ -24,7 +24,7 @@ use crate::protocol::ShipState;
  * Change this type to your AIs
  */
 type AttackerAI = CympfhAI;
-type DefenderAI = min_mutlti_ai::MinMultiAi;
+type DefenderAI = unagi_clone::UnagiCloneAI;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
