@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+mod garasubo;
 mod ai;
 mod cympfh;
 mod full_moon;
@@ -23,7 +25,7 @@ use crate::protocol::ShipState;
 /*****************************
  * Change this type to your AIs
  */
-type AttackerAI = CympfhAI;
+type AttackerAI = garasubo::CympfhAI;
 type DefenderAI = unagi_clone::UnagiCloneAI;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
