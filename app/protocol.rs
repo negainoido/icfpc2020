@@ -228,7 +228,7 @@ impl TryFrom<List> for GameState {
 }
 
 impl GameState {
-    pub fn get_ships(self: &GameState, role: &Role) -> Vec<&Ship> {
+    pub fn get_ships(&self, role: &Role) -> Vec<&Ship> {
         self.ship_and_commands
             .iter()
             .map(|(s, _)| s)
