@@ -111,7 +111,11 @@ impl Moon {
             } else if *y < -*x {
                 WallType::B
             } else {
-                WallType::A
+                if *y == -*x {
+                    WallType::B
+                } else {
+                    WallType::A
+                }
             }
         } else {
             // B, C or D.
@@ -120,7 +124,11 @@ impl Moon {
             } else if *y < *x {
                 WallType::B
             } else {
-                WallType::C
+                if *y == -*x {
+                    WallType::D
+                } else {
+                    WallType::C
+                }
             }
         }
     }
@@ -167,5 +175,13 @@ impl Moon {
                 (1, -1)
             }
         }
+    }
+}
+
+#[test]
+fn start_with_corner() {
+    let init_velocity = (0, 0);
+    for init_pos in &[(48, 48), (-48, 48), (48, -48), (-48, -48)] {
+        assert_ne!((0, 0), Moon::get_boost(&init_pos, &init_velocity));
     }
 }
