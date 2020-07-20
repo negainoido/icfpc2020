@@ -428,8 +428,6 @@ while true
 		# interact with galaxy
 		$stderr.puts "Interacting with Galaxy..."
 		send_data = res["imageListAsData"] # "ap ap cons 0 nil"
-		send_data = "ap ap cons 1113939892088752268 nil" if $a
-		$a = true
 		$stderr.puts "send_data: #{send_data}"
 		send_data = modulate(send_data)
 		$stderr.puts "modulated: #{send_data}"
