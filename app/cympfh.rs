@@ -205,7 +205,7 @@ impl AI for CympfhAI {
                     let power = std::cmp::min(ship.x6 - ship.x5 + ship.x4[2], ship.x4[1]);
                     cmds.push(Command::Shoot {
                         ship_id: ship.id,
-                        target: target.position,
+                        target: CympfhAI::estimate_next_position(target).position,
                         power,
                     });
                     continue;
