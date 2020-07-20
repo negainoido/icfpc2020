@@ -141,7 +141,7 @@ impl From<Command> for List {
     }
 }
 
-#[derive(Default, Debug, serde::Serialize)]
+#[derive(Default, Debug, Clone, serde::Serialize)]
 pub struct GameState {
     pub tick: i128,
     pub x1: Vec<i128>,
