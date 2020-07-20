@@ -1,11 +1,35 @@
 #![allow(dead_code, unused_variables)]
 use crate::ai::*;
-use crate::moon::Moon;
+use crate::new_moon::NewMoon;
 use crate::protocol::*;
 
 pub struct CympfhAI {
     rand: XorShift,
     atack_waiting: bool,
+}
+
+impl CympfhAI {
+    fn estimate_next_position(ship: &Ship) -> Ship {
+        let pos = if ship.velocity == (0, 0) {
+            // 停止してる
+            ship.position
+        } else {
+            add(
+                &add(&ship.position, &ship.velocity),
+                &Section::from(&ship.position).gravity(),
+            )
+        };
+        Ship {
+            role: ship.role,
+            id: ship.id,
+            position: pos,
+            velocity: ship.velocity,
+            x4: ship.x4.clone(),
+            x5: ship.x5,
+            x6: ship.x6,
+            x7: ship.x7,
+        }
+    }
 }
 
 // .----> x0
@@ -174,25 +198,23 @@ impl AI for CympfhAI {
         }
     }
     fn main(&mut self, _info: &GameInfo, _state: &GameState) -> Vec<Command> {
+        use Role::*;
+
         let role_self = _info.role;
-        let ship_self: &Ship = _state
+        let self_ships: Vec<&Ship> = _state
             .ship_and_commands
             .iter()
             .filter(|&(ship, _)| ship.role == role_self)
             .map(|(ship, _)| ship)
-            .next()
-            .unwrap();
-        let ship_enemy: &Ship = _state
+            .collect();
+        let enemy_ships: Vec<&Ship> = _state
             .ship_and_commands
             .iter()
             .filter(|&(ship, _)| ship.role != role_self)
             .map(|(ship, _)| ship)
-            .next()
-            .unwrap();
+            .collect();
 
-        let arg_self = (ship_self.position.0 as f64).atan2(ship_self.position.1 as f64);
-        let arg_enemy = (ship_enemy.position.0 as f64).atan2(ship_enemy.position.1 as f64);
-        let arg_diff = (arg_self - arg_enemy).abs();
+        let role = self_ships[0].role;
 
         let commands_enemy = _state
             .ship_and_commands
@@ -202,85 +224,77 @@ impl AI for CympfhAI {
             .next()
             .unwrap();
 
-        if self.atack_waiting {
-            if ship_self.role == Role::Defender {
-                self.atack_waiting = false;
-            } else if arg_diff < 1.0 {
-                self.atack_waiting = false;
-            } else if _state.tick > 100 {
-                self.atack_waiting = false;
+        let mut cmds = vec![];
+
+        for &ship in self_ships.iter() {
+            // 自爆
+            if role == Attacker
+                && enemy_ships.len() == 1
+                && close_max(&ship, &enemy_ships[0], DETONATE_DIST)
+            {
+                cmds.push(Command::Detonate { ship_id: ship.id });
+                continue;
+            }
+            // 衛星軌道
+            if let Some(boost) = NewMoon::get_boost(&ship, &_state) {
+                cmds.push(boost);
+                continue;
+            }
+            // ビーム
+            if ship.x5 <= 10 {
+                let mut done = false;
+                for &enemy_ship in enemy_ships.iter() {
+                    let target = CympfhAI::estimate_next_position(&enemy_ship);
+                    let power = ship.x6 - ship.x5;
+                    cmds.push(Command::Shoot {
+                        ship_id: ship.id,
+                        target: target.position,
+                        power,
+                    });
+                    done = true;
+                    break;
+                }
+                if done {
+                    continue;
+                }
+            }
+            // 自爆回避
+            if role == Defender {
+                let mut done = false;
+                let self_ship = CympfhAI::estimate_next_position(&ship);
+                for &enemy_ship in enemy_ships.iter() {
+                    let target = CympfhAI::estimate_next_position(&enemy_ship);
+                    if close_max(&target, &self_ship, DETONATE_DIST * 2) {
+                        let g = Section::from(&ship.position).gravity();
+                        let boost = (-g.0, -g.1);
+                        cmds.push(Command::Accelerate {
+                            ship_id: ship.id,
+                            vector: boost,
+                        });
+                        done = true;
+                        break;
+                    }
+                }
+                if done {
+                    continue;
+                }
+            }
+            // Random Accel
+            {
+                if ship.position.0.abs() + ship.position.1.abs() > 32 {
+                    if self.rand.gen::<i128>() % 20 == 0 {
+                        let g = Section::from(&ship.position).gravity();
+                        let boost = (-g.0, -g.1);
+                        cmds.push(Command::Accelerate {
+                            ship_id: ship.id,
+                            vector: boost,
+                        });
+                        continue;
+                    }
+                }
             }
         }
 
-        let boost = Moon::get_boost(&ship_self.position, &ship_self.velocity);
-        if ship_self.role == Role::Attacker && self.atack_waiting {
-            let g = Section::from(&ship_self.position).gravity();
-            return vec![Command::Accelerate {
-                ship_id: ship_self.id,
-                vector: g,
-            }];
-        } else if ship_self.role == Role::Attacker
-            && close_max(&ship_self, &ship_enemy, DETONATE_DIST)
-        {
-            {
-                let a = ship_self.clone();
-                let b = ship_enemy.clone();
-                let x = add(
-                    &add(&a.position, &a.velocity),
-                    &Section::from(&a.position).gravity(),
-                );
-                let y = add(
-                    &add(&b.position, &b.velocity),
-                    &Section::from(&b.position).gravity(),
-                );
-                let d = dist_max(&x, &y);
-                eprintln!("\x1b[34m!!! DETONATE min_dist = {} !!!\x1b[0m", d);
-            }
-            return vec![Command::Detonate {
-                ship_id: ship_self.id,
-            }];
-        } else if boost != (0, 0) {
-            return vec![Command::Accelerate {
-                ship_id: ship_self.id,
-                vector: boost,
-            }];
-        } else if ship_self.x5 == 0 {
-            // (等速直線運動 OR 停止) ならビーム
-            let y = if ship_enemy.velocity == (0, 0) {
-                // 停止してる
-                ship_enemy.position
-            } else {
-                add(
-                    &add(&ship_enemy.position, &ship_enemy.velocity),
-                    &Section::from(&ship_enemy.position).gravity(),
-                )
-            };
-            let power = ship_self.x6;
-            return vec![Command::Shoot {
-                ship_id: ship_self.id,
-                target: y,
-                power,
-            }];
-        } else if ship_self.role == Role::Defender
-            && close_max(&ship_self, &ship_enemy, DETONATE_DIST)
-        {
-            // 自爆回避
-            let g = Section::from(&ship_self.position).gravity();
-            let boost = (g.0, g.1);
-            return vec![Command::Accelerate {
-                ship_id: ship_self.id,
-                vector: boost,
-            }];
-        } else if self.rand.gen::<i128>() % 4 == 0 {
-            // random noise
-            let v = ship_self.velocity;
-            let boost = (v.0, v.1);
-            return vec![Command::Accelerate {
-                ship_id: ship_self.id,
-                vector: boost,
-            }];
-        } else {
-            return vec![];
-        }
+        cmds
     }
 }
