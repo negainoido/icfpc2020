@@ -1,4 +1,5 @@
 mod ai;
+mod min_mutlti_ai;
 mod moon;
 mod nop_ai;
 mod protocol;
@@ -16,7 +17,7 @@ use crate::ai::AI;
 /*****************************
  * Change this type to your AI
  */
-type MyAI = moon::Moon;
+type MyAI = min_mutlti_ai::MinMultiAi;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
