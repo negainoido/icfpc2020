@@ -115,7 +115,7 @@ impl ShipState {
     }
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, Clone)]
 pub enum Command {
     Accelerate {
         ship_id: ShipId,
@@ -181,7 +181,7 @@ impl From<Command> for List {
     }
 }
 
-#[derive(Default, Debug, serde::Serialize)]
+#[derive(Default, Debug, serde::Serialize, Clone)]
 pub struct GameState {
     pub tick: i128,
     pub x1: Vec<i128>,
