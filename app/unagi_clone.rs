@@ -372,9 +372,9 @@ impl DefenseAI {
     }
 
     fn is_inside_planet(position: &Coord) -> bool {
-        MIN_CHEBYSHEV_DIST <= position.0
+        -MIN_CHEBYSHEV_DIST <= position.0
             && position.0 <= MIN_CHEBYSHEV_DIST
-            && MIN_CHEBYSHEV_DIST <= position.1
+            && -MIN_CHEBYSHEV_DIST <= position.1
             && position.1 <= MIN_CHEBYSHEV_DIST
     }
 
@@ -415,6 +415,7 @@ impl DefenseAI {
     }
 
     fn dfs(&mut self, position: &Coord, velocity: &Coord) -> i32 {
+        dbg!(position, velocity);
         if DefenseAI::is_invalid_position(position) || DefenseAI::is_invalid_velocity(velocity) {
             return DEAD_END;
         }
