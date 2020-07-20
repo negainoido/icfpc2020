@@ -96,7 +96,7 @@ impl TryFrom<List> for Ship {
     }
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, Clone)]
 pub enum Command {
     Accelerate {
         ship_id: ShipId,
