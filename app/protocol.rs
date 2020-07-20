@@ -22,6 +22,15 @@ pub enum Role {
     Defender = 1,
 }
 
+impl Role {
+    pub fn opponent(&self) -> Role {
+        match self {
+            Role::Attacker => Role::Defender,
+            Role::Defender => Role::Attacker,
+        }
+    }
+}
+
 #[derive(Debug, serde::Serialize)]
 pub struct GameInfo {
     pub x0: i128,
