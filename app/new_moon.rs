@@ -101,24 +101,12 @@ impl Ship {
 }
 
 impl NewMoon {
-    fn compute(&self, _info: &GameInfo, _state: &GameState) -> Vec<Command> {
-        let role_self = _info.role;
-        let ship_self: &Ship = _state
-            .ship_and_commands
-            .iter()
-            .filter(|&(ship, _)| ship.role == role_self)
-            .map(|(ship, _)| ship)
-            .next()
-            .unwrap();
-        let ship_enemy: &Ship = _state
-            .ship_and_commands
-            .iter()
-            .filter(|&(ship, _)| ship.role != role_self)
-            .map(|(ship, _)| ship)
-            .next()
-            .unwrap();
+    fn compute(&self, info: &GameInfo, state: &GameState) -> Vec<Command> {
+        let role_self = info.role;
+        let ship_self: &Ship = state.get_ships(&role_self)[0];
+        let ship_enemy: &Ship = state.get_ships(&role_self.opponent())[0];
 
-        let commands_enemy = _state
+        let commands_enemy = state
             .ship_and_commands
             .iter()
             .filter(|&(ship, _)| ship.role != role_self)
@@ -138,7 +126,7 @@ impl NewMoon {
 
         assert!(expected_ship.position == ship_self.position);
 
-        let remaining_turn = 256 - _state.tick;
+        let remaining_turn = 256 - state.tick;
         if !ship_self.is_safe_after(remaining_turn) {
             let mut best = -1;
             let mut bestacc = Command::Accelerate {
