@@ -5,6 +5,7 @@ use crate::protocol::*;
 
 pub struct CympfhAI {
     rand: XorShift,
+    atack_waiting: bool,
 }
 
 // .----> x0
@@ -169,6 +170,7 @@ impl AI for CympfhAI {
     fn new() -> Self {
         Self {
             rand: XorShift::new(),
+            atack_waiting: true,
         }
     }
     fn main(&mut self, _info: &GameInfo, _state: &GameState) -> Vec<Command> {
@@ -188,6 +190,10 @@ impl AI for CympfhAI {
             .next()
             .unwrap();
 
+        let arg_self = (ship_self.position.0 as f64).atan2(ship_self.position.1 as f64);
+        let arg_enemy = (ship_enemy.position.0 as f64).atan2(ship_enemy.position.1 as f64);
+        let arg_diff = (arg_self - arg_enemy).abs();
+
         let commands_enemy = _state
             .ship_and_commands
             .iter()
@@ -196,8 +202,26 @@ impl AI for CympfhAI {
             .next()
             .unwrap();
 
+        if self.atack_waiting {
+            if ship_self.role == Role::Defender {
+                self.atack_waiting = false;
+            } else if arg_diff < 1.0 {
+                self.atack_waiting = false;
+            } else if _state.tick > 100 {
+                self.atack_waiting = false;
+            }
+        }
+
         let boost = Moon::get_boost(&ship_self.position, &ship_self.velocity);
-        if ship_self.role == Role::Attacker && close_max(&ship_self, &ship_enemy, DETONATE_DIST) {
+        if ship_self.role == Role::Attacker && self.atack_waiting {
+            let g = Section::from(&ship_self.position).gravity();
+            return vec![Command::Accelerate {
+                ship_id: ship_self.id,
+                vector: g,
+            }];
+        } else if ship_self.role == Role::Attacker
+            && close_max(&ship_self, &ship_enemy, DETONATE_DIST)
+        {
             {
                 let a = ship_self.clone();
                 let b = ship_enemy.clone();
