@@ -131,7 +131,7 @@ fn add(a: &Coord, b: &Coord) -> Coord {
     (a.0 + b.0, a.1 + b.1)
 }
 
-const DETONATE_DIST: i128 = 4;
+const DETONATE_DIST: i128 = 3;
 const BEAM_DIST: i128 = 64;
 
 fn dist_max(x: &Coord, y: &Coord) -> i128 {
@@ -223,16 +223,24 @@ impl AI for CympfhAI {
             }];
         } else if close_manhattan(&ship_self, &ship_enemy, BEAM_DIST)
             && (commands_enemy.is_empty() || ship_enemy.velocity == (0, 0))
+            && ship_self.x5 == 0
             && ship_enemy.x4[0] > 0
         {
             // 近距離で (等速直線運動 OR 停止) ならビーム
-            let y = add(
-                &add(&ship_enemy.position, &ship_enemy.velocity),
-                &Section::from(&ship_enemy.position).gravity(),
-            );
+            let y = if commands_enemy.is_empty() {
+                add(
+                    &add(&ship_enemy.position, &ship_enemy.velocity),
+                    &Section::from(&ship_enemy.position).gravity(),
+                )
+            } else {
+                // 停止してる
+                ship_enemy.position
+            };
+            let power = ship_self.x6;
             return vec![Command::Shoot {
                 ship_id: ship_self.id,
                 target: y,
+                power,
             }];
         } else if ship_self.role == Role::Defender
             && close_max(&ship_self, &ship_enemy, DETONATE_DIST)

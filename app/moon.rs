@@ -54,6 +54,7 @@ impl AI for Moon {
                 commands.push(Command::Shoot {
                     ship_id: target_ship.id.clone(),
                     target: next_target_pos,
+                    power: 4,
                 })
             }
         }
