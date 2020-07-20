@@ -65,7 +65,7 @@ impl AI for Moon {
 }
 
 impl Moon {
-    fn get_boost(pos: &Coord, velocity: &Coord) -> Coord {
+    pub fn get_boost(pos: &Coord, velocity: &Coord) -> Coord {
         let wall = Moon::ground_wall(pos);
         let (gdx, gdy) = Moon::base_gravity(&wall);
         let complete = Moon::complete_func(&wall);
@@ -91,7 +91,7 @@ impl Moon {
         }
     }
 
-    fn get_next_pos(pos: &Coord, velocity: &Coord) -> Coord {
+    pub fn get_next_pos(pos: &Coord, velocity: &Coord) -> Coord {
         let wall = Moon::ground_wall(pos);
         let (gdx, gdy) = Moon::base_gravity(&wall);
         (pos.0 + velocity.0 + gdx, pos.1 + velocity.1 + gdy)
