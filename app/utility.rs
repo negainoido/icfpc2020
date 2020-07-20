@@ -18,3 +18,7 @@ pub fn gravity_of((x, y): &Coord) -> Coord {
     }
     return (gx, gy);
 }
+
+pub fn add((x1, y1): &Coord, (x2, y2): &Coord) -> Coord {
+    (*x1 + *x2, *y1 + *y2)
+}
