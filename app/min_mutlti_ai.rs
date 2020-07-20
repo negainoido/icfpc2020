@@ -16,6 +16,34 @@ pub struct MinMultiAi {
 const CLONE_FUEL_THRESHOLD: i128 = 32;
 const CLONE_CAPCITY_THRESHOLD: i128 = 4;
 
+fn get_distance(s: &Coord, t: &Coord) -> f64 {
+    let x = (s.0 - t.0)  as f64;
+    let y = (s.1 - t.1)  as f64;
+    (x*x + y*y).sqrt()
+}
+
+const SHOT_THRESHOLD: f64 = 30.0;
+
+fn find_target<'a>(ship: &Ship, enemies: &Vec<&'a Ship>) -> Option<&'a Ship> {
+    let mut result: Option<&Ship> = None;
+    let pos = Moon::get_next_pos(&ship.position, &ship.velocity);
+    for &e in enemies.iter() {
+        let epos = Moon::get_next_pos(&e.position, &e.velocity);
+        let d = get_distance(&pos, &epos);
+        if d < SHOT_THRESHOLD {
+            if let Some(current) = result {
+                let cpos = Moon::get_next_pos(&current.position, &current.velocity);
+                if get_distance(&pos, &cpos) > d {
+                    result = Some(e)
+                }
+            } else {
+                result = Some(e);
+            }
+        }
+    }
+    result
+}
+
 impl AI for MinMultiAi {
     fn new() -> Self {
         MinMultiAi {
@@ -24,19 +52,20 @@ impl AI for MinMultiAi {
         }
     }
 
+
     fn main(&mut self, info: &GameInfo, state: &GameState) -> Vec<Command> {
         let my_role = &info.role;
-        let mut my_ships: Vec<Ship> = state
+        let mut my_ships: Vec<&Ship> = state
             .ship_and_commands
             .iter()
             .filter(|(s, _)| s.role == *my_role)
-            .map(|(s, _)| s.clone())
+            .map(|(s, _)| s)
             .collect();
-        let enemy_ships: Vec<Ship> = state
+        let enemy_ships: Vec<&Ship> = state
             .ship_and_commands
             .iter()
             .filter(|(s, _)| s.role != *my_role)
-            .map(|(s, _)| s.clone())
+            .map(|(s, _)| s)
             .collect();
         my_ships.sort_by(|s, t| s.id.cmp(&t.id));
 
@@ -70,14 +99,16 @@ impl AI for MinMultiAi {
                 if enemy_ships.is_empty() {
                     continue;
                 }
-                let target_ship: &Ship = &enemy_ships[0];
-                let next_target_pos =
-                    Moon::get_next_pos(&target_ship.position, &target_ship.velocity);
-                commands.push(Command::Shoot {
-                    ship_id: ship.id.clone(),
-                    target: next_target_pos,
-                    power: 4,
-                })
+                let target = find_target(ship, &enemy_ships);
+                if let Some(target_ship) = target {
+                    let next_target_pos =
+                        Moon::get_next_pos(&target_ship.position, &target_ship.velocity);
+                    commands.push(Command::Shoot {
+                        ship_id: ship.id.clone(),
+                        target: next_target_pos,
+                        power: 4,
+                    });
+                }
             }
             if ship.x4[3] > 1
                 && ship.x4[0] / 2 >= CLONE_FUEL_THRESHOLD
@@ -94,8 +125,8 @@ impl AI for MinMultiAi {
         }
 
         let state = State {
-            my_ships,
-            enemy_ships,
+            my_ships: my_ships.iter().map(|s| (*s).clone()).collect(),
+            enemy_ships: enemy_ships.iter().map(|e| (*e).clone()).collect(),
         };
 
         self.round += 1;
