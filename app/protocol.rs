@@ -105,7 +105,7 @@ impl TryFrom<List> for Ship {
     }
 }
 
-#[derive(Debug, serde::Serialize, Clone)]
+#[derive(Debug, PartialEq, Eq, serde::Serialize, Clone)]
 pub struct ShipState {
     pub fuel: i128,     // 残り燃料
     pub power: i128,    // レーザーの出力
@@ -205,6 +205,9 @@ pub enum AppliedCommand {
         x4: i128,
         x5: i128,
     },
+    Cloned {
+        state: ShipState,
+    },
     Unknown(List),
 }
 
@@ -250,6 +253,22 @@ impl From<List> for AppliedCommand {
                     power: power.as_int().unwrap(),
                     x4: x4.as_int().unwrap(),
                     x5: x5.as_int().unwrap(),
+                }
+            }
+            3 => {
+                let (vec, l) = l.decompose().unwrap();
+                if !l.is_nil() {
+                    panic!("unexpected value for applied Cloned command: {}", l);
+                }
+                let vec = vec.as_vec().unwrap();
+                assert_eq!(vec.len(), 4);
+                Cloned {
+                    state: ShipState {
+                        fuel: vec[0],
+                        power: vec[1],
+                        capacity: vec[2],
+                        units: vec[3],
+                    },
                 }
             }
             typ => {
@@ -466,7 +485,6 @@ mod test {
             },
         );
         assert_eq!(*commands1, vec![]);
-
         let (ship2, commands2) = &state.ship_and_commands[1];
         assert_eq!(
             *ship2,
@@ -497,12 +515,42 @@ mod test {
     }
 
     #[test]
-    fn unknown_applied_command() {
+    fn cloned() {
         // https://icfpc2020-api.testkontur.ru/logs?logKey=5lyYxfZwONT37pqrSBiSVg1WqtjuZowdn8joV8A1YPo%3D&apiKey=9ffa61129e0c45378b01b0817117622c
         let resp = "1101100001110110000111110111100001000000001101011110111100010000000001101100001110111001000000001111011100001000011011101000000000111101110100110001101011011010001101110011001000000111101100100111101110000100001101110100000000011111111011000011101011111011000011101011100011010111110110011101100101111101110100100101101011011010001101110011000110011011100001000011011101000000011011000100011111101100011111101011010110101101100001000000001111110101101100001111101110001100001011000100100111101001011110111010000010110111001000000110110101011011000010011010110111001000000110110000100111111010111110100001010000000111111011000011101100010111110110000111010111000110101111101100111011001011111010110101101011011000010011010110111010000000110110001000110000000000";
         let l = List::demodulate(&resp).unwrap();
+        eprintln!("l: {}", &l);
         let game_resp = GameResponse::try_from(l).unwrap();
         eprintln!("resp: {:?}", game_resp);
+        let state = game_resp.state;
+
+        assert_eq!(state.ship_and_commands.len(), 3);
+
+        let (ship1, commands1) = &state.ship_and_commands[0];
+        assert_eq!(
+            *ship1,
+            Ship {
+                role: Role::Defender,
+                id: 0,
+                position: (-29, 53),
+                velocity: (7, 5),
+                x4: vec![146, 0, 8, 99],
+                x5: 16,
+                x6: 128,
+                x7: 2
+            },
+        );
+        assert_eq!(
+            *commands1,
+            vec![AppliedCommand::Cloned {
+                state: ShipState {
+                    fuel: 0,
+                    power: 0,
+                    capacity: 0,
+                    units: 1
+                }
+            }]
+        );
     }
 
     #[test]
