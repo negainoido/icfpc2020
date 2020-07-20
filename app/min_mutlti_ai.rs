@@ -13,9 +13,6 @@ pub struct MinMultiAi {
     history: Vec<State>,
 }
 
-const CLONE_FUEL_THRESHOLD: i128 = 32;
-const CLONE_CAPCITY_THRESHOLD: i128 = 4;
-
 fn get_distance(s: &Coord, t: &Coord) -> f64 {
     let x = (s.0 - t.0) as f64;
     let y = (s.1 - t.1) as f64;
@@ -44,6 +41,50 @@ fn find_target<'a>(ship: &Ship, enemies: &Vec<&'a Ship>) -> Option<&'a Ship> {
     result
 }
 
+#[allow(dead_code)]
+const ATTACK_AVAILABLE_PARAMS: &'static [ShipState] = &[
+    ShipState {
+        fuel: 128,
+        power: 47,
+        capacity: 16,
+        units: 2,
+    }, // パワーヒッターコンビ
+    ShipState {
+        fuel: 128,
+        power: 32,
+        capacity: 16,
+        units: 32,
+    }, // 雑魚量産型
+    ShipState {
+        fuel: 128,
+        power: 56,
+        capacity: 8,
+        units: 32,
+    }, // 攻撃型雑魚量産型
+    ShipState {
+        fuel: 156,
+        power: 64,
+        capacity: 8,
+        units: 2,
+    }, // 高速エース型
+];
+
+#[allow(dead_code)]
+const DEFENCE_AVAILABLE_PARAMS: &'static [ShipState] = &[
+    ShipState {
+        fuel: 128,
+        power: 31,
+        capacity: 16,
+        units: 2,
+    }, // 攻防一体の陣
+    ShipState {
+        fuel: 128,
+        power: 0,
+        capacity: 16,
+        units: 64,
+    }, // 分裂雲隠れの陣
+];
+
 impl AI for MinMultiAi {
     fn new() -> Self {
         MinMultiAi {
@@ -54,8 +95,8 @@ impl AI for MinMultiAi {
 
     fn initial_params(info: &GameInfo) -> ShipState {
         match info.role {
-            Role::Attacker => ShipState::new(134, 64, 10, 1),
-            Role::Defender => ShipState::new(128, 0, 16, 2),
+            Role::Attacker => ATTACK_AVAILABLE_PARAMS[3].clone(),
+            Role::Defender => DEFENCE_AVAILABLE_PARAMS[1].clone(),
         }
     }
 
@@ -115,19 +156,17 @@ impl AI for MinMultiAi {
                     }
                 }
             }
-            if ship.x4[3] > 1
-                && ship.x4[0] / 2 >= CLONE_FUEL_THRESHOLD
-                && ship.x4[2] / 2 >= CLONE_CAPCITY_THRESHOLD
-            {
+            // クローン可能
+            if ship.x4[3] > 1 {
                 commands.push(dbg!(Command::Clone {
                     ship_id: ship.id.clone(),
                     child: ShipState {
-                        fuel: 0,
-                        power: 0,
-                        capacity: 0,
+                        fuel: ship.x4[0] / ship.x4[3],
+                        power: ship.x4[1] / ship.x4[3],
+                        capacity: ship.x4[2] / ship.x4[3],
                         units: 1
                     },
-                }))
+                }));
             }
         }
 

@@ -9,25 +9,6 @@ pub type ShipId = i128;
 
 pub type Coord = (i128, i128);
 
-pub fn gravity_of((x, y): &Coord) -> Coord {
-    let mut gx = 0;
-    let mut gy = 0;
-
-    if *x >= y.abs() {
-        gx -= 1;
-    }
-    if *y >= x.abs() {
-        gy -= 1;
-    }
-    if *x <= -y.abs() {
-        gx += 1;
-    }
-    if *y <= -x.abs() {
-        gy += 1;
-    }
-    return (gx, gy);
-}
-
 #[derive(FromPrimitive, Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 pub enum GameStage {
     NotStarted = 0,
