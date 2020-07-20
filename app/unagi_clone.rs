@@ -415,7 +415,7 @@ impl DefenseAI {
     }
 
     fn dfs(&mut self, position: &Coord, velocity: &Coord) -> i32 {
-        dbg!(position, velocity);
+        // dbg!(position, velocity);
         if DefenseAI::is_invalid_position(position) || DefenseAI::is_invalid_velocity(velocity) {
             return DEAD_END;
         }
@@ -457,6 +457,7 @@ impl DefenseAI {
         while let Some((position, velocity)) = state_queue.pop_front() {
             let curr_state = (position, velocity);
             let maybe_loop_id = self.dfs(&position, &velocity);
+            // dbg!("SEARCHING", maybe_loop_id);
 
             if DefenseAI::is_loop_id(maybe_loop_id) && !self.used_loops.contains(&maybe_loop_id) {
                 let mut curr_state = curr_state;
@@ -465,12 +466,15 @@ impl DefenseAI {
                     vector: (0, 0),
                 };
                 while let Some(prev_state) = prev_states.get(&curr_state) {
+                    // dbg!(&prev_state);
+                    let last_accel: (i128, i128) = *prev_actions.get(&curr_state).unwrap();
                     last_action = Command::Accelerate {
                         ship_id: 0,
-                        vector: *prev_actions.get(&curr_state).unwrap(),
+                        vector: (-last_accel.0, -last_accel.1),
                     };
                     curr_state = *prev_state;
                 }
+                // dbg!("GOAL", (&position, &velocity), (&mother_ship.position, mother_ship.velocity));
                 return vec![last_action];
             }
 
