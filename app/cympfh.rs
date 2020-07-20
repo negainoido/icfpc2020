@@ -220,7 +220,7 @@ impl AI for CympfhAI {
                 ship_id: ship_self.id,
                 vector: boost,
             }];
-        } else if ship_self.x5 == 0 && ship_enemy.x4[0] > 0 {
+        } else if ship_self.x5 == 0 {
             // (等速直線運動 OR 停止) ならビーム
             let y = if ship_enemy.velocity == (0, 0) {
                 // 停止してる
