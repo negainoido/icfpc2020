@@ -62,7 +62,7 @@ impl Moon {
         let mut cur_pos = pos.clone();
         let mut cur_velocity = velocity.clone();
         loop {
-            let (gdx, gdy) = Moon::base_gravity(&cur_pos);
+            let (gdx, gdy) = gravity_of(&cur_pos);
             cur_velocity.0 += gdx;
             cur_velocity.1 += gdy;
             cur_pos.0 += cur_velocity.0;
@@ -79,7 +79,7 @@ impl Moon {
     }
 
     pub fn get_next_pos(pos: &Coord, velocity: &Coord) -> Coord {
-        let (gdx, gdy) = Moon::base_gravity(&pos);
+        let (gdx, gdy) = gravity_of(&pos);
 
         (pos.0 + velocity.0 + gdx, pos.1 + velocity.1 + gdy)
     }
@@ -120,49 +120,6 @@ impl Moon {
                 WallType::B
             } else {
                 WallType::C
-            }
-        }
-    }
-
-    fn base_gravity((x, y): &Coord) -> Coord {
-        if *x > 0 {
-            // A, D or B.
-            if *y > *x {
-                // D
-                (0, -1)
-            } else if *y < -*x {
-                // B
-                (0, 1)
-            } else {
-                // C
-                let (gdx, mut gdy) = (-1, 0);
-                if *y == *x {
-                    // + D
-                    gdy = -1;
-                } else if *y == -*x {
-                    // + B
-                    gdy = 1;
-                }
-                (gdx, gdy)
-            }
-        } else {
-            // B, C or D.
-            if *y > -*x {
-                // D
-                (0, -1)
-            } else if *y < *x {
-                // B
-                (0, 1)
-            } else {
-                // C
-                let (gdx, mut gdy) = (1, 0);
-                if *y == -*x {
-                    // D
-                    gdy = -1;
-                } else if *y == *x {
-                    gdy = 1;
-                }
-                (gdx, gdy)
             }
         }
     }
