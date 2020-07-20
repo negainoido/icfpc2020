@@ -106,7 +106,7 @@ impl AI for MinMultiAi {
                     commands.push(Command::Shoot {
                         ship_id: ship.id.clone(),
                         target: next_target_pos,
-                        power: 4,
+                        power: 8,
                     });
                 }
             }
