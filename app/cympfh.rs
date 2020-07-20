@@ -1,12 +1,12 @@
 #![allow(dead_code, unused_variables)]
 use crate::ai::*;
-use crate::new_moon::NewMoon;
 use crate::protocol::*;
+use crate::true_moon::TrueMoon;
 use crate::utility::*;
 
 pub struct CympfhAI {
     rand: XorShift,
-    atack_waiting: bool,
+    moon: TrueMoon,
 }
 
 impl CympfhAI {
@@ -127,7 +127,7 @@ impl AI for CympfhAI {
     fn new() -> Self {
         Self {
             rand: XorShift::new(),
-            atack_waiting: true,
+            moon: TrueMoon::new(),
         }
     }
     fn main(&mut self, info: &GameInfo, state: &GameState) -> Vec<Command> {
@@ -159,7 +159,7 @@ impl AI for CympfhAI {
                 continue;
             }
             // 衛星軌道
-            if let Some(boost) = NewMoon::get_boost(&ship, &state) {
+            if let Some(boost) = self.moon.get_boost(&ship) {
                 cmds.push(boost);
                 continue;
             }
