@@ -4,7 +4,7 @@ class Image
 		@state = state
 		@role2machines = Hash.new { |h, k| h[k] = [] }
 		@state["ship_and_commands"].flatten.each do |m|
-			@role2machines[m["role"]] << m if m.class == Hash # ignore "(nil) (niL)"
+			@role2machines[m["role"]] << m if m.class == Hash && m["role"] # ignore "(nil) (niL)"
 		end
 	end
 
