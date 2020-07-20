@@ -1,7 +1,9 @@
 mod ai;
+mod min_mutlti_ai;
 mod moon;
 mod nop_ai;
 mod protocol;
+mod new_moon;
 
 use std::convert::TryFrom;
 use std::env;
@@ -12,11 +14,12 @@ use icfpc2020::modulate::{cons, List};
 use protocol::{Command, GameResponse};
 
 use crate::ai::AI;
+use crate::protocol::ShipState;
 
 /*****************************
  * Change this type to your AI
  */
-type MyAI = moon::Moon;
+type MyAI = min_mutlti_ai::MinMultiAi;
 
 fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Error>> {
     println!("request: {}", request);
@@ -49,9 +52,9 @@ fn make_join_request(player_key: &i128) -> String {
     sexp.modulate()
 }
 
-fn make_start_request(player_key: &i128, (a, b, c, d): (u32, u32, u32, u32)) -> String {
+fn make_start_request(player_key: &i128, state: ShipState) -> String {
     use List::*;
-    let state = List::from(vec![a as i128, b as i128, c as i128, d as i128]);
+    let state = state.into();
     let sexp = cons(Integer(3), cons(Integer(*player_key), cons(state, Nil)));
     println!("start request: {}", sexp);
     sexp.modulate()
@@ -118,7 +121,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let request = make_start_request(player_key, MyAI::initial_params(&info));
     let resp = send(server_url, &request)?;
 
-    let game_response: GameResponse = GameResponse::try_from(resp).unwrap();
+    let game_response: GameResponse = GameResponse::try_from(resp)?;
     if game_response.is_finished() {
         println!("Game is immediately finished!!");
         return Ok(());
@@ -133,9 +136,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Turn {}", turn);
         turn += 1;
 
-        println!("state: {:?}", state);
+        println!("state: {}", serde_json::to_string(&state).unwrap());
         let commands = ai.main(&info, &state);
-        println!("command: {:?}", commands);
+        println!("command: {}", serde_json::to_string(&commands).unwrap());
         let request = make_command_request(player_key, commands);
         let resp = send(server_url, &request);
         if let Err(e) = resp {
@@ -143,8 +146,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             break;
         }
 
-        let game_response: GameResponse = GameResponse::try_from(resp.unwrap()).unwrap();
-        println!("game_response: {:?}", game_response);
+        let game_response: GameResponse = GameResponse::try_from(resp?)?;
+        println!(
+            "game_response: {}",
+            serde_json::to_string(&game_response).unwrap()
+        );
         if game_response.is_finished() {
             println!("Game is successfully finished!!");
             break;

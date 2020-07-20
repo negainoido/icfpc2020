@@ -9,20 +9,20 @@ pub type ShipId = i128;
 
 pub type Coord = (i128, i128);
 
-#[derive(FromPrimitive, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(FromPrimitive, Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 pub enum GameStage {
     NotStarted = 0,
     Started = 1,
     Finished = 2,
 }
 
-#[derive(FromPrimitive, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(FromPrimitive, Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 pub enum Role {
     Attacker = 0,
     Defender = 1,
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub struct GameInfo {
     pub x0: i128,
     pub role: Role,
@@ -55,7 +55,7 @@ impl TryFrom<List> for GameInfo {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct Ship {
     pub role: Role,
     pub id: ShipId,
@@ -96,7 +96,26 @@ impl TryFrom<List> for Ship {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize, Clone)]
+pub struct ShipState {
+    pub fuel: i128,     // 残り燃料
+    pub power: i128,    // レーザーの出力
+    pub capacity: i128, // 機体がnopだったときに下がる温度
+    pub units: i128,    // 分裂可能な数(2以上でクローンが実行可能)
+}
+
+impl ShipState {
+    pub fn new(fuel: i128, power: i128, capacity: i128, units: i128) -> Self {
+        ShipState {
+            fuel,
+            power,
+            capacity,
+            units,
+        }
+    }
+}
+
+#[derive(Debug, serde::Serialize, Clone)]
 pub enum Command {
     Accelerate {
         ship_id: ShipId,
@@ -110,6 +129,24 @@ pub enum Command {
         target: Coord,
         power: i128,
     },
+    Clone {
+        ship_id: ShipId,
+        child: ShipState,
+    },
+}
+
+impl From<ShipState> for List {
+    fn from(state: ShipState) -> List {
+        use icfpc2020::modulate::cons;
+        use List::*;
+        cons(
+            Integer(state.fuel),
+            cons(
+                Integer(state.power),
+                cons(Integer(state.capacity), cons(Integer(state.units), Nil)),
+            ),
+        )
+    }
 }
 
 impl From<Command> for List {
@@ -137,11 +174,14 @@ impl From<Command> for List {
                     cons(cons(Integer(x), Integer(y)), cons(Integer(power), Nil)),
                 ),
             ),
+            Clone { ship_id, child } => {
+                cons(Integer(3), cons(Integer(ship_id), cons(child.into(), Nil)))
+            }
         }
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, serde::Serialize, Clone)]
 pub struct GameState {
     pub tick: i128,
     pub x1: Vec<i128>,
@@ -187,7 +227,7 @@ impl TryFrom<List> for GameState {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub struct GameResponse {
     pub stage: GameStage,
     pub info: GameInfo,

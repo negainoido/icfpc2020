@@ -3,10 +3,10 @@ use crate::protocol::*;
 pub trait AI {
     fn new() -> Self;
 
-    fn initial_params(info: &GameInfo) -> (u32, u32, u32, u32) {
+    fn initial_params(info: &GameInfo) -> ShipState {
         match info.role {
-            Role::Attacker => (134, 64, 10, 1),
-            Role::Defender => (70, 64, 10, 1),
+            Role::Attacker => ShipState::new(134, 64, 10, 1),
+            Role::Defender => ShipState::new(70, 64, 10, 1),
         }
     }
 
