@@ -1,6 +1,5 @@
 #![allow(dead_code, unused_variables)]
 use crate::ai::*;
-use crate::moon::Moon;
 use crate::protocol::*;
 
 pub struct TailedAI {
@@ -51,6 +50,12 @@ impl Ship {
         };
     }
 
+    fn next_steps(&mut self, number_of_steps: i128) {
+        for i in 0..number_of_steps {
+            self.next();
+        }
+    }
+
     fn next(&mut self) {
         let (gx, gy) = gravity_of(&self.position);
         self.velocity.0 += gx;
@@ -70,9 +75,31 @@ impl Ship {
             self.next();
         }
     }
+
+    fn is_inside(&self) -> bool {
+        self.position.0.abs() <= 128 && self.position.1.abs() <= 128
+    }
+    fn is_on_earth(&self) -> bool {
+        self.position.0.abs() <= 16 && self.position.1.abs() <= 16
+    }
+    fn is_safe(&self) -> bool {
+        return self.is_inside() && !self.is_on_earth();
+    }
+
+    fn is_safe_after(&self, number_of_steps: i128) -> bool {
+        let mut ship = self.clone();
+        for _ in 0..number_of_steps {
+            if !ship.is_safe() {
+                return false;
+            }
+            ship.next();
+        }
+        return ship.is_safe();
+    }
 }
 
 impl TailedAI {
+    fn search_safe(&self) {}
     fn compute(&self, _info: &GameInfo, _state: &GameState) -> Vec<Command> {
         let role_self = _info.role;
         let ship_self: &Ship = _state
@@ -108,23 +135,26 @@ impl TailedAI {
         println!("expected ship: {:?}", expected_ship);
         println!("true ship    : {:?}", ship_self);
 
-        let boost = Moon::get_boost(&ship_self.position, &ship_self.velocity);
+        assert!(expected_ship.position == ship_self.position);
 
-        /*
-        dbg!(&boost);
-        dbg!(&self.command_history);
-        */
-        for commands in self.command_history.iter() {
-            for i in commands.iter() {
-                println!("history: {:?}", i)
+        let remaining_turn = 256 - _state.tick;
+        if !ship_self.is_safe_after(remaining_turn) {
+            for x in -1..=1 {
+                for y in -1..=1 {
+                    if x == 0 && y == 0 {
+                        continue;
+                    }
+                    let mut ship = ship_self.clone();
+                    let acc = Command::Accelerate {
+                        ship_id: ship.id,
+                        vector: (x, y),
+                    };
+                    ship.apply(&acc);
+                    if ship.is_safe_after(remaining_turn) {
+                        return vec![acc];
+                    }
+                }
             }
-        }
-
-        if boost != (0, 0) {
-            return vec![Command::Accelerate {
-                ship_id: ship_self.id,
-                vector: boost,
-            }];
         }
 
         return vec![];
