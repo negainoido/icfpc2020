@@ -303,6 +303,11 @@ state = {
 	"point" => point_to_lambda(-3, 1),
 	"data" => "ap ap cons 2 ap ap cons ap ap cons 1 ap ap cons -1 nil ap ap cons 0 ap ap cons nil nil"
 }
+state = {
+    "point" => "ap ap cons 1 ap ap cons 5700 nil",
+    "data" => "ap ap cons 5 ap ap cons ap ap cons 1 ap ap cons 0 ap ap cons nil ap ap cons nil ap ap cons nil ap ap cons nil ap ap cons nil ap ap cons 0 nil ap ap cons 9 ap ap cons nil nil"
+}
+
 
 require 'optparse'
 opt = OptionParser.new
