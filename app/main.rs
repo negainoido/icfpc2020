@@ -51,9 +51,12 @@ fn send(server_url: &str, request: &str) -> Result<List, Box<dyn std::error::Err
     Ok(list)
 }
 
-fn make_join_request(player_key: &i128) -> String {
+fn make_join_request(player_key: &i128, vec: Vec<i128>) -> String {
     use List::*;
-    let sexp = cons(Integer(2), cons(Integer(*player_key), cons(Nil, Nil)));
+    let sexp = cons(
+        Integer(2),
+        cons(Integer(*player_key), cons(vec.into(), Nil)),
+    );
     println!("join request: {}", sexp);
     sexp.modulate()
 }
@@ -112,8 +115,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("ServerUrl: {}; PlayerKey: {}", server_url, player_key);
 
+    let join_params: Vec<i128> = if args.len() > 3 {
+        args[3]
+            .split(",")
+            .map(|s| s.parse::<i128>().expect("failed parsing"))
+            .collect()
+    } else {
+        vec![]
+    };
+
+    println!("Join params: {:?}", join_params);
+
     // Join
-    let request = make_join_request(player_key);
+    let request = make_join_request(player_key, join_params);
     let resp = send(server_url, &request)?;
     let game_response: GameResponse = GameResponse::try_from(resp).unwrap();
     if game_response.is_finished() {
