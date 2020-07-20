@@ -22,6 +22,15 @@ pub enum Role {
     Defender = 1,
 }
 
+impl Role {
+    pub fn opponent(&self) -> Role {
+        match self {
+            Role::Attacker => Role::Defender,
+            Role::Defender => Role::Attacker,
+        }
+    }
+}
+
 #[derive(Debug, serde::Serialize)]
 pub struct GameInfo {
     pub x0: i128,
@@ -224,6 +233,16 @@ impl TryFrom<List> for GameState {
         } else {
             Err(format!("GameState l is not nil: {}", l))
         }
+    }
+}
+
+impl GameState {
+    pub fn get_ships(&self, role: &Role) -> Vec<&Ship> {
+        self.ship_and_commands
+            .iter()
+            .map(|(s, _)| s)
+            .filter(|s| s.role == *role)
+            .collect()
     }
 }
 

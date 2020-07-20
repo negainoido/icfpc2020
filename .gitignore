@@ -16,3 +16,4 @@
 .idea
 
 /images/*.png
+*.log

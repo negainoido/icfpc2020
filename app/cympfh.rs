@@ -197,26 +197,16 @@ impl AI for CympfhAI {
             atack_waiting: true,
         }
     }
-    fn main(&mut self, _info: &GameInfo, _state: &GameState) -> Vec<Command> {
+    fn main(&mut self, info: &GameInfo, state: &GameState) -> Vec<Command> {
         use Role::*;
 
-        let role_self = _info.role;
-        let self_ships: Vec<&Ship> = _state
-            .ship_and_commands
-            .iter()
-            .filter(|&(ship, _)| ship.role == role_self)
-            .map(|(ship, _)| ship)
-            .collect();
-        let enemy_ships: Vec<&Ship> = _state
-            .ship_and_commands
-            .iter()
-            .filter(|&(ship, _)| ship.role != role_self)
-            .map(|(ship, _)| ship)
-            .collect();
+        let role_self = info.role;
+        let self_ships: Vec<&Ship> = state.get_ships(&role_self);
+        let enemy_ships: Vec<&Ship> = state.get_ships(&role_self.opponent());
 
         let role = self_ships[0].role;
 
-        let commands_enemy = _state
+        let commands_enemy = state
             .ship_and_commands
             .iter()
             .filter(|&(ship, _)| ship.role != role_self)
@@ -236,7 +226,7 @@ impl AI for CympfhAI {
                 continue;
             }
             // 衛星軌道
-            if let Some(boost) = NewMoon::get_boost(&ship, &_state) {
+            if let Some(boost) = NewMoon::get_boost(&ship, &state) {
                 cmds.push(boost);
                 continue;
             }
