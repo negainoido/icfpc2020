@@ -181,6 +181,13 @@ impl AI for CympfhAI {
                     continue;
                 }
             }
+            // Swing-By
+            if role == Attacker {
+                for &enemy_ship in enemy_ships.iter() {
+                    let target = CympfhAI::estimate_next_position(&enemy_ship);
+                    let self_nop = CympfhAI::estimate_next_position(&ship);
+                }
+            }
             // 自爆回避
             if role == Defender {
                 let mut done = false;
