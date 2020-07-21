@@ -40,34 +40,59 @@ module visualizer {
         }
     }
 
+    class ShipWithCommands {
+        ship: Ship;
+        commands: any[]
+
+        constructor(input: any[]) {
+            this.ship = new Ship(input[0]);
+            this.commands = input[1];
+        }
+    }
+
     class Visualizer {
-        private shipLogs: Ship[][];
-        private canvas_size:number = 600;
+        private shipLogs: ShipWithCommands[][];
+        private canvas_size: number = 600;
         private space_size = 260;
         private planet_size = 32;
         private ship_size = 2;
+        private beam_size = 4;
         private scale = 2;
         private ctx: CanvasRenderingContext2D;
 
-        constructor(canvas: HTMLCanvasElement, shipLogs: Ship[][]) {
+        constructor(canvas: HTMLCanvasElement, shipLogs: ShipWithCommands[][]) {
             canvas.width = this.canvas_size;
             canvas.height = this.canvas_size;
             this.ctx = canvas.getContext('2d')!;
             this.shipLogs = shipLogs;
         }
 
-
+        convert_to_canvas_coord(point: Coord) {
+            point = point.scale(this.scale);
+            return new Coord([point.x + this.canvas_size / 2, point.y + this.canvas_size / 2]);
+        }
 
         draw_square(center: Coord, side_length: number, color: string) {
             this.ctx.fillStyle = color;
-            center = center.scale(this.scale);
+            center = this.convert_to_canvas_coord(center);
             side_length *= this.scale;
             this.ctx.fillRect(
-                center.x + this.canvas_size / 2 - side_length / 2,
-                center.y + this.canvas_size / 2 - side_length / 2,
+                center.x - side_length / 2,
+                center.y - side_length / 2,
                 side_length,
                 side_length
             )
+        }
+
+        draw_segments(points: Coord[], color: string) {
+            points = points.map((point) => this.convert_to_canvas_coord(point));
+            this.ctx.strokeStyle = color;
+            this.ctx.beginPath()
+            this.ctx.moveTo(points[0].x, points[0].y);
+            for (var i = 1; i < points.length; i++) {
+                this.ctx.lineTo(points[i].x, points[i].y);
+            }
+            this.ctx.stroke()
         }
 
         draw(turn: number) {
@@ -75,7 +100,19 @@ module visualizer {
             this.ctx.clearRect(0, 0, this.canvas_size, this.canvas_size);
             this.draw_square(new Coord([0, 0]), this.space_size, "rgb(0, 0, 0)");
             this.draw_square(new Coord([0, 0]), this.planet_size, "rgb(255, 255, 255)");
-            shipLog.forEach((ship) => {
+            shipLog.forEach((shipWithCommands) => {
+                const ship = shipWithCommands.ship;
+                shipWithCommands.commands.forEach((command) => {
+                    if ("Shot" in command) {
+                        let target = new Coord(command["Shot"]["target"]);
+                        this.draw_square(target, this.beam_size, "rgb(255, 255, 100)");
+                        this.draw_segments([ship.position, target], "rgb(255, 255, 100)");
+                    }
+                })
+            });
+
+            shipLog.forEach((shipWithCommands) => {
+                const ship = shipWithCommands.ship;
                 this.draw_square(ship.position, this.ship_size, ship.ship_color());
             });
         }
@@ -83,22 +120,20 @@ module visualizer {
 
     export const init = () => {
         const logFile = <HTMLInputElement>document.getElementById("log_file");
-        const loadLogFile = (file: File, callback: (logs: Ship[][], rawLogs: String[][]) => void) => {
+        const loadLogFile = (file: File, callback: (logs: ShipWithCommands[][], rawLogs: String[][]) => void) => {
             const statePrefix = "state: ";
             const reader = new FileReader();
             reader.readAsText(file);
             reader.onloadend = function () {
                 if (reader.result) {
                     const lines = reader.result.toString().split('\n');
-                    const shipLogs: Ship[][] = []
+                    const shipLogs: ShipWithCommands[][] = []
                     const rawLogs: String[][] = [];
                     lines.forEach(line => {
                         if (line.startsWith(statePrefix)) {
                             const state = JSON.parse(line.substring(statePrefix.length));
-                            const ships: Ship[] = state["ship_and_commands"]
-                                .map((input: any) => new Ship(input[0]));
+                            shipLogs.push(state["ship_and_commands"].map((input: any) => new ShipWithCommands(input)))
                             rawLogs.push(state["ship_and_commands"].map((input: any) => JSON.stringify(input)));
-                            shipLogs.push(ships);
                         }
                     });
                     callback(shipLogs, rawLogs);
@@ -107,7 +142,7 @@ module visualizer {
         };
 
 
-        const canvas = <HTMLCanvasElement> document.getElementById("canvas");
+        const canvas = <HTMLCanvasElement>document.getElementById("canvas");
         const turn = <HTMLInputElement>document.getElementById("turn");
         const turn_slider = <HTMLInputElement>document.getElementById("turn_slider");
         const server_response = <HTMLDivElement>document.getElementById("server_response");
@@ -124,7 +159,7 @@ module visualizer {
 
                     const innerHtml: String[] = []
                     rawLogs[turn_number].forEach((rawLog, i) => {
-                        innerHtml.push(`<div style='color: ${shipLogs[turn_number][i].ship_color()}'>` + rawLogs[turn_number][i] + "</div>")
+                        innerHtml.push(`<div style='color: ${shipLogs[turn_number][i].ship.ship_color()}'>` + rawLogs[turn_number][i] + "</div>")
                     })
                     server_response.innerHTML = "<div>" + innerHtml.join("") + "</div>"
                 }
