@@ -21,6 +21,9 @@ ruby vis.rb
 
 You can click the window to interact with galaxy pad.
 
+You can change the initial state, by changing
+around Line 298 in `vis.rb` 
+
 ## How to build
 
 ## Docker
