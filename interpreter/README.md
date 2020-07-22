@@ -15,6 +15,13 @@ You don't have to compile it. The evaluator is deployed on Cloud.
 ruby vis.rb
 ```
 
+Or if the cloud evaluator is down. You can build the evaluator and run in local.
+
+```
+cabal new-build
+ruby vis.rb --local
+```
+
 ![galaxyinit](galaxy_init.png)
 
 ![galaxymain](galaxy_main.png)
