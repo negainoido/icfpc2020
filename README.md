@@ -1,11 +1,9 @@
 # icfpc2020
 
-[docs](https://docs.google.com/document/d/14mA2PDG3-_r_VDUscjzOUJKAvTAeKIBm6ccvvDjzLrM/edit?usp=sharing)
 
 
-## ディレクトリ構成
+## Directory structure
 
 * [solver](solver): ソルバー
 * [tools](tools): ユーティリティツール
-* [simulator](simulator): selenium用のスクリプトなど
-* [images](images): 画像など
+* [interpreter](interpreter): Galaxy Evaluator
