@@ -5,6 +5,7 @@ This is our Galaxy Evaluator written in Haskell
 ## Requirement
 - gnuplot
 - ruby
+
 - GHC (8.8)
 
 
