@@ -1,9 +1,11 @@
+
 # icfpc2020
 
 
 
 ## Directory structure
-* [solver](solver): ソルバー
-* [tools](tools): ユーティリティツール
-* [interpreter](interpreter): Galaxy Evaluator
+
 * [app](app): Local Tournament AI
+* [interpreter](interpreter): Galaxy Evaluator
+* [solver](solver): code helped us understanding the message from space.
+* [tools](tools): misc.
