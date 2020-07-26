@@ -2,6 +2,9 @@
 
 #### Attacker
 
+Our attacker
+1. detonates if there is only one defender and that is near to our attacker or
+1. chooses a defender and shoot while attacker's temperature is zero 
 
 #### Defender
 
