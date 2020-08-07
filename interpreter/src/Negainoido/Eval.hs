@@ -9,13 +9,15 @@ import Data.IORef
 import Control.Monad.Except
 --import Debug.Trace
 import Negainoido.Syntax
+import qualified Data.Sequence as Q
 
 type Env = M.Map NT Thunk
 
 evalForce :: Value -> ExceptT String IO SData
 evalForce (VNumber v) = pure $ DNumber v
-evalForce (VPApp Nil []) = pure $ DNil
-evalForce (VPApp Cons [t2, t1]) = DCons <$> (evalThunk t1 >>= evalForce) <*> (evalThunk t2 >>= evalForce)
+evalForce (VPApp Nil Q.Empty) = pure $ DNil
+evalForce (VPApp Cons (t1 Q.:<| t2 Q.:<| Q.Empty)) = 
+    DCons <$> (evalThunk t1 >>= evalForce) <*> (evalThunk t2 >>= evalForce)
 evalForce e = throwError $ "cannot force partial application" ++ show e
 
 mkEnv :: [Def] -> ExceptT String IO Env
@@ -37,50 +39,50 @@ eval env (EThunk t args) = do
     v <- evalThunk t
     case (v, args) of
         (VPApp hd args', _args) -> 
-            let toExpr x = EThunk x [] in
-            eval env (App hd (args ++ (map toExpr args')))
-        (_, []) -> pure v
+            let toExpr x = EThunk x Q.Empty in
+            eval env (App hd ((fmap toExpr args') <> args))
+        (_, Q.Empty) -> pure v
         (_, _) -> throwError $ "cannot apply: " ++ show (v, args)
 eval env (App hd args) = 
     let triOp f
-            | e0:e1:e2:es <- reverse args = Just $ foldl app (f e0 e1 e2) es  
+            | e0 Q.:<| e1 Q.:<| e2 Q.:<| es <- args = Just $ foldl app (f e0 e1 e2) es  
             | otherwise = Nothing
         triOpM f
-            | e0:e1:e2:es <- reverse args = Just $ do
+            | e0 Q.:<| e1 Q.:<| e2 Q.:<| es <- args = Just $ do
                 e' <- f e0 e1 e2
                 pure $ foldl app e' es  
             | otherwise = Nothing 
         uniOp f 
-            | e0: es <- reverse args = Just $ foldl app (f e0) es
+            | e0 Q.:<| es <- args = Just $ foldl app (f e0) es
             | otherwise = Nothing
         uniOpM f
-            | e0: es <- reverse args = Just $ do
+            | e0 Q.:<| es <- args = Just $ do
                 e' <- f e0
                 pure $ foldl app e' es
             | otherwise = Nothing
         binOp f 
-            | e0:e1: es <- reverse args = Just $ foldl app (f e0 e1) es
+            | e0 Q.:<| e1 Q.:<| es <- args = Just $ foldl app (f e0 e1) es
             | otherwise = Nothing
         binOpM f
-            | e0:e1: es <- reverse args = Just $ do
+            | e0 Q.:<| e1 Q.:<| es <- args = Just $ do
                  e' <- f e0 e1
                  pure $ foldl app e' es
             | otherwise = Nothing
             in
     case (hd, args) of
-        (Add, [e2, e1]) -> do 
+        (Add, e1 Q.:<| e2 Q.:<| Q.Empty) -> do 
             n1 <- eval env e1 >>= ensureNumber
             n2 <- eval env e2 >>= ensureNumber
             pure $ VNumber $ n1 + n2
-        (Mul, [e2, e1]) -> do 
+        (Mul, e1 Q.:<| e2 Q.:<| Q.Empty) -> do 
             n1 <- eval env e1 >>= ensureNumber
             n2 <- eval env e2 >>= ensureNumber
             pure $ VNumber $ n1 * n2
-        (Div, [e2, e1]) -> do 
+        (Div, e1 Q.:<| e2 Q.:<| Q.Empty) -> do 
             n1 <- eval env e1 >>= ensureNumber
             n2 <- eval env e2 >>= ensureNumber
             pure $ VNumber $ n1 `div` n2
-        (Neg, [e]) -> do
+        (Neg, e Q.:<| Q.Empty) -> do
             n <- eval env e >>= ensureNumber
             pure $ VNumber $ negate n
         (B, _) | Just e <- triOp f -> eval env e
@@ -91,7 +93,7 @@ eval env (App hd args) =
             where
             f e0 e1 e2 =  do
                 t2 <- mkThunk e2 (eval env e2)
-                let e2' = EThunk t2 []
+                let e2' = EThunk t2 Q.Empty 
                 pure $ app (app e0 e2') (app e1 e2')
         (I, _) | Just e <- uniOp id ->  eval env e
         (T, _) | Just e <- binOp (\x _ -> x) -> eval env e
@@ -137,7 +139,7 @@ eval env (App hd args) =
                 Nothing -> throwError $  "Undefined Nonterminal: " ++ show n
                 Just v -> pure v
             eval env (EThunk t es)
-        (Num n, []) -> pure $ VNumber n
+        (Num n, Q.Empty) -> pure $ VNumber n
         _ -> 
             VPApp hd <$> forM args (\e -> mkThunk e (eval env e)) 
 
