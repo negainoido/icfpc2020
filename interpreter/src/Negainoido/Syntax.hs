@@ -36,12 +36,12 @@ instance Show Expr where
     show (EThunk t es) =
         "(Thunk " ++ unwords (show t: map show (toList es)) ++ ")"
 
-data Thunk = Thunk !Expr !(IORef (Either (ExceptT String IO Value) Value))
+newtype Thunk = Thunk (IORef (Either (ExceptT String IO Value) Value))
     deriving(Eq)
 
 
 instance Show Thunk where
-    show (Thunk e ref) = unsafePerformIO $ do
+    show (Thunk ref) = unsafePerformIO $ do
         r <- readIORef ref
         case r of
             Left _ -> pure "_"
@@ -51,7 +51,7 @@ data Value =
       VNumber !Integer
     | VPApp !Symbol !(Q.Seq Thunk)
     | VNil
-    | VCons !Thunk !Thunk
+    | VCons !Value !Value
     deriving(Show, Eq)
 
 data SData = DNumber !Integer | DCons !SData !SData | DNil

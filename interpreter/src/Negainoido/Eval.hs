@@ -17,7 +17,7 @@ evalForce :: Value -> ExceptT String IO SData
 evalForce (VNumber v) = pure $ DNumber v
 evalForce (VNil ) = pure $ DNil
 evalForce (VCons t1 t2) = 
-    DCons <$> (evalThunk t1 >>= evalForce) <*> (evalThunk t2 >>= evalForce)
+    DCons <$> (pure t1 >>= evalForce) <*> (pure t2 >>= evalForce)
 evalForce e = throwError $ "cannot force partial application" ++ show e
 
 mkEnv :: [Def] -> ExceptT String IO Env
@@ -44,7 +44,9 @@ eval env (EThunk t args) = do
         (_, Q.Empty) -> pure v
         (VNil, _ Q.:<| es) ->
             eval env (App T es)
-        (VCons t1 t2, p Q.:<| es) ->
+        (VCons v1 v2, p Q.:<| es) -> do
+            t1 <- mkThunk undefined (pure v1)
+            t2 <- mkThunk undefined (pure v2)
             eval env (appArgs p (toExpr t1 Q.:<| toExpr t2 Q.:<| es))
         (_, _) -> throwError $ "cannot apply: " ++ show (v, args)
 eval env (App hd args) = 
@@ -103,13 +105,15 @@ eval env (App hd args) =
         (T, _) | Just e <- binOp (\x _ -> x) -> eval env e
         (F, _) | Just e <- binOp (\_ y -> y) -> eval env e
         (Car, e1 Q.:<| es) -> do
-            VCons t1 _ <- eval env e1
+            VCons v1 _ <- eval env e1
+            t1 <- mkThunk undefined (pure v1)
             eval env (EThunk t1 es)
         (Car, _) | Just e <- uniOp f ->  eval env e
             where
             f e = app e (symToExpr T)
         (Cdr, e1 Q.:<| es) -> do
-            VCons _ t2 <- eval env e1
+            VCons _ v2 <- eval env e1
+            t2 <- mkThunk undefined (pure v2)
             eval env (EThunk t2 es)
         (Cdr, _) | Just e <- uniOp f ->  eval env e
             where
@@ -119,9 +123,9 @@ eval env (App hd args) =
             where
             f _ = symToExpr T
         (Cons, e1 Q.:<| e2 Q.:<| Q.Empty) -> do
-            t1 <- mkThunk e1 (eval env e1)
-            t2 <- mkThunk e2 (eval env e2)
-            pure $ VCons t1 t2
+            v1 <- eval env e1
+            v2 <- eval env e2
+            pure $ VCons v1 v2
         (Cons, _) | Just e <- triOp f -> eval env e
             where
             f e0 e1 e2 = app (app e2 e0) e1
@@ -159,10 +163,10 @@ eval env (App hd args) =
             VPApp hd <$> forM args (\e -> mkThunk e (eval env e)) 
 
 mkThunk :: Expr -> ExceptT String IO Value -> ExceptT String IO Thunk
-mkThunk e action = liftIO $ Thunk e <$> newIORef (Left action)
+mkThunk e action = liftIO $ Thunk <$> newIORef (Left action)
 
 evalThunk :: Thunk -> ExceptT String IO Value
-evalThunk (Thunk _ ref) = do
+evalThunk (Thunk ref) = do
     r <- liftIO $ readIORef ref
     case r of
         Right v -> pure v
