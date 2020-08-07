@@ -15,8 +15,8 @@ type Env = M.Map NT Thunk
 
 evalForce :: Value -> ExceptT String IO SData
 evalForce (VNumber v) = pure $ DNumber v
-evalForce (VPApp Nil Q.Empty) = pure $ DNil
-evalForce (VPApp Cons (t1 Q.:<| t2 Q.:<| Q.Empty)) = 
+evalForce (VNil ) = pure $ DNil
+evalForce (VCons t1 t2) = 
     DCons <$> (evalThunk t1 >>= evalForce) <*> (evalThunk t2 >>= evalForce)
 evalForce e = throwError $ "cannot force partial application" ++ show e
 
@@ -37,36 +37,40 @@ eval :: Env -> Expr -> ExceptT String IO Value
 --eval env e | traceShow ("eval", e) False = undefined
 eval env (EThunk t args) = do
     v <- evalThunk t
+    let toExpr x = EThunk x Q.Empty
     case (v, args) of
         (VPApp hd args', _args) -> 
-            let toExpr x = EThunk x Q.Empty in
             eval env (App hd ((fmap toExpr args') <> args))
         (_, Q.Empty) -> pure v
+        (VNil, _ Q.:<| es) ->
+            eval env (App T es)
+        (VCons t1 t2, p Q.:<| es) ->
+            eval env (appArgs p (toExpr t1 Q.:<| toExpr t2 Q.:<| es))
         (_, _) -> throwError $ "cannot apply: " ++ show (v, args)
 eval env (App hd args) = 
     let triOp f
-            | e0 Q.:<| e1 Q.:<| e2 Q.:<| es <- args = Just $ foldl app (f e0 e1 e2) es  
+            | e0 Q.:<| e1 Q.:<| e2 Q.:<| es <- args = Just $ appArgs (f e0 e1 e2) es  
             | otherwise = Nothing
         triOpM f
             | e0 Q.:<| e1 Q.:<| e2 Q.:<| es <- args = Just $ do
                 e' <- f e0 e1 e2
-                pure $ foldl app e' es  
+                pure $ appArgs e' es  
             | otherwise = Nothing 
         uniOp f 
-            | e0 Q.:<| es <- args = Just $ foldl app (f e0) es
+            | e0 Q.:<| es <- args = Just $ appArgs (f e0) es
             | otherwise = Nothing
         uniOpM f
             | e0 Q.:<| es <- args = Just $ do
                 e' <- f e0
-                pure $ foldl app e' es
+                pure $ appArgs e' es
             | otherwise = Nothing
         binOp f 
-            | e0 Q.:<| e1 Q.:<| es <- args = Just $ foldl app (f e0 e1) es
+            | e0 Q.:<| e1 Q.:<| es <- args = Just $ appArgs (f e0 e1) es
             | otherwise = Nothing
         binOpM f
             | e0 Q.:<| e1 Q.:<| es <- args = Just $ do
                  e' <- f e0 e1
-                 pure $ foldl app e' es
+                 pure $ appArgs e' es
             | otherwise = Nothing
             in
     case (hd, args) of
@@ -98,15 +102,26 @@ eval env (App hd args) =
         (I, _) | Just e <- uniOp id ->  eval env e
         (T, _) | Just e <- binOp (\x _ -> x) -> eval env e
         (F, _) | Just e <- binOp (\_ y -> y) -> eval env e
+        (Car, e1 Q.:<| es) -> do
+            VCons t1 _ <- eval env e1
+            eval env (EThunk t1 es)
         (Car, _) | Just e <- uniOp f ->  eval env e
             where
             f e = app e (symToExpr T)
+        (Cdr, e1 Q.:<| es) -> do
+            VCons _ t2 <- eval env e1
+            eval env (EThunk t2 es)
         (Cdr, _) | Just e <- uniOp f ->  eval env e
             where
             f e = app e (symToExpr F)
+        (Nil, Q.Empty) -> pure $ VNil
         (Nil, _) | Just e <- uniOp f -> eval env e
             where
             f _ = symToExpr T
+        (Cons, e1 Q.:<| e2 Q.:<| Q.Empty) -> do
+            t1 <- mkThunk e1 (eval env e1)
+            t2 <- mkThunk e2 (eval env e2)
+            pure $ VCons t1 t2
         (Cons, _) | Just e <- triOp f -> eval env e
             where
             f e0 e1 e2 = app (app e2 e0) e1
@@ -115,8 +130,8 @@ eval env (App hd args) =
             f e = do
                 v <- eval env e
                 case v of
-                    VPApp Nil _ -> pure $ symToExpr T
-                    VPApp Cons _ -> pure $ symToExpr F
+                    VNil -> pure $ symToExpr T
+                    VCons {} -> pure $ symToExpr F
                     _ -> throwError $ "Nil or Cons is expected but found" ++ show v
         (Lt, _) | Just me <- binOpM f -> me >>= eval env
             where
