@@ -61,4 +61,4 @@ parse = go []
       go [SExpr e] [] = pure e
       go st tokens = throwError $ "Unexpected parse state: Stack = " ++ show st ++ " Token = " ++ show (take 3 tokens)
       toStackElem Ap = SAp
-      toStackElem c = SExpr (App c [])
+      toStackElem c = SExpr $ symToExpr c
