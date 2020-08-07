@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-} 
+{-# LANGUAGE BangPatterns #-} 
 module Negainoido.Syntax where
 
 import Data.Text(Text)
@@ -21,12 +22,12 @@ newtype NT = NT Int
     deriving (Eq, Ord, Show)
 
 data Def = Def {
-    defHead :: NT,
-    defBody :: Expr
+    defHead :: !NT,
+    defBody :: !Expr
 } deriving(Eq, Show)
 
-data Expr = App Symbol (Q.Seq Expr) 
-    | EThunk Thunk (Q.Seq Expr)
+data Expr = App !Symbol !(Q.Seq Expr) 
+    | EThunk Thunk !(Q.Seq Expr)
     deriving (Eq)
 
 instance Show Expr where
@@ -35,7 +36,7 @@ instance Show Expr where
     show (EThunk t es) =
         "(Thunk " ++ unwords (show t: map show (toList es)) ++ ")"
 
-data Thunk = Thunk Expr (IORef (Either (ExceptT String IO Value) Value))
+data Thunk = Thunk !Expr !(IORef (Either (ExceptT String IO Value) Value))
     deriving(Eq)
 
 
@@ -47,11 +48,13 @@ instance Show Thunk where
             Right v -> pure $ show v
 
 data Value = 
-      VNumber Integer
-    | VPApp Symbol (Q.Seq Thunk) -- arguments are in reverse order
+      VNumber !Integer
+    | VPApp !Symbol !(Q.Seq Thunk)
+    | VNil
+    | VCons !Thunk !Thunk
     deriving(Show, Eq)
 
-data SData = DNumber Integer | DCons SData SData | DNil
+data SData = DNumber !Integer | DCons !SData !SData | DNil
     deriving(Eq)
 
 instance Show SData where
@@ -78,3 +81,7 @@ symToExpr x = App x Q.Empty
 app :: Expr -> Expr -> Expr
 app (App c es) e2 = App c (es Q.:|> e2)
 app (EThunk e es) e2 = EThunk e (es Q.:|> e2) 
+
+appArgs :: Expr -> Q.Seq Expr -> Expr
+appArgs (App c es) es2 = App c (es <> es2)
+appArgs (EThunk e es) es2 = EThunk e (es <> es2) 
