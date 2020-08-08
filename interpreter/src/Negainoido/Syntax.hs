@@ -74,14 +74,18 @@ toCode = B.run . go
     go DNil = "nil"
     go (DNumber n) = B.decimal n
 
+
+{-# INLINE symToExpr #-}
 symToExpr :: Symbol -> Expr
 symToExpr x = App x Q.Empty 
 
 
+{-# INLINE app #-}
 app :: Expr -> Expr -> Expr
 app (App c es) e2 = App c (es Q.:|> e2)
 app (EThunk e es) e2 = EThunk e (es Q.:|> e2) 
 
+{-# INLINE appArgs #-}
 appArgs :: Expr -> Q.Seq Expr -> Expr
 appArgs (App c es) es2 = App c (es <> es2)
 appArgs (EThunk e es) es2 = EThunk e (es <> es2) 

@@ -50,31 +50,6 @@ eval env (EThunk t args) = do
             eval env (appArgs p (toExpr t1 Q.:<| toExpr t2 Q.:<| es))
         (_, _) -> throwError $ "cannot apply: " ++ show (v, args)
 eval env (App hd args) = 
-    let triOp f
-            | e0 Q.:<| e1 Q.:<| e2 Q.:<| es <- args = Just $ appArgs (f e0 e1 e2) es  
-            | otherwise = Nothing
-        triOpM f
-            | e0 Q.:<| e1 Q.:<| e2 Q.:<| es <- args = Just $ do
-                e' <- f e0 e1 e2
-                pure $ appArgs e' es  
-            | otherwise = Nothing 
-        uniOp f 
-            | e0 Q.:<| es <- args = Just $ appArgs (f e0) es
-            | otherwise = Nothing
-        uniOpM f
-            | e0 Q.:<| es <- args = Just $ do
-                e' <- f e0
-                pure $ appArgs e' es
-            | otherwise = Nothing
-        binOp f 
-            | e0 Q.:<| e1 Q.:<| es <- args = Just $ appArgs (f e0 e1) es
-            | otherwise = Nothing
-        binOpM f
-            | e0 Q.:<| e1 Q.:<| es <- args = Just $ do
-                 e' <- f e0 e1
-                 pure $ appArgs e' es
-            | otherwise = Nothing
-            in
     case (hd, args) of
         (Add, e1 Q.:<| e2 Q.:<| Q.Empty) -> do 
             n1 <- eval env e1 >>= ensureNumber
@@ -93,77 +68,67 @@ eval env (App hd args) =
             pure $ VNumber $ negate n
         (B, e1 Q.:<| e2 Q.:<| e3 Q.:<| es) ->
             eval env $ appArgs e1 (app e2 e3 Q.:<| es)
-        (C, _) | Just e <- triOp f -> eval env e
-            where f e0 e1 e2 = app (app e0 e2) e1
-        (S, _) | Just me <- triOpM f -> me >>= eval env
-            where
-            f e0 e1 e2 =  do
-                t2 <- mkThunk e2 (eval env e2)
-                let e2' = EThunk t2 Q.Empty 
-                pure $ app (app e0 e2') (app e1 e2')
-        (I, _) | Just e <- uniOp id ->  eval env e
-        (T, _) | Just e <- binOp (\x _ -> x) -> eval env e
-        (F, _) | Just e <- binOp (\_ y -> y) -> eval env e
+        (C, e1 Q.:<| e2 Q.:<| e3 Q.:<| es)  ->
+            eval env $ appArgs e1 (e3 Q.:<| e2 Q.:<| es)
+        (S, e1 Q.:<| e2 Q.:<| e3 Q.:<| es) -> do
+            t3 <- mkThunkExpr env e3
+            let e3' = EThunk t3 Q.Empty
+            eval env $ appArgs e1 (e3' Q.:<| app e2 e3' Q.:<| es)
+        (I, e1 Q.:<| es) -> eval env (appArgs e1 es)
+        (T, e1 Q.:<| _ Q.:<| es) -> 
+            eval env (appArgs e1 es)
+        (F, _ Q.:<| e2 Q.:<| es) -> 
+            eval env (appArgs e2 es)
         (Car, e1 Q.:<| es) -> do
             VCons v1 _ <- eval env e1
             t1 <- mkThunk undefined (pure v1)
             eval env (EThunk t1 es)
-        (Car, _) | Just e <- uniOp f ->  eval env e
-            where
-            f e = app e (symToExpr T)
+        (Car, e1 Q.:<| es) ->  eval env $ appArgs e1 (symToExpr T Q.:<| es)
         (Cdr, e1 Q.:<| es) -> do
             VCons _ v2 <- eval env e1
             t2 <- mkThunk undefined (pure v2)
             eval env (EThunk t2 es)
-        (Cdr, _) | Just e <- uniOp f ->  eval env e
-            where
-            f e = app e (symToExpr F)
+        (Cdr, e1 Q.:<| es) ->  eval env $ appArgs e1 (symToExpr F Q.:<| es)
         (Nil, Q.Empty) -> pure $ VNil
-        (Nil, _) | Just e <- uniOp f -> eval env e
-            where
-            f _ = symToExpr T
+        (Nil, _ Q.:<| es) -> eval env (appArgs (symToExpr T) es)
         (Cons, e1 Q.:<| e2 Q.:<| Q.Empty) -> do
             v1 <- eval env e1
             v2 <- eval env e2
             pure $ VCons v1 v2
-        (Cons, _) | Just e <- triOp f -> eval env e
-            where
-            f e0 e1 e2 = app (app e2 e0) e1
-        (IsNil, _) | Just me <- uniOpM f -> me >>= eval env
-            where
-            f e = do
-                v <- eval env e
-                case v of
-                    VNil -> pure $ symToExpr T
-                    VCons {} -> pure $ symToExpr F
-                    _ -> throwError $ "Nil or Cons is expected but found" ++ show v
-        (Lt, _) | Just me <- binOpM f -> me >>= eval env
-            where
-                f e1 e2 = do
-                    n1 <- eval env e1 >>= ensureNumber
-                    n2 <- eval env e2 >>= ensureNumber
-                    pure $ if n1 < n2
-                        then symToExpr T
-                        else symToExpr F
-        (Eq, _) | Just me <- binOpM f -> me >>= eval env
-            where
-                f e1 e2 = do
-                    n1 <- eval env e1 >>= ensureNumber
-                    n2 <- eval env e2 >>= ensureNumber
-                    pure $ if n1 == n2
-                        then symToExpr T
-                        else symToExpr F
+        (Cons, e1 Q.:<| e2 Q.:<| e3 Q.:<| es) ->
+            eval env (appArgs e3 (e1 Q.:<| e2 Q.:<| es))
+        (IsNil, e1 Q.:<| es) -> do
+            v <- eval env e1
+            case v of
+                VNil -> eval env $ appArgs (symToExpr T) es
+                VCons {} -> eval env $ appArgs (symToExpr F) es
+                _ -> throwError $ "Nil or Cons is expected but found" ++ show v
+        (Lt, e1 Q.:<| e2 Q.:<| es) -> do
+            n1 <- eval env e1 >>= ensureNumber
+            n2 <- eval env e2 >>= ensureNumber
+            if n1 < n2
+                then eval env (appArgs (symToExpr T) es)
+                else eval env (appArgs (symToExpr F) es)
+        (Eq, e1 Q.:<| e2 Q.:<| es) -> do
+            n1 <- eval env e1 >>= ensureNumber
+            n2 <- eval env e2 >>= ensureNumber
+            if n1 == n2
+                then eval env (appArgs (symToExpr T) es)
+                else eval env (appArgs (symToExpr F) es)
         (NonTerm n, es) -> do -- es [ e_n, ... , e2, e1, e0]
             t <- case M.lookup n env of
                 Nothing -> throwError $  "Undefined Nonterminal: " ++ show n
                 Just v -> pure v
             eval env (EThunk t es)
         (Num n, Q.Empty) -> pure $ VNumber n
-        _ -> 
-            VPApp hd <$> forM args (\e -> mkThunk e (eval env e)) 
+        _ -> VPApp hd <$> forM args (\e -> mkThunkExpr env e) 
 
 mkThunk :: Expr -> ExceptT String IO Value -> ExceptT String IO Thunk
 mkThunk e action = liftIO $ Thunk <$> newIORef (Left action)
+
+mkThunkExpr :: Env -> Expr -> ExceptT String IO Thunk
+mkThunkExpr _ (EThunk t Q.Empty) = pure t
+mkThunkExpr env e = liftIO $ Thunk <$> newIORef (Left $ eval env e)
 
 evalThunk :: Thunk -> ExceptT String IO Value
 evalThunk (Thunk ref) = do
