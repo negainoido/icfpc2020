@@ -100,8 +100,10 @@ main = do
         defs1 <- mapExceptT (pure . runIdentity) $ mapM parseDef defs
         mainExpr <- mapExceptT (pure . runIdentity) $ parseMain gdef
         rdata <- evalMain defs1 mainExpr
+        {-
         liftIO $ T.hPutStrLn stderr "raw output is written at result.txt"
         liftIO $ writeFile "result.txt" (show rdata)
+        -}
         res@Result{..} <- dataToResult rdata
         --liftIO $ putStrLn "result json is written at result.json"
         --liftIO $ encodeFile "result.json" res

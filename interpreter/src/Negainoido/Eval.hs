@@ -91,8 +91,8 @@ eval env (App hd args) =
         (Neg, e Q.:<| Q.Empty) -> do
             n <- eval env e >>= ensureNumber
             pure $ VNumber $ negate n
-        (B, _) | Just e <- triOp f -> eval env e
-            where f e0 e1 e2 = app e0 (app e1 e2)
+        (B, e1 Q.:<| e2 Q.:<| e3 Q.:<| es) ->
+            eval env $ appArgs e1 (app e2 e3 Q.:<| es)
         (C, _) | Just e <- triOp f -> eval env e
             where f e0 e1 e2 = app (app e0 e2) e1
         (S, _) | Just me <- triOpM f -> me >>= eval env
